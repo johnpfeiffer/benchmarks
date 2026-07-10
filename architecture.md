@@ -1,7 +1,8 @@
 # Architecture
 
-AI model benchmarks dashboard: visualizes and sorts AI model intelligence
-scores from an embedded JSON dataset. Derived from the immutable
+AI model benchmarks dashboard: visualizes, filters, and sorts embedded model
+benchmark datasets. It currently renders Artificial Analysis scores and Senior
+SWE Bench tasteful/basic solve rates. Derived from the immutable
 [`/KERNEL/`](./KERNEL/); if anything here conflicts with the kernel, the kernel
 wins.
 
@@ -19,14 +20,18 @@ the views. The `App` component is the controller (owns state and data flow).
 
 ```mermaid
 flowchart TD
-    JSON["data/ai.json<br/>(embedded)"] --> App["App.tsx<br/>(controller)"]
+    AIJSON["data/ai.json<br/>(embedded)"] --> App["App.tsx<br/>(controller)"]
+    SWEJSON["data/swe.json<br/>(embedded)"] --> App
     App -->|parse + validate| Models["models/<br/>parse, sort, types"]
-    Models -->|INV-001 gate| Validated["ModelEntry[]"]
-    App -->|sorted entries + sort state| Dashboard["views/Dashboard"]
-    Dashboard --> Chart["IntelligenceBarChart"]
-    Dashboard --> Table["ModelTable (sortable)"]
-    Dashboard --> Footer["Footer (credit)"]
-    Table -->|onSortChange| App
+    Models -->|INV-001 gate| Validated["ModelEntry[] per source"]
+    Models --> Merge["mergeSweMetrics<br/>(SWE columns on AI rows)"]
+    App -->|sorted table rows + selected ids| Dashboard["views/Dashboard"]
+    Dashboard --> ChartA["IntelligenceBarChart<br/>(Artificial Analysis)"]
+    Dashboard --> Table["ModelTable<br/>(sortable + selectable + SWE columns)"]
+    Dashboard --> ChartB["IntelligenceBarChart<br/>(SWE tasteful solve rate)"]
+    Dashboard --> ChartC["IntelligenceBarChart<br/>(SWE basic solve rate)"]
+    Dashboard --> Footer["Footer (source credits)"]
+    Table -->|onSortChange / onToggleEntry| App
 ```
 
 ### Domain (`models/`)
@@ -34,27 +39,49 @@ flowchart TD
 | File | Responsibility |
 | --- | --- |
 | `types.ts` | `ModelEntry`, `SortField`, `SortDirection`, `SortState` |
-| `parse.ts` | `parseModelEntries` + `InvariantError`; upholds **INV-001** (every model has a provider) and structural guards at the single gate |
+| `parse.ts` | `parseModelEntries`, `parseSweEntries`, `inferProviderFromModel` + `InvariantError`; upholds **INV-001** (every model has a provider) and structural guards at the single gate |
+| `merge.ts` | `mergeSweMetrics`, `modelMatchKey`; adds optional SWE table columns to matching Artificial Analysis rows |
 | `sort.ts` | `sortModels`, `nextSortState`, `DEFAULT_SORT` (score desc) |
 | `index.ts` | Public re-exports |
+
+`data/swe.json` does not include provider fields, so `parseSweEntries` derives
+provider from known model-family prefixes (Claude, GPT, Grok, GLM, Kimi,
+Gemini). Unknown families fail as **INV-001** violations instead of being
+rendered without a provider.
 
 ### Presentation (`views/`)
 
 All views are pure (props in, callbacks out, no business logic):
 
 - `IntelligenceBarChart` - vertical bars sorted by the controller (highest on
-  the left by default), horizontally scrollable so labels stay readable.
-- `ModelTable` - sortable table; headers `Provider`, `Model Name`, `Score`;
-  click toggles asc/desc.
-- `Footer` - credits the data source, [artificialanalysis.ai](https://artificialanalysis.ai/).
-- `Dashboard` - layout composing the above (progressive disclosure: summary
-  chart, then details table, then footer).
+  the left by default), horizontally scrollable so labels stay readable,
+  provider/model-family colored, with diagonal x-axis labels. The lower SWE
+  comparison charts use fit-to-width mode with skinnier bars to avoid horizontal
+  chart scrollbars.
+- `ModelTable` - sortable table; headers `Provider`, `Model Name`, `Intelligence`;
+  `tasteful_solve_rate_pct`, `basic_solve_rate_pct`, `avg_steps`, and
+  `avg_tokens`; click headers to toggle asc/desc. The table expands to full
+  height and scrolls horizontally on narrow viewports. Missing SWE values render
+  as `*`. Model names are buttons; clicking toggles matching model inclusion
+  across all charts while the row remains visible and gray when deselected.
+- `Footer` - credits both data sources,
+  [Artificial Analysis](https://artificialanalysis.ai/) and
+  [Senior SWE Bench](https://senior-swe-bench.snorkel.ai/).
+- `Dashboard` - layout composing the intelligence chart, enriched details
+  table, responsive side-by-side SWE comparison charts, then footer. The
+  Artificial Analysis chart also has a direct source link immediately below it.
 
 ### Controller (`App.tsx`)
 
-Parses the embedded JSON once (`useMemo`), holds the `SortState`, computes the
-sorted entries, and forwards header clicks through `nextSortState`. Mounted at
-the router index route (react-router retained).
+Parses embedded JSON once (`useMemo`), merges SWE metrics into the main
+Artificial Analysis table rows, holds the table `SortState` and selected model
+IDs for the intelligence chart, computes sorted/chart-visible entries, and
+forwards header clicks through `nextSortState`. Deselected table model names are
+converted to match keys and filtered out of the Artificial Analysis chart plus
+both SWE charts when corresponding SWE rows exist. The SWE charts are rendered
+below the table from `swe.json` rows sorted by score descending: one chart for
+`tasteful_solve_rate_pct`, one for `basic_solve_rate_pct`. Mounted at the router
+index route (react-router retained).
 
 ## Invariants
 
@@ -70,22 +97,29 @@ journey
   section Open
     Load app: 5: User
     JSON parsed + INV-001 validated: 3: System
-  section Explore
-    See bar chart (score desc): 5: User
+  section Explore Intelligence
+    See Artificial Analysis chart (score desc): 5: User
+    See Artificial Analysis source link below chart: 4: User
     Scroll chart horizontally for labels: 4: User
-  section Sort
-    Read details table: 5: User
-    Click a header (Provider/Model/Score): 5: User
+    Read details table with SWE columns: 5: User
+    Click a header, including SWE metrics: 5: User
     Toggle asc/desc: 5: User
+    Click model button to remove from all matching charts: 5: User
+  section Explore SWE
+    See tasteful/basic charts side by side on desktop: 5: User
+    See charts reflow vertically on mobile: 5: User
+    Compare tasteful and basic solve rates: 5: User
   section Credit
-    See data source in footer: 3: User
+    See data sources in footer: 3: User
 ```
 
 ## Validation
 
 - `npm test` - Vitest unit + component tests (domain logic + dashboard happy
-  path / sort interaction).
+  path / sort interaction / all-chart model filtering / SWE metric merge /
+  source credits).
 - `npm run build` - `tsc -b` typecheck + Vite production build.
 
 Tests follow Red/Green TDD with concise table-driven cases for the domain
-(parse/INV-001, sorting) and a high-value happy path for the dashboard.
+(parse/INV-001, sorting, SWE metric merge) and high-value dashboard paths for
+rendering, sorting, filtering, placeholders, and credits.

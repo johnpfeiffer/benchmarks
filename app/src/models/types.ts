@@ -14,17 +14,41 @@ export interface RawModelEntry {
   reasoning: boolean
 }
 
+/** A single Senior SWE Bench row, as embedded in the JSON data. */
+export interface RawSweEntry {
+  rank: number
+  model: string
+  harness: string
+  effort: string
+  tasteful_solve_rate_pct: number
+  basic_solve_rate_pct: number
+  avg_steps: number
+  avg_tokens: string
+}
+
 /** A validated model entry. Exists only when INV-001 holds. */
 export interface ModelEntry {
+  id: string
   model: string
-  /** Intelligence score, the "Score" column in the dashboard. */
+  /** Primary benchmark score, the "Score" column in the dashboard. */
   score: number
   provider: string
-  reasoning: boolean
+  reasoning?: boolean
+  tasteful_solve_rate_pct?: number
+  basic_solve_rate_pct?: number
+  avg_steps?: number
+  avg_tokens?: string
 }
 
 /** Columns the dashboard table can sort by. */
-export type SortField = 'provider' | 'model' | 'score'
+export type SortField =
+  | 'provider'
+  | 'model'
+  | 'score'
+  | 'tasteful_solve_rate_pct'
+  | 'basic_solve_rate_pct'
+  | 'avg_steps'
+  | 'avg_tokens'
 
 /** Sort direction. */
 export type SortDirection = 'asc' | 'desc'

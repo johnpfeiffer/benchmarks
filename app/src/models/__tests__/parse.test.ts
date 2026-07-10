@@ -1,6 +1,6 @@
 import { describe, it, expect } from 'vitest'
-import { parseModelEntries, InvariantError } from '../parse'
-import type { RawModelEntry } from '../types'
+import { parseModelEntries, parseSweEntries, inferProviderFromModel, InvariantError } from '../parse'
+import type { RawModelEntry, RawSweEntry } from '../types'
 
 const valid: RawModelEntry[] = [
   { model: 'Alpha', intelligence_score: 60, provider: 'Anthropic', reasoning: true },
@@ -12,6 +12,7 @@ describe('parseModelEntries', () => {
     const out = parseModelEntries(valid)
     expect(out).toHaveLength(2)
     expect(out[0]).toEqual({
+      id: 'anthropic:alpha',
       model: 'Alpha',
       score: 60,
       provider: 'Anthropic',
@@ -81,5 +82,63 @@ describe('parseModelEntries', () => {
     const input = [...valid]
     parseModelEntries(input)
     expect(input).toEqual(valid)
+  })
+})
+
+describe('parseSweEntries', () => {
+  const validSwe: RawSweEntry[] = [
+    {
+      rank: 1,
+      model: 'Claude Fable 5',
+      harness: 'Mini-SWE-Agent',
+      effort: 'max',
+      tasteful_solve_rate_pct: 29.1,
+      basic_solve_rate_pct: 46.5,
+      avg_steps: 159,
+      avg_tokens: '290.2K',
+    },
+    {
+      rank: 2,
+      model: 'GPT-5.6 Sol',
+      harness: 'Mini-SWE-Agent',
+      effort: 'xhigh',
+      tasteful_solve_rate_pct: 24.4,
+      basic_solve_rate_pct: 54.7,
+      avg_steps: 49,
+      avg_tokens: '31.1K',
+    },
+  ]
+
+  it('normalizes SWE rows using tasteful solve rate as score', () => {
+    const out = parseSweEntries(validSwe)
+    expect(out[0]).toMatchObject({
+      id: 'anthropic:claude-fable-5:mini-swe-agent:max',
+      model: 'Claude Fable 5',
+      score: 29.1,
+      provider: 'Anthropic',
+      tasteful_solve_rate_pct: 29.1,
+      basic_solve_rate_pct: 46.5,
+      avg_steps: 159,
+      avg_tokens: '290.2K',
+    })
+  })
+
+  it('derives providers from known model families', () => {
+    expect(inferProviderFromModel('Claude Opus 4.8')).toBe('Anthropic')
+    expect(inferProviderFromModel('GPT-5.6 Sol')).toBe('OpenAI')
+    expect(inferProviderFromModel('Grok 4.5')).toBe('xAI')
+    expect(inferProviderFromModel('GLM-5.2')).toBe('Z AI')
+    expect(inferProviderFromModel('Kimi K2.6')).toBe('Moonshot AI')
+    expect(inferProviderFromModel('Gemini 3.5 Flash')).toBe('Google')
+  })
+
+  it('rejects unknown SWE model families as INV-001 violations', () => {
+    const bad = [{ ...validSwe[0], model: 'Mystery Model' }]
+    expect(() => parseSweEntries(bad)).toThrow(InvariantError)
+    try {
+      parseSweEntries(bad)
+    } catch (e) {
+      expect((e as InvariantError).invariant).toBe('INV-001')
+    }
   })
 })

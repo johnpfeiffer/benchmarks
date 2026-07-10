@@ -1,11 +1,16 @@
 import { Box, Link, Typography } from '@mui/material'
+import type { DataSourceCredit } from './Dashboard'
+
+interface FooterProps {
+  sources: readonly DataSourceCredit[]
+}
 
 /**
  * Footer crediting the data source.
  *
- * Requirements (requirements-v1.md): give credit to artificialanalysis.ai.
+ * Requirements (requirements-v1.md): give credit to each benchmark source.
  */
-export function Footer() {
+export function Footer({ sources }: FooterProps) {
   return (
     <Box
       component="footer"
@@ -17,10 +22,15 @@ export function Footer() {
       }}
     >
       <Typography variant="body2" color="text.secondary">
-        Data source:{' '}
-        <Link href="https://artificialanalysis.ai/" target="_blank" rel="noopener noreferrer">
-          Artificial Analysis
-        </Link>
+        Data sources:{' '}
+        {sources.map((source, index) => (
+          <span key={source.href}>
+            {index > 0 ? ', ' : ''}
+            <Link href={source.href} target="_blank" rel="noopener noreferrer">
+              {source.label}
+            </Link>
+          </span>
+        ))}
       </Typography>
     </Box>
   )

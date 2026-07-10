@@ -1,0 +1,15 @@
+[
+  {"rank": 1, "model": "Claude Fable 5", "harness": "Mini-SWE-Agent", "effort": "max", "tasteful_solve_rate_pct": 29.1, "basic_solve_rate_pct": 46.5, "avg_steps": 159, "avg_tokens": "290.2K"},
+  {"rank": 2, "model": "Claude Opus 4.8", "harness": "Mini-SWE-Agent", "effort": "max", "tasteful_solve_rate_pct": 25.0, "basic_solve_rate_pct": 39.8, "avg_steps": 132, "avg_tokens": "115.2K"},
+  {"rank": 3, "model": "GPT-5.6 Sol", "harness": "Mini-SWE-Agent", "effort": "xhigh", "tasteful_solve_rate_pct": 24.4, "basic_solve_rate_pct": 54.7, "avg_steps": 49, "avg_tokens": "31.1K"},
+  {"rank": 4, "model": "Claude Sonnet 5", "harness": "Mini-SWE-Agent", "effort": "max", "tasteful_solve_rate_pct": 17.4, "basic_solve_rate_pct": 39.5, "avg_steps": 333, "avg_tokens": "445.5K"},
+  {"rank": 5, "model": "Grok 4.5", "harness": "Mini-SWE-Agent", "effort": "high", "tasteful_solve_rate_pct": 17.2, "basic_solve_rate_pct": 49.4, "avg_steps": 80, "avg_tokens": "22.9K"},
+  {"rank": 6, "model": "GPT-5.5", "harness": "Mini-SWE-Agent", "effort": "xhigh", "tasteful_solve_rate_pct": 15.9, "basic_solve_rate_pct": 56.8, "avg_steps": 88, "avg_tokens": "35.9K"},
+  {"rank": 7, "model": "Claude Opus 4.7", "harness": "Mini-SWE-Agent", "effort": "max", "tasteful_solve_rate_pct": 13.8, "basic_solve_rate_pct": 39.1, "avg_steps": 158, "avg_tokens": "97.6K"},
+  {"rank": 8, "model": "GPT-5.4", "harness": "Mini-SWE-Agent", "effort": "xhigh", "tasteful_solve_rate_pct": 13.6, "basic_solve_rate_pct": 48.9, "avg_steps": 82, "avg_tokens": "50.5K"},
+  {"rank": 9, "model": "GLM-5.2", "harness": "Mini-SWE-Agent", "effort": "max", "tasteful_solve_rate_pct": 13.1, "basic_solve_rate_pct": 32.1, "avg_steps": 214, "avg_tokens": "66.0K"},
+  {"rank": 10, "model": "Kimi K2.6", "harness": "Mini-SWE-Agent", "effort": "default", "tasteful_solve_rate_pct": 9.4, "basic_solve_rate_pct": 24.7, "avg_steps": 222, "avg_tokens": "513.1K"},
+  {"rank": 11, "model": "Claude Sonnet 4.6", "harness": "Mini-SWE-Agent", "effort": "high", "tasteful_solve_rate_pct": 9.3, "basic_solve_rate_pct": 30.2, "avg_steps": 175, "avg_tokens": "61.1K"},
+  {"rank": 12, "model": "Gemini 3.1 Pro", "harness": "Mini-SWE-Agent", "effort": "high", "tasteful_solve_rate_pct": 6.8, "basic_solve_rate_pct": 26.1, "avg_steps": 90, "avg_tokens": "19.4K"},
+  {"rank": 13, "model": "Gemini 3.5 Flash", "harness": "Mini-SWE-Agent", "effort": "medium", "tasteful_solve_rate_pct": 3.4, "basic_solve_rate_pct": 20.5, "avg_steps": 255, "avg_tokens": "85.0K"}
+]

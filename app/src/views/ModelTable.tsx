@@ -1,5 +1,6 @@
 import {
   Box,
+  Button,
   Table,
   TableBody,
   TableCell,
@@ -18,13 +19,20 @@ interface ModelTableProps {
   sort: SortState
   /** Called when a header is clicked; the controller decides the next state. */
   onSortChange: (field: SortField) => void
+  selectedIds: ReadonlySet<string>
+  onToggleEntry: (id: string) => void
+  title: string
 }
 
 /** Column config: header label -> domain sort field + cell accessor. */
-const COLUMNS: Array<{ label: string; field: SortField; accessor: (e: ModelEntry) => string | number }> = [
+const COLUMNS: Array<{ label: string; field: SortField; accessor: (e: ModelEntry) => string | number | undefined }> = [
   { label: 'Provider', field: 'provider', accessor: (e) => e.provider },
   { label: 'Model Name', field: 'model', accessor: (e) => e.model },
-  { label: 'Score', field: 'score', accessor: (e) => e.score },
+  { label: 'Intelligence', field: 'score', accessor: (e) => e.score },
+  { label: 'tasteful_solve_rate_pct', field: 'tasteful_solve_rate_pct', accessor: (e) => e.tasteful_solve_rate_pct },
+  { label: 'basic_solve_rate_pct', field: 'basic_solve_rate_pct', accessor: (e) => e.basic_solve_rate_pct },
+  { label: 'avg_steps', field: 'avg_steps', accessor: (e) => e.avg_steps },
+  { label: 'avg_tokens', field: 'avg_tokens', accessor: (e) => e.avg_tokens },
 ]
 
 /**
@@ -33,17 +41,17 @@ const COLUMNS: Array<{ label: string; field: SortField; accessor: (e: ModelEntry
  * Pure presentation: renders the given (already-sorted) rows and emits header
  * clicks. All sort logic lives in the controller / models layer.
  */
-export function ModelTable({ entries, sort, onSortChange }: ModelTableProps) {
+export function ModelTable({ entries, sort, onSortChange, selectedIds, onToggleEntry, title }: ModelTableProps) {
   return (
     <Box>
       <Typography variant="h6" component="h2" sx={{ mb: 1 }}>
-        Model Details
+        {title}
       </Typography>
       <TableContainer
         component={Box}
-        sx={{ maxHeight: 480, border: '1px solid', borderColor: 'divider', borderRadius: 1, overflowY: 'auto' }}
+        sx={{ border: '1px solid', borderColor: 'divider', borderRadius: 1, overflowX: 'auto' }}
       >
-        <Table stickyHeader size="small" aria-label="model benchmarks">
+        <Table size="small" aria-label={title}>
           <TableHead>
             <TableRow>
               {COLUMNS.map((col) => (
@@ -60,13 +68,47 @@ export function ModelTable({ entries, sort, onSortChange }: ModelTableProps) {
             </TableRow>
           </TableHead>
           <TableBody>
-            {entries.map((entry) => (
-              <TableRow key={`${entry.provider}-${entry.model}`} hover>
-                {COLUMNS.map((col) => (
-                  <TableCell key={col.field}>{col.accessor(entry)}</TableCell>
-                ))}
-              </TableRow>
-            ))}
+            {entries.map((entry) => {
+              const isSelected = selectedIds.has(entry.id)
+              return (
+                <TableRow
+                  key={entry.id}
+                  hover
+                  sx={{
+                    bgcolor: isSelected ? 'inherit' : 'action.disabledBackground',
+                    '&:hover': {
+                      bgcolor: isSelected ? undefined : 'action.disabledBackground',
+                    },
+                  }}
+                >
+                  {COLUMNS.map((col) => (
+                    <TableCell key={col.field}>
+                      {col.field === 'model' ? (
+                        <Button
+                          size="small"
+                          variant={isSelected ? 'text' : 'contained'}
+                          color={isSelected ? 'primary' : 'inherit'}
+                          aria-pressed={isSelected}
+                          onClick={() => onToggleEntry(entry.id)}
+                          sx={{
+                            justifyContent: 'flex-start',
+                            maxWidth: '100%',
+                            minWidth: 0,
+                            textAlign: 'left',
+                            textTransform: 'none',
+                            whiteSpace: 'normal',
+                          }}
+                        >
+                          {entry.model}
+                        </Button>
+                      ) : (
+                        col.accessor(entry) ?? '*'
+                      )}
+                    </TableCell>
+                  ))}
+                </TableRow>
+              )
+            })}
           </TableBody>
         </Table>
       </TableContainer>
