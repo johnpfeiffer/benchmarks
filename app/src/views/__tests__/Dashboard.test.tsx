@@ -95,6 +95,9 @@ describe('Dashboard', () => {
       'href',
       'https://senior-swe-bench.snorkel.ai/',
     )
+    const githubLink = screen.getByRole('link', { name: /GitHub repository/i })
+    expect(githubLink).toHaveAttribute('href', 'http://github.com/johnpfeiffer/benchmarks')
+    expect(githubLink.querySelector('svg')).toBeInTheDocument()
   })
 
   it('renders both benchmark sections', () => {

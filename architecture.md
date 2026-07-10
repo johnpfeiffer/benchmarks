@@ -66,7 +66,9 @@ All views are pure (props in, callbacks out, no business logic):
   across all charts while the row remains visible and gray when deselected.
 - `Footer` - credits both data sources,
   [Artificial Analysis](https://artificialanalysis.ai/) and
-  [Senior SWE Bench](https://senior-swe-bench.snorkel.ai/).
+  [Senior SWE Bench](https://senior-swe-bench.snorkel.ai/), and links to the
+  [GitHub repository](http://github.com/johnpfeiffer/benchmarks) with an inline
+  GitHub SVG mark.
 - `Dashboard` - layout composing the intelligence chart, enriched details
   table, responsive side-by-side SWE comparison charts, then footer. The
   Artificial Analysis chart also has a direct source link immediately below it.
@@ -111,6 +113,7 @@ journey
     Compare tasteful and basic solve rates: 5: User
   section Credit
     See data sources in footer: 3: User
+    Open GitHub repository from footer icon link: 3: User
 ```
 
 ## Validation
