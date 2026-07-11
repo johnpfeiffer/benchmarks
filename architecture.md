@@ -2,9 +2,10 @@
 
 AI model benchmarks dashboard: visualizes, filters, and sorts embedded model
 benchmark datasets. It currently renders Artificial Analysis scores and Senior
-SWE Bench tasteful/basic solve rates. Derived from the immutable
-[`/KERNEL/`](./KERNEL/); if anything here conflicts with the kernel, the kernel
-wins.
+SWE Bench tasteful/basic solve rates. Models can be toggled in/out of the charts
+individually, or restricted to open-weight models via the "Open Weights Only"
+preset. Derived from the immutable [`/KERNEL/`](./KERNEL/); if anything here
+conflicts with the kernel, the kernel wins.
 
 ## Stack
 
@@ -38,10 +39,11 @@ flowchart TD
 
 | File | Responsibility |
 | --- | --- |
-| `types.ts` | `ModelEntry`, `SortField`, `SortDirection`, `SortState` |
-| `parse.ts` | `parseModelEntries`, `parseSweEntries`, `inferProviderFromModel` + `InvariantError`; upholds **INV-001** (every model has a provider) and structural guards at the single gate |
+| `types.ts` | `ModelEntry`, `SortField`, `SortDirection`, `SortState`; `ModelEntry.open_weight` is always present after parse |
+| `parse.ts` | `parseModelEntries`, `parseSweEntries`, `inferProviderFromModel`, `isOpenWeightModel` + `InvariantError`; upholds **INV-001** (every model has a provider) and structural guards at the single gate. Reads `open_weight` from `ai.json` and infers it from the model family for `swe.json` |
 | `merge.ts` | `mergeSweMetrics`, `modelMatchKey`; adds optional SWE table columns to matching Artificial Analysis rows |
 | `sort.ts` | `sortModels`, `nextSortState`, `DEFAULT_SORT` (score desc) |
+| `filter.ts` | `openWeightIds`; the id set used by the "Open Weights Only" preset |
 | `index.ts` | Public re-exports |
 
 `data/swe.json` does not include provider fields, so `parseSweEntries` derives
@@ -63,11 +65,13 @@ All views are pure (props in, callbacks out, no business logic):
   `avg_tokens`; click headers to toggle asc/desc. The table expands to full
   height and scrolls horizontally on narrow viewports. Missing SWE values render
   as `*`. Model names are buttons; clicking toggles matching model inclusion
-  across all charts while the row remains visible and gray when deselected.
+  across all charts while the row remains visible and gray when deselected. An
+  "Open Weights Only" toggle sits beside the title; turning it on sets the
+  selection to the open-weight models, turning it off re-selects every model.
 - `Footer` - credits both data sources,
   [Artificial Analysis](https://artificialanalysis.ai/) and
   [Senior SWE Bench](https://senior-swe-bench.snorkel.ai/), and links to the
-  [GitHub repository](http://github.com/johnpfeiffer/benchmarks) with an inline
+  [GitHub repository](https://github.com/johnpfeiffer/benchmarks) with an inline
   GitHub SVG mark.
 - `Dashboard` - layout composing the intelligence chart, enriched details
   table, responsive side-by-side SWE comparison charts, then footer. The
@@ -80,10 +84,12 @@ Artificial Analysis table rows, holds the table `SortState` and selected model
 IDs for the intelligence chart, computes sorted/chart-visible entries, and
 forwards header clicks through `nextSortState`. Deselected table model names are
 converted to match keys and filtered out of the Artificial Analysis chart plus
-both SWE charts when corresponding SWE rows exist. The SWE charts are rendered
-below the table from `swe.json` rows sorted by score descending: one chart for
-`tasteful_solve_rate_pct`, one for `basic_solve_rate_pct`. Mounted at the router
-index route (react-router retained).
+both SWE charts when corresponding SWE rows exist. The "Open Weights Only"
+toggle is a selection preset: on -> `replaceSelection(openWeightIds(...))`;
+off -> `replaceSelection(allIds)`, so the table graying and every chart follow
+the selection. The SWE charts are rendered below the table from `swe.json` rows
+sorted by score descending: one chart for `tasteful_solve_rate_pct`, one for
+`basic_solve_rate_pct`. Mounted at the router index route (react-router retained).
 
 ## Invariants
 
@@ -107,6 +113,7 @@ journey
     Click a header, including SWE metrics: 5: User
     Toggle asc/desc: 5: User
     Click model button to remove from all matching charts: 5: User
+    Toggle "Open Weights Only" to restrict selection to open models: 5: User
   section Explore SWE
     See tasteful/basic charts side by side on desktop: 5: User
     See charts reflow vertically on mobile: 5: User

@@ -9,6 +9,7 @@ const entries: ModelEntry[] = [
     score: 50,
     provider: 'OpenAI',
     reasoning: true,
+    open_weight: false,
     tasteful_solve_rate_pct: 10,
     basic_solve_rate_pct: 20,
     avg_steps: 100,
@@ -20,12 +21,13 @@ const entries: ModelEntry[] = [
     score: 60,
     provider: 'Anthropic',
     reasoning: true,
+    open_weight: false,
     tasteful_solve_rate_pct: 20,
     basic_solve_rate_pct: 30,
     avg_steps: 200,
     avg_tokens: '100.1K',
   },
-  { id: 'openai:beta', model: 'Beta', score: 60, provider: 'OpenAI', reasoning: false },
+  { id: 'openai:beta', model: 'Beta', score: 60, provider: 'OpenAI', reasoning: false, open_weight: false },
 ]
 
 describe('sortModels', () => {

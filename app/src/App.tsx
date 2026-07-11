@@ -9,6 +9,7 @@ import {
   modelMatchKey,
   sortModels,
   nextSortState,
+  openWeightIds,
   DEFAULT_SORT,
   type ModelEntry,
   type SortField,
@@ -50,7 +51,12 @@ function useBenchmarkState(entries: readonly ModelEntry[]) {
     })
   }
 
-  return { sorted, chartEntries, sort, selectedIds, handleSortChange, handleToggleEntry }
+  /** Replace the entire selection (used by the "Open Weights Only" preset). */
+  const replaceSelection = (ids: ReadonlySet<string>) => {
+    setSelectedIds(new Set(ids))
+  }
+
+  return { sorted, chartEntries, sort, selectedIds, handleSortChange, handleToggleEntry, replaceSelection }
 }
 
 function DashboardPage() {
@@ -64,6 +70,25 @@ function DashboardPage() {
   )
 
   const table = useBenchmarkState(tableEntries)
+  const [openWeightsOnly, setOpenWeightsOnly] = useState(false)
+
+  // "Open Weights Only" is a selection preset: turning it on sets the selection
+  // to exactly the open-weight models; turning it off re-selects every model.
+  // Because the table grays deselected rows and every chart renders only the
+  // selected models, the preset is reflected in the table and the charts.
+  const allIds = useMemo(() => new Set(tableEntries.map((entry) => entry.id)), [tableEntries])
+  const openIds = useMemo(() => openWeightIds(tableEntries), [tableEntries])
+
+  const handleToggleOpenWeights = () => {
+    if (openWeightsOnly) {
+      table.replaceSelection(allIds)
+      setOpenWeightsOnly(false)
+    } else {
+      table.replaceSelection(openIds)
+      setOpenWeightsOnly(true)
+    }
+  }
+
   const deselectedModelKeys = useMemo(
     () => new Set(tableEntries.filter((entry) => !table.selectedIds.has(entry.id)).map((entry) => modelMatchKey(entry.model))),
     [tableEntries, table.selectedIds],
@@ -100,6 +125,8 @@ function DashboardPage() {
       selectedIds={table.selectedIds}
       onSortChange={table.handleSortChange}
       onToggleEntry={table.handleToggleEntry}
+      openWeightsOnly={openWeightsOnly}
+      onToggleOpenWeights={handleToggleOpenWeights}
       sources={sources}
     />
   )

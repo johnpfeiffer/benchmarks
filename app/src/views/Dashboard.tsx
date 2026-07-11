@@ -18,6 +18,8 @@ interface DashboardProps {
   selectedIds: ReadonlySet<string>
   onSortChange: (field: SortField) => void
   onToggleEntry: (id: string) => void
+  openWeightsOnly: boolean
+  onToggleOpenWeights: () => void
   sources: readonly DataSourceCredit[]
 }
 
@@ -36,6 +38,8 @@ export function Dashboard({
   selectedIds,
   onSortChange,
   onToggleEntry,
+  openWeightsOnly,
+  onToggleOpenWeights,
   sources,
 }: DashboardProps) {
   return (
@@ -73,6 +77,8 @@ export function Dashboard({
           selectedIds={selectedIds}
           onToggleEntry={onToggleEntry}
           title="Model Details"
+          openWeightsOnly={openWeightsOnly}
+          onToggleOpenWeights={onToggleOpenWeights}
         />
       </Box>
 
