@@ -54,6 +54,11 @@ Then below the table create a new chart based just on swe.json
 - same design as the first chart including colors and diagonal labels
 
 
+## NEW FEATURE - Open Weights button
 
+Add is a button  "Open Weights Only" (unselected by default) beside the "Model Details" table header.
+- when it is selected then update the selection to only be the Open Weight Models (therefore reflected in the Table - which affects the Chart)
+
+Which means updating the JSON to have a boolean attribute Open Weight (Kimi, MiniMax, DeepSeek, Nemotron, Qwen, Z.AI, GLM, Mistral, Gemma, GPT-OSS)
 
 
