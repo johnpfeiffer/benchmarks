@@ -22,6 +22,8 @@ interface ModelTableProps {
   selectedIds: ReadonlySet<string>
   onToggleEntry: (id: string) => void
   title: string
+  openWeightsOnly: boolean
+  onToggleOpenWeights: () => void
 }
 
 /** Column config: header label -> domain sort field + cell accessor. */
@@ -41,12 +43,33 @@ const COLUMNS: Array<{ label: string; field: SortField; accessor: (e: ModelEntry
  * Pure presentation: renders the given (already-sorted) rows and emits header
  * clicks. All sort logic lives in the controller / models layer.
  */
-export function ModelTable({ entries, sort, onSortChange, selectedIds, onToggleEntry, title }: ModelTableProps) {
+export function ModelTable({ entries, sort, onSortChange, selectedIds, onToggleEntry, title, openWeightsOnly, onToggleOpenWeights }: ModelTableProps) {
   return (
     <Box>
-      <Typography variant="h6" component="h2" sx={{ mb: 1 }}>
-        {title}
-      </Typography>
+      <Box
+        sx={{
+          display: 'flex',
+          alignItems: 'center',
+          justifyContent: 'space-between',
+          gap: 1,
+          flexWrap: 'wrap',
+          mb: 1,
+        }}
+      >
+        <Typography variant="h6" component="h2">
+          {title}
+        </Typography>
+        <Button
+          size="small"
+          variant={openWeightsOnly ? 'contained' : 'outlined'}
+          color={openWeightsOnly ? 'primary' : 'inherit'}
+          aria-pressed={openWeightsOnly}
+          onClick={onToggleOpenWeights}
+          sx={{ textTransform: 'none' }}
+        >
+          Open Weights Only
+        </Button>
+      </Box>
       <TableContainer
         component={Box}
         sx={{ border: '1px solid', borderColor: 'divider', borderRadius: 1, overflowX: 'auto' }}

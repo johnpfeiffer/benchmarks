@@ -4,7 +4,7 @@ import { useState } from 'react'
 import { ThemeProvider, CssBaseline } from '@mui/material'
 import { theme } from '../../theme'
 import { Dashboard } from '../Dashboard'
-import { sortModels, nextSortState, DEFAULT_SORT, type ModelEntry, type SortField, type SortState } from '../../models'
+import { sortModels, nextSortState, openWeightIds, DEFAULT_SORT, type ModelEntry, type SortField, type SortState } from '../../models'
 
 const entries: ModelEntry[] = [
   {
@@ -13,13 +13,14 @@ const entries: ModelEntry[] = [
     score: 60,
     provider: 'Anthropic',
     reasoning: true,
+    open_weight: true,
     tasteful_solve_rate_pct: 29.1,
     basic_solve_rate_pct: 46.5,
     avg_steps: 159,
     avg_tokens: '290.2K',
   },
-  { id: 'openai:beta', model: 'Beta', score: 50, provider: 'OpenAI', reasoning: false },
-  { id: 'google:gamma', model: 'Gamma', score: 55, provider: 'Google', reasoning: true },
+  { id: 'openai:beta', model: 'Beta', score: 50, provider: 'OpenAI', reasoning: false, open_weight: false },
+  { id: 'google:gamma', model: 'Gamma', score: 55, provider: 'Google', reasoning: true, open_weight: false },
 ]
 
 const sweChartEntries: ModelEntry[] = [
@@ -28,6 +29,7 @@ const sweChartEntries: ModelEntry[] = [
     model: 'Alpha',
     score: 29.1,
     provider: 'Anthropic',
+    open_weight: true,
     tasteful_solve_rate_pct: 29.1,
     basic_solve_rate_pct: 46.5,
     avg_steps: 159,
@@ -39,6 +41,7 @@ const sweChartEntries: ModelEntry[] = [
 function DashboardController({ initialSort = DEFAULT_SORT }: { initialSort?: SortState }) {
   const [sort, setSort] = useState<SortState>(initialSort)
   const [selectedIds, setSelectedIds] = useState<Set<string>>(() => new Set(entries.map((entry) => entry.id)))
+  const [openWeightsOnly, setOpenWeightsOnly] = useState(false)
   const sorted = sortModels(entries, sort)
   const chartEntries = sorted.filter((entry) => selectedIds.has(entry.id))
   const handleSortChange = (field: SortField) => setSort((cur) => nextSortState(cur, field))
@@ -49,6 +52,15 @@ function DashboardController({ initialSort = DEFAULT_SORT }: { initialSort?: Sor
       else next.add(id)
       return next
     })
+  }
+  const handleToggleOpenWeights = () => {
+    if (openWeightsOnly) {
+      setSelectedIds(new Set(entries.map((entry) => entry.id)))
+      setOpenWeightsOnly(false)
+    } else {
+      setSelectedIds(openWeightIds(entries))
+      setOpenWeightsOnly(true)
+    }
   }
   return (
     <Dashboard
@@ -62,6 +74,8 @@ function DashboardController({ initialSort = DEFAULT_SORT }: { initialSort?: Sor
       selectedIds={selectedIds}
       onSortChange={handleSortChange}
       onToggleEntry={handleToggleEntry}
+      openWeightsOnly={openWeightsOnly}
+      onToggleOpenWeights={handleToggleOpenWeights}
       sources={[
         { label: 'Artificial Analysis', href: 'https://artificialanalysis.ai/' },
         { label: 'Senior SWE Bench', href: 'https://senior-swe-bench.snorkel.ai/' },
@@ -96,7 +110,7 @@ describe('Dashboard', () => {
       'https://senior-swe-bench.snorkel.ai/',
     )
     const githubLink = screen.getByRole('link', { name: /GitHub repository/i })
-    expect(githubLink).toHaveAttribute('href', 'http://github.com/johnpfeiffer/benchmarks')
+    expect(githubLink).toHaveAttribute('href', 'https://github.com/johnpfeiffer/benchmarks')
     expect(githubLink.querySelector('svg')).toBeInTheDocument()
   })
 
@@ -177,5 +191,33 @@ describe('Dashboard', () => {
     fireEvent.click(screen.getByRole('button', { name: 'Beta' }))
     fireEvent.click(screen.getByRole('button', { name: 'Gamma' }))
     expect(screen.getAllByText('No models selected')).toHaveLength(3)
+  })
+
+  it('renders the "Open Weights Only" toggle beside the Model Details title, off by default', () => {
+    renderDashboard()
+    const toggle = screen.getByRole('button', { name: 'Open Weights Only' })
+    expect(toggle).toHaveAttribute('aria-pressed', 'false')
+  })
+
+  it('sets selection to open-weight models when "Open Weights Only" is toggled on', () => {
+    renderDashboard()
+    const toggle = screen.getByRole('button', { name: 'Open Weights Only' })
+    fireEvent.click(toggle)
+    expect(toggle).toHaveAttribute('aria-pressed', 'true')
+    // Only Alpha is open-weight -> stays selected; Beta and Gamma deselected.
+    expect(screen.getByRole('button', { name: 'Alpha' })).toHaveAttribute('aria-pressed', 'true')
+    expect(screen.getByRole('button', { name: 'Beta' })).toHaveAttribute('aria-pressed', 'false')
+    expect(screen.getByRole('button', { name: 'Gamma' })).toHaveAttribute('aria-pressed', 'false')
+  })
+
+  it('re-selects every model when "Open Weights Only" is toggled back off', () => {
+    renderDashboard()
+    const toggle = screen.getByRole('button', { name: 'Open Weights Only' })
+    fireEvent.click(toggle) // on
+    fireEvent.click(toggle) // off
+    expect(toggle).toHaveAttribute('aria-pressed', 'false')
+    expect(screen.getByRole('button', { name: 'Alpha' })).toHaveAttribute('aria-pressed', 'true')
+    expect(screen.getByRole('button', { name: 'Beta' })).toHaveAttribute('aria-pressed', 'true')
+    expect(screen.getByRole('button', { name: 'Gamma' })).toHaveAttribute('aria-pressed', 'true')
   })
 })

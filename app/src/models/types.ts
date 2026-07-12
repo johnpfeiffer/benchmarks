@@ -12,6 +12,8 @@ export interface RawModelEntry {
   intelligence_score: number
   provider: string
   reasoning: boolean
+  /** Whether the model's weights are openly available. Optional in raw data. */
+  open_weight?: boolean
 }
 
 /** A single Senior SWE Bench row, as embedded in the JSON data. */
@@ -34,6 +36,8 @@ export interface ModelEntry {
   score: number
   provider: string
   reasoning?: boolean
+  /** Whether the model's weights are openly available. Always present after parse. */
+  open_weight: boolean
   tasteful_solve_rate_pct?: number
   basic_solve_rate_pct?: number
   avg_steps?: number

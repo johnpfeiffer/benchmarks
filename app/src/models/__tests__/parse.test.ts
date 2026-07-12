@@ -1,9 +1,9 @@
 import { describe, it, expect } from 'vitest'
-import { parseModelEntries, parseSweEntries, inferProviderFromModel, InvariantError } from '../parse'
+import { parseModelEntries, parseSweEntries, inferProviderFromModel, isOpenWeightModel, InvariantError } from '../parse'
 import type { RawModelEntry, RawSweEntry } from '../types'
 
 const valid: RawModelEntry[] = [
-  { model: 'Alpha', intelligence_score: 60, provider: 'Anthropic', reasoning: true },
+  { model: 'Alpha', intelligence_score: 60, provider: 'Anthropic', reasoning: true, open_weight: true },
   { model: 'Beta', intelligence_score: 50, provider: 'OpenAI', reasoning: true },
 ]
 
@@ -17,7 +17,20 @@ describe('parseModelEntries', () => {
       score: 60,
       provider: 'Anthropic',
       reasoning: true,
+      open_weight: true,
     })
+  })
+
+  it('defaults open_weight to false when the raw field is missing', () => {
+    const out = parseModelEntries(valid)
+    expect(out[1].open_weight).toBe(false)
+  })
+
+  it('coerces open_weight to a boolean', () => {
+    const out = parseModelEntries([
+      { model: 'X', intelligence_score: 1, provider: 'P', reasoning: true, open_weight: 1 as unknown as boolean },
+    ])
+    expect(out[0].open_weight).toBe(true)
   })
 
   // Table-driven INV-001 cases: each row should be rejected.
@@ -140,5 +153,45 @@ describe('parseSweEntries', () => {
     } catch (e) {
       expect((e as InvariantError).invariant).toBe('INV-001')
     }
+  })
+
+  it('infers open_weight for SWE rows from the model family', () => {
+    const out = parseSweEntries([
+      { ...validSwe[0], model: 'Kimi K2.6' },
+      { ...validSwe[1], model: 'GLM-5.2' },
+      { ...validSwe[0], model: 'Claude Opus 4.8' },
+    ])
+    expect(out[0].open_weight).toBe(true)
+    expect(out[1].open_weight).toBe(true)
+    expect(out[2].open_weight).toBe(false)
+  })
+})
+
+describe('isOpenWeightModel', () => {
+  // Table-driven: each model family the user listed as open-weight.
+  const openWeightCases: Array<{ name: string; expected: boolean }> = [
+    { name: 'Kimi K2.6', expected: true },
+    { name: 'MiniMax-M3', expected: true },
+    { name: 'DeepSeek V4 Pro (max)', expected: true },
+    { name: 'Nemotron 3 Ultra', expected: true },
+    { name: 'Qwen3.6 27B', expected: true },
+    { name: 'GLM-5.2 (max)', expected: true },
+    { name: 'GLM-4.7', expected: true },
+    { name: 'Mistral Medium 3.5', expected: true },
+    { name: 'Gemma 4 31B', expected: true },
+    { name: 'gpt-oss-120b (high)', expected: true },
+    { name: 'Claude Fable 5 (with fallback)', expected: false },
+    { name: 'GPT-5.6 Sol (max)', expected: false },
+    { name: 'Grok 4.5 (high)', expected: false },
+    { name: 'Gemini 3.5 Flash', expected: false },
+  ]
+
+  it.each(openWeightCases)('$name -> open_weight $expected', ({ name, expected }) => {
+    expect(isOpenWeightModel(name)).toBe(expected)
+  })
+
+  it('is case-insensitive', () => {
+    expect(isOpenWeightModel('kimi k2.6')).toBe(true)
+    expect(isOpenWeightModel('QWEN3.5 397B')).toBe(true)
   })
 })

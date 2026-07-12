@@ -3,9 +3,9 @@ import { mergeSweMetrics, modelMatchKey } from '../merge'
 import type { ModelEntry } from '../types'
 
 const intelligenceEntries: ModelEntry[] = [
-  { id: 'anthropic:claude-fable-5-with-fallback', model: 'Claude Fable 5 (with fallback)', score: 60, provider: 'Anthropic' },
-  { id: 'openai:gpt-5.6-sol-max', model: 'GPT-5.6 Sol (max)', score: 59, provider: 'OpenAI' },
-  { id: 'minimax:minimax-m3', model: 'MiniMax-M3', score: 44, provider: 'MiniMax' },
+  { id: 'anthropic:claude-fable-5-with-fallback', model: 'Claude Fable 5 (with fallback)', score: 60, provider: 'Anthropic', open_weight: false },
+  { id: 'openai:gpt-5.6-sol-max', model: 'GPT-5.6 Sol (max)', score: 59, provider: 'OpenAI', open_weight: false },
+  { id: 'minimax:minimax-m3', model: 'MiniMax-M3', score: 44, provider: 'MiniMax', open_weight: true },
 ]
 
 const sweEntries: ModelEntry[] = [
@@ -14,6 +14,7 @@ const sweEntries: ModelEntry[] = [
     model: 'Claude Fable 5',
     score: 29.1,
     provider: 'Anthropic',
+    open_weight: false,
     tasteful_solve_rate_pct: 29.1,
     basic_solve_rate_pct: 46.5,
     avg_steps: 159,
@@ -24,6 +25,7 @@ const sweEntries: ModelEntry[] = [
     model: 'GPT-5.6 Sol',
     score: 24.4,
     provider: 'OpenAI',
+    open_weight: false,
     tasteful_solve_rate_pct: 24.4,
     basic_solve_rate_pct: 54.7,
     avg_steps: 49,

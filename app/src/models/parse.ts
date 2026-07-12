@@ -69,6 +69,7 @@ function normalize(raw: RawModelEntry, index: number): ModelEntry {
     score,
     provider,
     reasoning: Boolean(raw.reasoning),
+    open_weight: Boolean(raw.open_weight),
   }
 }
 
@@ -83,6 +84,28 @@ const SWE_PROVIDER_RULES: Array<{ pattern: RegExp; provider: string }> = [
 
 export function inferProviderFromModel(model: string): string | null {
   return SWE_PROVIDER_RULES.find((rule) => rule.pattern.test(model))?.provider ?? null
+}
+
+/**
+ * Model families whose weights are openly available. Used to infer
+ * `open_weight` for sources (e.g. swe.json) that do not carry the field.
+ * Matches the curated open-weight set in ai.json.
+ */
+const OPEN_WEIGHT_PREFIXES = [
+  'kimi',
+  'minimax',
+  'deepseek',
+  'nemotron',
+  'qwen',
+  'glm',
+  'mistral',
+  'gemma',
+  'gpt-oss',
+]
+
+export function isOpenWeightModel(model: string): boolean {
+  const lower = model.trim().toLowerCase()
+  return OPEN_WEIGHT_PREFIXES.some((prefix) => lower.startsWith(prefix))
 }
 
 function normalizeSwe(raw: RawSweEntry, index: number): ModelEntry {
@@ -102,6 +125,7 @@ function normalizeSwe(raw: RawSweEntry, index: number): ModelEntry {
     model,
     score,
     provider,
+    open_weight: isOpenWeightModel(model),
     tasteful_solve_rate_pct: score,
     basic_solve_rate_pct: assertScore(raw?.basic_solve_rate_pct, index, model, 'basic_solve_rate_pct'),
     avg_steps: assertScore(raw?.avg_steps, index, model, 'avg_steps'),
