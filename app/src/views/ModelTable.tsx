@@ -99,6 +99,10 @@ export function ModelTable({ entries, sort, onSortChange, selectedIds, onToggleE
                   hover
                   sx={{
                     bgcolor: isSelected ? 'inherit' : 'action.disabledBackground',
+                    // Fade the text of deselected rows, not just the background.
+                    '& .MuiTableCell-root': {
+                      color: isSelected ? undefined : 'text.disabled',
+                    },
                     '&:hover': {
                       bgcolor: isSelected ? undefined : 'action.disabledBackground',
                     },
@@ -120,6 +124,7 @@ export function ModelTable({ entries, sort, onSortChange, selectedIds, onToggleE
                             textAlign: 'left',
                             textTransform: 'none',
                             whiteSpace: 'normal',
+                            opacity: isSelected ? 1 : 0.6,
                           }}
                         >
                           {entry.model}
