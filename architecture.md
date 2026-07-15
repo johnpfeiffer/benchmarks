@@ -65,9 +65,10 @@ All views are pure (props in, callbacks out, no business logic):
   `avg_tokens`; click headers to toggle asc/desc. The table expands to full
   height and scrolls horizontally on narrow viewports. Missing SWE values render
   as `*`. Model names are buttons; clicking toggles matching model inclusion
-  across all charts while the row remains visible and gray when deselected. An
-  "Open Weights Only" toggle sits beside the title; turning it on sets the
-  selection to the open-weight models, turning it off re-selects every model.
+  across all charts while the row remains visible when deselected, with a gray
+  background and faded text. An "Open Weights Only" toggle sits beside the
+  title; turning it on sets the selection to the open-weight models, turning it
+  off re-selects every model.
 - `Footer` - credits both data sources,
   [Artificial Analysis](https://artificialanalysis.ai/) and
   [Senior SWE Bench](https://senior-swe-bench.snorkel.ai/), and links to the
@@ -84,12 +85,16 @@ Artificial Analysis table rows, holds the table `SortState` and selected model
 IDs for the intelligence chart, computes sorted/chart-visible entries, and
 forwards header clicks through `nextSortState`. Deselected table model names are
 converted to match keys and filtered out of the Artificial Analysis chart plus
-both SWE charts when corresponding SWE rows exist. The "Open Weights Only"
-toggle is a selection preset: on -> `replaceSelection(openWeightIds(...))`;
-off -> `replaceSelection(allIds)`, so the table graying and every chart follow
-the selection. The SWE charts are rendered below the table from `swe.json` rows
-sorted by score descending: one chart for `tasteful_solve_rate_pct`, one for
-`basic_solve_rate_pct`. Mounted at the router index route (react-router retained).
+both SWE charts when corresponding SWE rows exist. The main table now includes
+the three SWE-only models (Claude Opus 4.7, GPT-5.4 (xhigh), Claude Sonnet 4.6)
+as not-open-weight rows, so every SWE model has an Artificial Analysis
+counterpart and the "Open Weights Only" preset propagates fully to the SWE
+charts. The preset is a selection: on ->
+`replaceSelection(openWeightIds(...))`; off -> `replaceSelection(allIds)`, so the
+table graying/fading and every chart follow the selection. The SWE charts are
+rendered below the table from `swe.json` rows sorted by score descending: one
+chart for `tasteful_solve_rate_pct`, one for `basic_solve_rate_pct`. Mounted at
+the router index route (react-router retained).
 
 ## Invariants
 
