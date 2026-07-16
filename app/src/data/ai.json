@@ -16,6 +16,7 @@
   {"model": "MiniMax-M3", "intelligence_score": 44, "provider": "MiniMax", "reasoning": false, "open_weight": true},
   {"model": "DeepSeek V4 Pro (max)", "intelligence_score": 44, "provider": "DeepSeek", "reasoning": true, "open_weight": true},
   {"model": "Kimi K2.6", "intelligence_score": 44, "provider": "Moonshot AI", "reasoning": true, "open_weight": true},
+  {"model": "Inkling", "intelligence_score": 41, "provider": "Thinking Machines", "reasoning": true, "open_weight": true},
   {"model": "DeepSeek V4 Flash (max)", "intelligence_score": 40, "provider": "DeepSeek", "reasoning": true, "open_weight": true},
   {"model": "Nemotron 3 Ultra", "intelligence_score": 38, "provider": "NVIDIA", "reasoning": true, "open_weight": true},
   {"model": "Qwen3.6 27B", "intelligence_score": 37, "provider": "Groq", "reasoning": true, "open_weight": true},
