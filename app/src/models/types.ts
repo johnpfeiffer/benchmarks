@@ -14,6 +14,8 @@ export interface RawModelEntry {
   reasoning: boolean
   /** Whether the model's weights are openly available. Optional in raw data. */
   open_weight?: boolean
+  /** Explicit bar color (hex). Optional in raw data; ai.json carries one per row. */
+  color?: string
 }
 
 /** A single Senior SWE Bench row, as embedded in the JSON data. */
@@ -38,6 +40,8 @@ export interface ModelEntry {
   reasoning?: boolean
   /** Whether the model's weights are openly available. Always present after parse. */
   open_weight: boolean
+  /** Explicit bar color (hex). Set from ai.json; absent for SWE-only entries. */
+  color?: string
   tasteful_solve_rate_pct?: number
   basic_solve_rate_pct?: number
   avg_steps?: number

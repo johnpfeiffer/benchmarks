@@ -39,8 +39,8 @@ flowchart TD
 
 | File | Responsibility |
 | --- | --- |
-| `types.ts` | `ModelEntry`, `SortField`, `SortDirection`, `SortState`; `ModelEntry.open_weight` is always present after parse |
-| `parse.ts` | `parseModelEntries`, `parseSweEntries`, `inferProviderFromModel`, `isOpenWeightModel` + `InvariantError`; upholds **INV-001** (every model has a provider) and structural guards at the single gate. Reads `open_weight` from `ai.json` and infers it from the model family for `swe.json` |
+| `types.ts` | `ModelEntry`, `SortField`, `SortDirection`, `SortState`; `ModelEntry.open_weight` is always present after parse; `ModelEntry.color` is the explicit bar color carried from `ai.json` |
+| `parse.ts` | `parseModelEntries`, `parseSweEntries`, `inferProviderFromModel`, `isOpenWeightModel` + `InvariantError`; upholds **INV-001** (every model has a provider) and structural guards at the single gate. Reads `open_weight` and `color` from `ai.json` and infers `open_weight` from the model family for `swe.json` |
 | `merge.ts` | `mergeSweMetrics`, `modelMatchKey`; adds optional SWE table columns to matching Artificial Analysis rows |
 | `sort.ts` | `sortModels`, `nextSortState`, `DEFAULT_SORT` (score desc) |
 | `filter.ts` | `openWeightIds`; the id set used by the "Open Weights Only" preset |
@@ -57,7 +57,9 @@ All views are pure (props in, callbacks out, no business logic):
 
 - `IntelligenceBarChart` - vertical bars sorted by the controller (highest on
   the left by default), horizontally scrollable so labels stay readable,
-  provider/model-family colored, with diagonal x-axis labels. The lower SWE
+  colored by the explicit `color` field each `ai.json` row carries, falling
+  back to a provider/model-family lookup for SWE-only entries, with diagonal
+  x-axis labels. The lower SWE
   comparison charts use fit-to-width mode with skinnier bars to avoid horizontal
   chart scrollbars.
 - `ModelTable` - sortable table; headers `Provider`, `Model Name`, `Intelligence`;
