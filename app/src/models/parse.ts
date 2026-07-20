@@ -62,6 +62,7 @@ function normalize(raw: RawModelEntry, index: number): ModelEntry {
   }
   const model = assertModelName(raw?.model, index)
   const score = assertScore(raw?.intelligence_score, index, model, 'intelligence_score')
+  const color = typeof raw?.color === 'string' && raw.color.trim() !== '' ? raw.color : undefined
 
   return {
     id: makeId(provider, model),
@@ -70,6 +71,7 @@ function normalize(raw: RawModelEntry, index: number): ModelEntry {
     provider,
     reasoning: Boolean(raw.reasoning),
     open_weight: Boolean(raw.open_weight),
+    ...(color ? { color } : {}),
   }
 }
 

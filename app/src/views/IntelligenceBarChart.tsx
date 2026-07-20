@@ -56,7 +56,9 @@ export function IntelligenceBarChart({ entries, title, scoreLabel, fitWidth = fa
   const chartWidth = fitWidth ? '100%' : Math.max(920, entries.length * 36)
   const chartHeight = fitWidth ? 380 : 420
   const colorValues = entries.map((entry) => entry.model)
-  const colors = entries.map((entry) => benchmarkColor(entry, fallbackColor))
+  // Prefer the explicit per-model color from ai.json; fall back to the
+  // provider/model-family lookup for SWE-only entries that carry no color.
+  const colors = entries.map((entry) => entry.color ?? benchmarkColor(entry, fallbackColor))
 
   return (
     <Box>
