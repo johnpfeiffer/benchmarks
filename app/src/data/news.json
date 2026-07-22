@@ -2,5 +2,53 @@
   {
     "url": "https://artificialanalysis.ai/articles/gemini-3-6-flash-3-5-flash-lite-halving-time",
     "date": "2026-07-26"
+  },
+  {
+    "url": "https://fireworks.ai/blog/kimik3-fable",
+    "date": "2026-07-21"
+  },
+  {
+    "url": "https://artificialanalysis.ai/articles/kimi-k3-agentic-knowledge-benchmark",
+    "date": "2026-07-21"
+  },
+  {
+    "url": "https://thinkingmachines.ai/news/introducing-inkling/",
+    "date": "2026-07-15"
+  },
+  {
+    "url": "https://www.coderabbit.ai/blog/gpt-5-6-sol-and-terra-benchmark",
+    "date": "2026-07-09"
+  },
+  {
+    "url": "https://www.databricks.com/blog/benchmarking-coding-agents-databricks-multi-million-line-codebase",
+    "date": "2026-07-08"
+  },
+  {
+    "url": "https://metr.org/blog/2026-06-26-gpt-5-6-sol/",
+    "date": "2026-06-26"
+  },
+  {
+    "url": "https://semgrep.dev/blog/2026/we-have-mythos-at-home-glm-52-beats-claude-in-our-cyber-benchmarks/",
+    "date": "2026-06-22"
+  },
+  {
+    "url": "https://unsloth.ai/docs/models/glm-5.2",
+    "date": "2026-06-18"
+  },
+  {
+    "url": "https://artificialanalysis.ai/articles/glm-5-2-is-the-new-leading-open-weights-model-on-the-artificial-analysis-intelligence-index",
+    "date": "2026-06-16"
+  },
+  {
+    "url": "https://www.anthropic.com/news/claude-fable-5-mythos-5",
+    "date": "2026-06-09"
+  },
+  {
+    "url": "https://huggingface.co/blog/gemma4",
+    "date": "2026-04-02"
+  },
+  {
+    "url": "https://blog.google/innovation-and-ai/technology/developers-tools/gemma-4/",
+    "date": "2026-04-02"
   }
 ]
