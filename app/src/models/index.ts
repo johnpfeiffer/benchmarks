@@ -1,5 +1,5 @@
-export type { ModelEntry, RawModelEntry, RawSweEntry, SortField, SortDirection, SortState } from './types'
-export { parseModelEntries, parseSweEntries, inferProviderFromModel, isOpenWeightModel, InvariantError } from './parse'
+export type { ModelEntry, NewsEntry, RawModelEntry, RawNewsEntry, RawSweEntry, SortField, SortDirection, SortState } from './types'
+export { parseModelEntries, parseNewsEntries, parseSweEntries, inferProviderFromModel, isOpenWeightModel, InvariantError } from './parse'
 export { sortModels, nextSortState, DEFAULT_SORT } from './sort'
 export { mergeSweMetrics, modelMatchKey } from './merge'
 export { openWeightIds } from './filter'

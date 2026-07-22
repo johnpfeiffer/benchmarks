@@ -1,8 +1,9 @@
-import { Box, Container, Link, Typography } from '@mui/material'
-import type { ModelEntry, SortField, SortState } from '../models'
+import { Box, Container, Typography } from '@mui/material'
+import type { ModelEntry, NewsEntry, SortField, SortState } from '../models'
 import { IntelligenceBarChart } from './IntelligenceBarChart'
 import { ModelTable } from './ModelTable'
 import { Footer } from './Footer'
+import { NewsSection } from './NewsSection'
 
 export interface DataSourceCredit {
   label: string
@@ -20,14 +21,16 @@ interface DashboardProps {
   onToggleEntry: (id: string) => void
   openWeightsOnly: boolean
   onToggleOpenWeights: () => void
+  news: readonly NewsEntry[]
+  intelligenceSource: DataSourceCredit
   sources: readonly DataSourceCredit[]
 }
 
 /**
  * Dashboard layout (pure presentation).
  *
- * Progressive disclosure per DESIGN.md: a summary chart on top, details
- * (sortable table) below, sources/credit in the footer.
+ * Progressive disclosure per DESIGN.md: a summary chart on top, collapsible
+ * news and sortable details below, then sources/credit in the footer.
  */
 export function Dashboard({
   entries,
@@ -40,6 +43,8 @@ export function Dashboard({
   onToggleEntry,
   openWeightsOnly,
   onToggleOpenWeights,
+  news,
+  intelligenceSource,
   sources,
 }: DashboardProps) {
   return (
@@ -60,13 +65,12 @@ export function Dashboard({
         <IntelligenceBarChart
           entries={intelligenceChartEntries}
           scoreLabel="Score"
+          source={intelligenceSource}
         />
-        <Typography variant="body2" sx={{ mt: 1 }}>
-          Source:{' '}
-          <Link href="https://artificialanalysis.ai/" target="_blank" rel="noopener noreferrer">
-            Artificial Analysis
-          </Link>
-        </Typography>
+      </Box>
+
+      <Box sx={{ mb: 4 }}>
+        <NewsSection entries={news} />
       </Box>
 
       <Box component="section" aria-labelledby="details-title" sx={{ mb: 5 }}>

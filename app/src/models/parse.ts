@@ -1,4 +1,4 @@
-import type { ModelEntry, RawModelEntry, RawSweEntry } from './types'
+import type { ModelEntry, NewsEntry, RawModelEntry, RawNewsEntry, RawSweEntry } from './types'
 
 /**
  * Error raised when raw data violates a kernel invariant.
@@ -161,4 +161,31 @@ export function parseSweEntries(raw: readonly RawSweEntry[]): ModelEntry[] {
     throw new InvariantError('Expected an array of SWE benchmark entries', -1, 'SHAPE')
   }
   return raw.map((entry, index) => normalizeSwe(entry, index))
+}
+
+function normalizeNews(raw: RawNewsEntry, index: number): NewsEntry {
+  const url = raw?.url
+  try {
+    const parsed = new URL(url)
+    if (parsed.protocol !== 'http:' && parsed.protocol !== 'https:') throw new Error('unsupported protocol')
+  } catch {
+    throw new InvariantError(`News entry at index ${index} has an invalid URL`, index, 'NEWS-URL')
+  }
+
+  const date = raw?.date
+  const isIsoDate = typeof date === 'string' && /^\d{4}-\d{2}-\d{2}$/.test(date)
+  const parsedDate = isIsoDate ? new Date(`${date}T00:00:00Z`) : null
+  if (!parsedDate || Number.isNaN(parsedDate.getTime()) || parsedDate.toISOString().slice(0, 10) !== date) {
+    throw new InvariantError(`News entry at index ${index} has an invalid date`, index, 'NEWS-DATE')
+  }
+
+  return { url, date }
+}
+
+/** Validate embedded news links and return a new array ordered newest first. */
+export function parseNewsEntries(raw: readonly RawNewsEntry[]): NewsEntry[] {
+  if (!Array.isArray(raw)) {
+    throw new InvariantError('Expected an array of news entries', -1, 'SHAPE')
+  }
+  return raw.map((entry, index) => normalizeNews(entry, index)).sort((a, b) => b.date.localeCompare(a.date))
 }

@@ -76,6 +76,11 @@ function DashboardController({ initialSort = DEFAULT_SORT }: { initialSort?: Sor
       onToggleEntry={handleToggleEntry}
       openWeightsOnly={openWeightsOnly}
       onToggleOpenWeights={handleToggleOpenWeights}
+      intelligenceSource={{ label: 'Artificial Analysis', href: 'https://artificialanalysis.ai/' }}
+      news={[
+        { url: 'https://example.com/newest', date: '2026-07-26' },
+        { url: 'https://example.com/older', date: '2026-07-20' },
+      ]}
       sources={[
         { label: 'Artificial Analysis', href: 'https://artificialanalysis.ai/' },
         { label: 'Senior SWE Bench', href: 'https://senior-swe-bench.snorkel.ai/' },
@@ -121,6 +126,26 @@ describe('Dashboard', () => {
     expect(screen.getByRole('heading', { name: 'Tasteful Solve Rate' })).toBeInTheDocument()
     expect(screen.getByRole('heading', { name: 'Basic Solve Rate' })).toBeInTheDocument()
     expect(screen.queryByRole('heading', { name: 'Intelligence Score' })).not.toBeInTheDocument()
+  })
+
+  it('shows News below the lead chart, expanded by default, with date tooltips and collapse control', () => {
+    renderDashboard()
+    const newsHeading = screen.getByRole('heading', { name: 'News' })
+    const newsSection = newsHeading.closest('section')
+    expect(newsSection).not.toBeNull()
+
+    const links = within(newsSection as HTMLElement).getAllByRole('link')
+    expect(links.map((link) => link.textContent)).toEqual([
+      'https://example.com/newest',
+      'https://example.com/older',
+    ])
+    expect(links[0]).toHaveAttribute('title', '2026-07-26')
+    expect(links[1]).toHaveAttribute('title', '2026-07-20')
+
+    const toggle = within(newsSection as HTMLElement).getByRole('button', { name: /News/i })
+    expect(toggle).toHaveAttribute('aria-expanded', 'true')
+    fireEvent.click(toggle)
+    expect(toggle).toHaveAttribute('aria-expanded', 'false')
   })
 
   it('renders the SWE metric columns in the existing table', () => {

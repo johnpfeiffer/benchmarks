@@ -1,12 +1,14 @@
 import { describe, it, expect } from 'vitest'
-import { parseModelEntries, parseSweEntries } from '../parse'
+import { parseModelEntries, parseNewsEntries, parseSweEntries } from '../parse'
 import { modelMatchKey } from '../merge'
 import rawIntelligenceData from '../../data/ai.json'
 import rawSweData from '../../data/swe.json'
+import rawNewsData from '../../data/news.json'
 
 describe('embedded data integrity', () => {
   const intelligence = parseModelEntries(rawIntelligenceData)
   const swe = parseSweEntries(rawSweData)
+  const news = parseNewsEntries(rawNewsData)
   const intelligenceKeys = new Set(intelligence.map((entry) => modelMatchKey(entry.model)))
 
   it('every Senior SWE Bench model has a matching Artificial Analysis row', () => {
@@ -38,5 +40,21 @@ describe('embedded data integrity', () => {
     expect(claudeSonnet46).toBeDefined()
     expect(claudeSonnet46?.score).toBe(47)
     expect(claudeSonnet46?.open_weight).toBe(false)
+  })
+
+  it('includes Gemini Flash 3.6 at intelligence 50 with a provider', () => {
+    expect(intelligence.find((entry) => entry.model === 'Gemini Flash 3.6')).toMatchObject({
+      score: 50,
+      provider: 'Google',
+    })
+  })
+
+  it('includes the initial dated news article', () => {
+    expect(news).toEqual([
+      {
+        url: 'https://artificialanalysis.ai/articles/gemini-3-6-flash-3-5-flash-lite-halving-time',
+        date: '2026-07-26',
+      },
+    ])
   })
 })
