@@ -49,12 +49,21 @@ describe('embedded data integrity', () => {
     })
   })
 
-  it('includes the initial dated news article', () => {
-    expect(news).toEqual([
-      {
-        url: 'https://artificialanalysis.ai/articles/gemini-3-6-flash-3-5-flash-lite-halving-time',
-        date: '2026-07-26',
-      },
-    ])
+  it('includes all news articles sorted newest first', () => {
+    // The initial seed article should still be first (newest).
+    expect(news[0]).toEqual({
+      url: 'https://artificialanalysis.ai/articles/gemini-3-6-flash-3-5-flash-lite-halving-time',
+      date: '2026-07-26',
+    })
+    // Every entry is sorted descending by date.
+    for (let i = 1; i < news.length; i++) {
+      expect(news[i].date <= news[i - 1].date).toBe(true)
+    }
+    // All expected URLs are present.
+    const urls = new Set(news.map((entry) => entry.url))
+    expect(urls.has('https://fireworks.ai/blog/kimik3-fable')).toBe(true)
+    expect(urls.has('https://www.anthropic.com/news/claude-fable-5-mythos-5')).toBe(true)
+    expect(urls.has('https://blog.google/innovation-and-ai/technology/developers-tools/gemma-4/')).toBe(true)
+    expect(news).toHaveLength(13)
   })
 })
