@@ -1,8 +1,9 @@
-import { Box, Container, Link, Typography } from '@mui/material'
-import type { ModelEntry, SortField, SortState } from '../models'
+import { Box, Chip, Container, Typography } from '@mui/material'
+import type { ModelEntry, NewsItem, SortField, SortState } from '../models'
 import { IntelligenceBarChart } from './IntelligenceBarChart'
 import { ModelTable } from './ModelTable'
 import { Footer } from './Footer'
+import { NewsSection } from './NewsSection'
 
 export interface DataSourceCredit {
   label: string
@@ -21,6 +22,7 @@ interface DashboardProps {
   openWeightsOnly: boolean
   onToggleOpenWeights: () => void
   sources: readonly DataSourceCredit[]
+  newsItems: readonly NewsItem[]
 }
 
 /**
@@ -41,6 +43,7 @@ export function Dashboard({
   openWeightsOnly,
   onToggleOpenWeights,
   sources,
+  newsItems,
 }: DashboardProps) {
   return (
     <Container maxWidth={false} sx={{ py: 3, px: { xs: 2, md: 3 } }}>
@@ -54,19 +57,38 @@ export function Dashboard({
       </Box>
 
       <Box component="section" aria-labelledby="intelligence-title" sx={{ mb: 4 }}>
-        <Typography id="intelligence-title" variant="h5" component="h2" sx={{ mb: 1 }}>
-          Artificial Analysis Intelligence
-        </Typography>
+        <Box
+          sx={{
+            display: 'flex',
+            alignItems: 'center',
+            justifyContent: 'space-between',
+            gap: 1,
+            flexWrap: 'wrap',
+            mb: 1,
+          }}
+        >
+          <Typography id="intelligence-title" variant="h5" component="h2">
+            Artificial Analysis Intelligence
+          </Typography>
+          <Chip
+            size="small"
+            variant="outlined"
+            label="Source: Artificial Analysis"
+            component="a"
+            href="https://artificialanalysis.ai/"
+            target="_blank"
+            rel="noopener noreferrer"
+            clickable
+          />
+        </Box>
         <IntelligenceBarChart
           entries={intelligenceChartEntries}
           scoreLabel="Score"
         />
-        <Typography variant="body2" sx={{ mt: 1 }}>
-          Source:{' '}
-          <Link href="https://artificialanalysis.ai/" target="_blank" rel="noopener noreferrer">
-            Artificial Analysis
-          </Link>
-        </Typography>
+      </Box>
+
+      <Box component="section" sx={{ mb: 4 }}>
+        <NewsSection items={newsItems} />
       </Box>
 
       <Box component="section" aria-labelledby="details-title" sx={{ mb: 5 }}>

@@ -23,11 +23,14 @@ the views. The `App` component is the controller (owns state and data flow).
 flowchart TD
     AIJSON["data/ai.json<br/>(embedded)"] --> App["App.tsx<br/>(controller)"]
     SWEJSON["data/swe.json<br/>(embedded)"] --> App
+    NEWSJSON["data/news.json<br/>(embedded)"] --> App
     App -->|parse + validate| Models["models/<br/>parse, sort, types"]
     Models -->|INV-001 gate| Validated["ModelEntry[] per source"]
     Models --> Merge["mergeSweMetrics<br/>(SWE columns on AI rows)"]
+    App -->|sorted news items| Dashboard
     App -->|sorted table rows + selected ids| Dashboard["views/Dashboard"]
     Dashboard --> ChartA["IntelligenceBarChart<br/>(Artificial Analysis)"]
+    Dashboard --> News["NewsSection<br/>(collapsible, expanded by default)"]
     Dashboard --> Table["ModelTable<br/>(sortable + selectable + SWE columns)"]
     Dashboard --> ChartB["IntelligenceBarChart<br/>(SWE tasteful solve rate)"]
     Dashboard --> ChartC["IntelligenceBarChart<br/>(SWE basic solve rate)"]
@@ -44,6 +47,7 @@ flowchart TD
 | `merge.ts` | `mergeSweMetrics`, `modelMatchKey`; adds optional SWE table columns to matching Artificial Analysis rows |
 | `sort.ts` | `sortModels`, `nextSortState`, `DEFAULT_SORT` (score desc) |
 | `filter.ts` | `openWeightIds`; the id set used by the "Open Weights Only" preset |
+| `news.ts` | `NewsItem`, `sortNewsDescending` (date desc, newest first) |
 | `index.ts` | Public re-exports |
 
 `data/swe.json` does not include provider fields, so `parseSweEntries` derives
@@ -59,7 +63,8 @@ All views are pure (props in, callbacks out, no business logic):
   the left by default), horizontally scrollable so labels stay readable,
   colored by the explicit `color` field each `ai.json` row carries, falling
   back to a provider/model-family lookup for SWE-only entries, with diagonal
-  x-axis labels. The lower SWE
+  x-axis labels. The bottom margin is minimized so the "Model" axis title sits
+  close to the chart frame with no extraneous whitespace. The lower SWE
   comparison charts use fit-to-width mode with skinnier bars to avoid horizontal
   chart scrollbars.
 - `ModelTable` - sortable table; headers `Provider`, `Model Name`, `Intelligence`;
@@ -71,19 +76,25 @@ All views are pure (props in, callbacks out, no business logic):
   background and faded text. An "Open Weights Only" toggle sits beside the
   title; turning it on sets the selection to the open-weight models, turning it
   off re-selects every model.
+- `NewsSection` - collapsible MUI Accordion below the lead intelligence chart,
+  expanded by default. Renders hardcoded news links from `news.json`; each link
+  displays the URL as text and shows the article date on hover via the native
+  `title` tooltip. Items are pre-sorted by the controller (newest first).
 - `Footer` - credits both data sources,
   [Artificial Analysis](https://artificialanalysis.ai/) and
   [Senior SWE Bench](https://senior-swe-bench.snorkel.ai/), and links to the
   [GitHub repository](https://github.com/johnpfeiffer/benchmarks) with an inline
   GitHub SVG mark.
-- `Dashboard` - layout composing the intelligence chart, enriched details
-  table, responsive side-by-side SWE comparison charts, then footer. The
-  Artificial Analysis chart also has a direct source link immediately below it.
+- `Dashboard` - layout composing the intelligence chart (with a "Source:
+  Artificial Analysis" chip in the top-right corner of the section header),
+  the collapsible News section, the enriched details table, responsive
+  side-by-side SWE comparison charts, then footer.
 
 ### Controller (`App.tsx`)
 
 Parses embedded JSON once (`useMemo`), merges SWE metrics into the main
-Artificial Analysis table rows, holds the table `SortState` and selected model
+Artificial Analysis table rows, sorts news items descending by date
+(`sortNewsDescending`), holds the table `SortState` and selected model
 IDs for the intelligence chart, computes sorted/chart-visible entries, and
 forwards header clicks through `nextSortState`. Deselected table model names are
 converted to match keys and filtered out of the Artificial Analysis chart plus
@@ -114,8 +125,11 @@ journey
     JSON parsed + INV-001 validated: 3: System
   section Explore Intelligence
     See Artificial Analysis chart (score desc): 5: User
-    See Artificial Analysis source link below chart: 4: User
+    See source chip in chart header: 4: User
     Scroll chart horizontally for labels: 4: User
+    Browse News section (expanded, newest first): 4: User
+    Hover a news link to see article date: 3: User
+    Collapse News section: 3: User
     Read details table with SWE columns: 5: User
     Click a header, including SWE metrics: 5: User
     Toggle asc/desc: 5: User
@@ -134,7 +148,7 @@ journey
 
 - `npm test` - Vitest unit + component tests (domain logic + dashboard happy
   path / sort interaction / all-chart model filtering / SWE metric merge /
-  source credits).
+  source credits / news section rendering and collapse).
 - `npm run build` - `tsc -b` typecheck + Vite production build.
 
 Tests follow Red/Green TDD with concise table-driven cases for the domain

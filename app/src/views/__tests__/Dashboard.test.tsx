@@ -4,7 +4,17 @@ import { useState } from 'react'
 import { ThemeProvider, CssBaseline } from '@mui/material'
 import { theme } from '../../theme'
 import { Dashboard } from '../Dashboard'
-import { sortModels, nextSortState, openWeightIds, DEFAULT_SORT, type ModelEntry, type SortField, type SortState } from '../../models'
+import {
+  sortModels,
+  nextSortState,
+  openWeightIds,
+  sortNewsDescending,
+  DEFAULT_SORT,
+  type ModelEntry,
+  type NewsItem,
+  type SortField,
+  type SortState,
+} from '../../models'
 
 const entries: ModelEntry[] = [
   {
@@ -36,6 +46,11 @@ const sweChartEntries: ModelEntry[] = [
     avg_tokens: '290.2K',
   },
 ]
+
+const testNewsItems: NewsItem[] = sortNewsDescending([
+  { url: 'https://example.com/older-article', date: '2026-07-20' },
+  { url: 'https://example.com/newer-article', date: '2026-07-26' },
+])
 
 /** Controller stand-in mirroring App.tsx: owns sort state, feeds sorted rows. */
 function DashboardController({ initialSort = DEFAULT_SORT }: { initialSort?: SortState }) {
@@ -80,6 +95,7 @@ function DashboardController({ initialSort = DEFAULT_SORT }: { initialSort?: Sor
         { label: 'Artificial Analysis', href: 'https://artificialanalysis.ai/' },
         { label: 'Senior SWE Bench', href: 'https://senior-swe-bench.snorkel.ai/' },
       ]}
+      newsItems={testNewsItems}
     />
   )
 }
@@ -219,5 +235,47 @@ describe('Dashboard', () => {
     expect(screen.getByRole('button', { name: 'Alpha' })).toHaveAttribute('aria-pressed', 'true')
     expect(screen.getByRole('button', { name: 'Beta' })).toHaveAttribute('aria-pressed', 'true')
     expect(screen.getByRole('button', { name: 'Gamma' })).toHaveAttribute('aria-pressed', 'true')
+  })
+
+  it('renders the source as a chip linking to Artificial Analysis', () => {
+    renderDashboard()
+    const chip = screen.getByRole('link', { name: /Source: Artificial Analysis/i })
+    expect(chip).toHaveAttribute('href', 'https://artificialanalysis.ai/')
+    expect(chip).toHaveAttribute('target', '_blank')
+  })
+
+  it('renders the News section heading below the intelligence chart', () => {
+    renderDashboard()
+    expect(screen.getByRole('heading', { name: 'News' })).toBeInTheDocument()
+  })
+
+  it('starts the News section expanded with links visible', () => {
+    renderDashboard()
+    // Expanded by default: links are in the accessibility tree.
+    expect(screen.getByRole('link', { name: 'https://example.com/newer-article' })).toBeInTheDocument()
+    expect(screen.getByRole('link', { name: 'https://example.com/older-article' })).toBeInTheDocument()
+  })
+
+  it('shows the article date on hover via the title attribute', () => {
+    renderDashboard()
+    const newer = screen.getByRole('link', { name: 'https://example.com/newer-article' })
+    const older = screen.getByRole('link', { name: 'https://example.com/older-article' })
+    expect(newer).toHaveAttribute('title', '2026-07-26')
+    expect(older).toHaveAttribute('title', '2026-07-20')
+  })
+
+  it('sorts news items descending so the newest article is first', () => {
+    renderDashboard()
+    const newsLinks = screen.getAllByRole('link', { name: /example\.com\/(newer|older)-article/ })
+    expect(newsLinks[0]).toHaveAttribute('href', 'https://example.com/newer-article')
+    expect(newsLinks[1]).toHaveAttribute('href', 'https://example.com/older-article')
+  })
+
+  it('collapses the News section when the summary is clicked', () => {
+    renderDashboard()
+    const summaryButton = screen.getByRole('button', { name: /News/ })
+    expect(summaryButton).toHaveAttribute('aria-expanded', 'true')
+    fireEvent.click(summaryButton)
+    expect(summaryButton).toHaveAttribute('aria-expanded', 'false')
   })
 })

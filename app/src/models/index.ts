@@ -3,3 +3,5 @@ export { parseModelEntries, parseSweEntries, inferProviderFromModel, isOpenWeigh
 export { sortModels, nextSortState, DEFAULT_SORT } from './sort'
 export { mergeSweMetrics, modelMatchKey } from './merge'
 export { openWeightIds } from './filter'
+export type { NewsItem } from './news'
+export { sortNewsDescending } from './news'

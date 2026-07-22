@@ -110,7 +110,7 @@ export function IntelligenceBarChart({ entries, title, scoreLabel, fitWidth = fa
               },
             ]}
             yAxis={[{ label: scoreLabel }]}
-            margin={{ left: 60, right: 24, top: 24, bottom: 96 }}
+            margin={{ left: 60, right: 24, top: 24, bottom: 4 }}
             grid={{ horizontal: true }}
             borderRadius={2}
             hideLegend

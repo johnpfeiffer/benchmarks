@@ -10,6 +10,7 @@ import {
   sortModels,
   nextSortState,
   openWeightIds,
+  sortNewsDescending,
   DEFAULT_SORT,
   type ModelEntry,
   type SortField,
@@ -18,6 +19,7 @@ import {
 import { Dashboard, type DataSourceCredit } from './views/Dashboard'
 import rawIntelligenceData from './data/ai.json'
 import rawSweData from './data/swe.json'
+import rawNewsData from './data/news.json'
 
 export type AppContext = { app: string }
 
@@ -115,6 +117,8 @@ function DashboardPage() {
     { label: 'Senior SWE Bench', href: 'https://senior-swe-bench.snorkel.ai/' },
   ]
 
+  const newsItems = useMemo(() => sortNewsDescending(rawNewsData), [])
+
   return (
     <Dashboard
       entries={table.sorted}
@@ -128,6 +132,7 @@ function DashboardPage() {
       openWeightsOnly={openWeightsOnly}
       onToggleOpenWeights={handleToggleOpenWeights}
       sources={sources}
+      newsItems={newsItems}
     />
   )
 }
