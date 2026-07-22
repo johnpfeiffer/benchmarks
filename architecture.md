@@ -1,11 +1,12 @@
 # Architecture
 
 AI model benchmarks dashboard: visualizes, filters, and sorts embedded model
-benchmark datasets. It currently renders Artificial Analysis scores and Senior
-SWE Bench tasteful/basic solve rates. Models can be toggled in/out of the charts
-individually, or restricted to open-weight models via the "Open Weights Only"
-preset. Derived from the immutable [`/KERNEL/`](./KERNEL/); if anything here
-conflicts with the kernel, the kernel wins.
+benchmark datasets plus a dated news feed. It currently renders Artificial
+Analysis scores and Senior SWE Bench tasteful/basic solve rates. Models can be
+toggled in/out of the charts individually, or restricted to open-weight models
+via the "Open Weights Only" preset. Derived from the immutable
+[`/KERNEL/`](./KERNEL/); if anything here conflicts with the kernel, the kernel
+wins.
 
 ## Stack
 
@@ -23,11 +24,13 @@ the views. The `App` component is the controller (owns state and data flow).
 flowchart TD
     AIJSON["data/ai.json<br/>(embedded)"] --> App["App.tsx<br/>(controller)"]
     SWEJSON["data/swe.json<br/>(embedded)"] --> App
+    NEWSJSON["data/news.json<br/>(embedded)"] --> App
     App -->|parse + validate| Models["models/<br/>parse, sort, types"]
     Models -->|INV-001 gate| Validated["ModelEntry[] per source"]
     Models --> Merge["mergeSweMetrics<br/>(SWE columns on AI rows)"]
     App -->|sorted table rows + selected ids| Dashboard["views/Dashboard"]
     Dashboard --> ChartA["IntelligenceBarChart<br/>(Artificial Analysis)"]
+    Dashboard --> News["NewsSection<br/>(expanded + collapsible)"]
     Dashboard --> Table["ModelTable<br/>(sortable + selectable + SWE columns)"]
     Dashboard --> ChartB["IntelligenceBarChart<br/>(SWE tasteful solve rate)"]
     Dashboard --> ChartC["IntelligenceBarChart<br/>(SWE basic solve rate)"]
@@ -39,8 +42,8 @@ flowchart TD
 
 | File | Responsibility |
 | --- | --- |
-| `types.ts` | `ModelEntry`, `SortField`, `SortDirection`, `SortState`; `ModelEntry.open_weight` is always present after parse; `ModelEntry.color` is the explicit bar color carried from `ai.json` |
-| `parse.ts` | `parseModelEntries`, `parseSweEntries`, `inferProviderFromModel`, `isOpenWeightModel` + `InvariantError`; upholds **INV-001** (every model has a provider) and structural guards at the single gate. Reads `open_weight` and `color` from `ai.json` and infers `open_weight` from the model family for `swe.json` |
+| `types.ts` | `ModelEntry`, `NewsEntry`, their raw JSON shapes, and benchmark sort types; `ModelEntry.open_weight` is always present after parse; `ModelEntry.color` is the explicit bar color carried from `ai.json` |
+| `parse.ts` | `parseModelEntries`, `parseSweEntries`, `parseNewsEntries`, provider/open-weight inference, and `InvariantError`; upholds **INV-001** (every model has a provider) and structural guards at the single gate. News URLs and ISO dates are validated, copied, and sorted newest first before reaching the view |
 | `merge.ts` | `mergeSweMetrics`, `modelMatchKey`; adds optional SWE table columns to matching Artificial Analysis rows |
 | `sort.ts` | `sortModels`, `nextSortState`, `DEFAULT_SORT` (score desc) |
 | `filter.ts` | `openWeightIds`; the id set used by the "Open Weights Only" preset |
@@ -59,9 +62,11 @@ All views are pure (props in, callbacks out, no business logic):
   the left by default), horizontally scrollable so labels stay readable,
   colored by the explicit `color` field each `ai.json` row carries, falling
   back to a provider/model-family lookup for SWE-only entries, with diagonal
-  x-axis labels. The lower SWE
-  comparison charts use fit-to-width mode with skinnier bars to avoid horizontal
-  chart scrollbars.
+  x-axis labels. The lead chart embeds its Artificial Analysis source credit as
+  a chip in the upper-right of the chart frame and uses only a small margin
+  below the x-axis allocation so the "Model" title sits close to the frame. The
+  lower SWE comparison charts use fit-to-width mode with skinnier bars to avoid
+  horizontal chart scrollbars.
 - `ModelTable` - sortable table; headers `Provider`, `Model Name`, `Intelligence`;
   `tasteful_solve_rate_pct`, `basic_solve_rate_pct`, `avg_steps`, and
   `avg_tokens`; click headers to toggle asc/desc. The table expands to full
@@ -76,13 +81,18 @@ All views are pure (props in, callbacks out, no business logic):
   [Senior SWE Bench](https://senior-swe-bench.snorkel.ai/), and links to the
   [GitHub repository](https://github.com/johnpfeiffer/benchmarks) with an inline
   GitHub SVG mark.
+- `NewsSection` - outlined accordion immediately below the lead chart, expanded
+  by default and user-collapsible. It displays only article URLs; each link's
+  ISO publication date is exposed through its hover title. Input order is
+  already newest-first.
 - `Dashboard` - layout composing the intelligence chart, enriched details
-  table, responsive side-by-side SWE comparison charts, then footer. The
-  Artificial Analysis chart also has a direct source link immediately below it.
+  table, responsive side-by-side SWE comparison charts, then footer. News sits
+  between the lead intelligence chart and model details.
 
 ### Controller (`App.tsx`)
 
-Parses embedded JSON once (`useMemo`), merges SWE metrics into the main
+Parses embedded JSON once (`useMemo`), including validated newest-first news,
+merges SWE metrics into the main
 Artificial Analysis table rows, holds the table `SortState` and selected model
 IDs for the intelligence chart, computes sorted/chart-visible entries, and
 forwards header clicks through `nextSortState`. Deselected table model names are
@@ -114,8 +124,10 @@ journey
     JSON parsed + INV-001 validated: 3: System
   section Explore Intelligence
     See Artificial Analysis chart (score desc): 5: User
-    See Artificial Analysis source link below chart: 4: User
+    Open Artificial Analysis from source chip: 4: User
     Scroll chart horizontally for labels: 4: User
+    Read newest-first News links and hover for dates: 4: User
+    Collapse or expand News: 4: User
     Read details table with SWE columns: 5: User
     Click a header, including SWE metrics: 5: User
     Toggle asc/desc: 5: User
@@ -134,7 +146,7 @@ journey
 
 - `npm test` - Vitest unit + component tests (domain logic + dashboard happy
   path / sort interaction / all-chart model filtering / SWE metric merge /
-  source credits).
+  source credits / news validation, ordering, tooltip, and collapse behavior).
 - `npm run build` - `tsc -b` typecheck + Vite production build.
 
 Tests follow Red/Green TDD with concise table-driven cases for the domain

@@ -30,6 +30,19 @@ export interface RawSweEntry {
   avg_tokens: string
 }
 
+/** A news link as embedded in news.json. */
+export interface RawNewsEntry {
+  url: string
+  /** Publication date in YYYY-MM-DD format. */
+  date: string
+}
+
+/** A validated news link, sorted by the parser before reaching a view. */
+export interface NewsEntry {
+  url: string
+  date: string
+}
+
 /** A validated model entry. Exists only when INV-001 holds. */
 export interface ModelEntry {
   id: string

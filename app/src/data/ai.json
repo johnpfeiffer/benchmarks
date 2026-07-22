@@ -11,6 +11,7 @@
   {"model": "GPT-5.6 Luna (max)", "intelligence_score": 51, "provider": "OpenAI", "reasoning": true, "open_weight": false, "color": "#1f1f1f"},
   {"model": "GLM-5.2 (max)", "intelligence_score": 51, "provider": "Z AI", "reasoning": true, "open_weight": true, "color": "#1c7ff8"},
   {"model": "GPT-5.4 (xhigh)", "intelligence_score": 51, "provider": "OpenAI", "reasoning": true, "open_weight": false, "color": "#1f1f1f"},
+  {"model": "Gemini Flash 3.6", "intelligence_score": 50, "provider": "Google", "reasoning": true, "open_weight": false, "color": "#34A853"},
   {"model": "Gemini 3.5 Flash", "intelligence_score": 50, "provider": "Google", "reasoning": true, "open_weight": false, "color": "#34A853"},
   {"model": "Claude Sonnet 4.6", "intelligence_score": 47, "provider": "Anthropic", "reasoning": true, "open_weight": false, "color": "#cc785c"},
   {"model": "Gemini 3.1 Pro Preview", "intelligence_score": 46, "provider": "Google", "reasoning": true, "open_weight": false, "color": "#34A853"},

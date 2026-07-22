@@ -1,4 +1,4 @@
-import { Box, Typography, useTheme } from '@mui/material'
+import { Box, Chip, Typography, useTheme } from '@mui/material'
 import { BarChart } from '@mui/x-charts/BarChart'
 import type { ModelEntry } from '../models'
 
@@ -8,6 +8,10 @@ interface IntelligenceBarChartProps {
   title?: string
   scoreLabel: string
   fitWidth?: boolean
+  source?: {
+    label: string
+    href: string
+  }
 }
 
 const PROVIDER_COLORS = {
@@ -49,7 +53,13 @@ function benchmarkColor(entry: ModelEntry, fallback: string): string {
  * horizontally scrollable container so labels stay readable (per DESIGN.md:
  * provide an obvious way to continue).
  */
-export function IntelligenceBarChart({ entries, title, scoreLabel, fitWidth = false }: IntelligenceBarChartProps) {
+export function IntelligenceBarChart({
+  entries,
+  title,
+  scoreLabel,
+  fitWidth = false,
+  source,
+}: IntelligenceBarChartProps) {
   const theme = useTheme()
   const fallbackColor = theme.palette.grey[500]
   // Fit more bars on screen than the original 52px bands while keeping labels readable.
@@ -70,53 +80,68 @@ export function IntelligenceBarChart({ entries, title, scoreLabel, fitWidth = fa
       <Box
         sx={{
           width: '100%',
-          overflowX: fitWidth ? 'hidden' : 'auto',
+          position: 'relative',
           border: '1px solid',
           borderColor: 'divider',
           borderRadius: 1,
         }}
       >
-        {entries.length === 0 ? (
-          <Box sx={{ minHeight: 240, display: 'grid', placeItems: 'center', color: 'text.secondary' }}>
-            <Typography variant="body2">No models selected</Typography>
-          </Box>
-        ) : (
-        <Box sx={{ width: chartWidth, height: chartHeight }}>
-          <BarChart
-            dataset={entries as unknown as readonly Record<string, unknown>[]}
-            series={[
-              {
-                dataKey: 'score',
-                label: scoreLabel,
-              },
-            ]}
-            xAxis={[
-              {
-                dataKey: 'model',
-                scaleType: 'band',
-                label: 'Model',
-                categoryGapRatio: fitWidth ? 0.78 : 0.55,
-                colorMap: {
-                  type: 'ordinal',
-                  values: colorValues,
-                  colors,
-                  unknownColor: fallbackColor,
-                },
-                tickLabelStyle: { angle: -35, fontSize: 11, textAnchor: 'end' },
-                tickLabelInterval: () => true,
-                tickLabelMinGap: 0,
-                tickLabelPlacement: 'middle',
-                height: 110,
-              },
-            ]}
-            yAxis={[{ label: scoreLabel }]}
-            margin={{ left: 60, right: 24, top: 24, bottom: 96 }}
-            grid={{ horizontal: true }}
-            borderRadius={2}
-            hideLegend
+        {source ? (
+          <Chip
+            component="a"
+            clickable
+            href={source.href}
+            target="_blank"
+            rel="noopener noreferrer"
+            label={`Source: ${source.label}`}
+            size="small"
+            variant="outlined"
+            sx={{ position: 'absolute', zIndex: 1, top: 8, right: 8, bgcolor: 'background.paper' }}
           />
+        ) : null}
+        <Box sx={{ overflowX: fitWidth ? 'hidden' : 'auto' }}>
+          {entries.length === 0 ? (
+            <Box sx={{ minHeight: 240, display: 'grid', placeItems: 'center', color: 'text.secondary' }}>
+              <Typography variant="body2">No models selected</Typography>
+            </Box>
+          ) : (
+            <Box sx={{ width: chartWidth, height: chartHeight }}>
+              <BarChart
+                dataset={entries as unknown as readonly Record<string, unknown>[]}
+                series={[
+                  {
+                    dataKey: 'score',
+                    label: scoreLabel,
+                  },
+                ]}
+                xAxis={[
+                  {
+                    dataKey: 'model',
+                    scaleType: 'band',
+                    label: 'Model',
+                    categoryGapRatio: fitWidth ? 0.78 : 0.55,
+                    colorMap: {
+                      type: 'ordinal',
+                      values: colorValues,
+                      colors,
+                      unknownColor: fallbackColor,
+                    },
+                    tickLabelStyle: { angle: -35, fontSize: 11, textAnchor: 'end' },
+                    tickLabelInterval: () => true,
+                    tickLabelMinGap: 0,
+                    tickLabelPlacement: 'middle',
+                    height: 110,
+                  },
+                ]}
+                yAxis={[{ label: scoreLabel }]}
+                margin={{ left: 60, right: 24, top: source ? 48 : 24, bottom: 8 }}
+                grid={{ horizontal: true }}
+                borderRadius={2}
+                hideLegend
+              />
+            </Box>
+          )}
         </Box>
-        )}
       </Box>
     </Box>
   )
