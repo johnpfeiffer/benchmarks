@@ -82,9 +82,13 @@ All views are pure (props in, callbacks out, no business logic):
   [GitHub repository](https://github.com/johnpfeiffer/benchmarks) with an inline
   GitHub SVG mark.
 - `NewsSection` - outlined accordion immediately below the lead chart, expanded
-  by default and user-collapsible. It displays only article URLs; each link's
-  ISO publication date is exposed through its hover title. Input order is
-  already newest-first.
+  by default and user-collapsible, titled "Hand Picked News" with a small
+  fresh-tomato SVG mark. Each row shows the ISO publication date in an
+  unobtrusive light-gray left column alongside the URL link (which also carries
+  the date as a hover title). A subtle `TableSortLabel` on the date header
+  toggles between descending (default, newest first) and ascending; the sort is
+  local `useState`/`useMemo` in the component and does not affect controller
+  state.
 - `Dashboard` - layout composing the intelligence chart, enriched details
   table, responsive side-by-side SWE comparison charts, then footer. News sits
   between the lead intelligence chart and model details.
@@ -126,8 +130,9 @@ journey
     See Artificial Analysis chart (score desc): 5: User
     Open Artificial Analysis from source chip: 4: User
     Scroll chart horizontally for labels: 4: User
-    Read newest-first News links and hover for dates: 4: User
-    Collapse or expand News: 4: User
+    Read Hand Picked News with visible dates and links: 4: User
+    Toggle news date sort asc/desc: 3: User
+    Collapse or expand Hand Picked News: 4: User
     Read details table with SWE columns: 5: User
     Click a header, including SWE metrics: 5: User
     Toggle asc/desc: 5: User
@@ -146,7 +151,8 @@ journey
 
 - `npm test` - Vitest unit + component tests (domain logic + dashboard happy
   path / sort interaction / all-chart model filtering / SWE metric merge /
-  source credits / news validation, ordering, tooltip, and collapse behavior).
+  source credits / news validation, ordering, visible dates, sort toggle, and
+  collapse behavior).
 - `npm run build` - `tsc -b` typecheck + Vite production build.
 
 Tests follow Red/Green TDD with concise table-driven cases for the domain

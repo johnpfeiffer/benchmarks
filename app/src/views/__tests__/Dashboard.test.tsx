@@ -128,24 +128,57 @@ describe('Dashboard', () => {
     expect(screen.queryByRole('heading', { name: 'Intelligence Score' })).not.toBeInTheDocument()
   })
 
-  it('shows News below the lead chart, expanded by default, with date tooltips and collapse control', () => {
+  it('shows Hand Picked News below the lead chart, expanded by default, with visible dates and collapse control', () => {
     renderDashboard()
-    const newsHeading = screen.getByRole('heading', { name: 'News' })
+    const newsHeading = screen.getByRole('heading', { name: 'Hand Picked News' })
     const newsSection = newsHeading.closest('section')
     expect(newsSection).not.toBeNull()
 
+    // Tomato icon present in the header
+    const header = within(newsSection as HTMLElement).getByRole('button', { name: /Hand Picked News/i })
+    expect(header.querySelector('svg')).toBeInTheDocument()
+
+    // Each row shows the date as visible text alongside the URL link
+    const listItems = within(newsSection as HTMLElement).getAllByRole('listitem')
+    expect(listItems).toHaveLength(2)
+    expect(listItems[0].textContent).toContain('2026-07-26')
+    expect(listItems[0].textContent).toContain('https://example.com/newest')
+    expect(listItems[1].textContent).toContain('2026-07-20')
+    expect(listItems[1].textContent).toContain('https://example.com/older')
+
+    // Links still carry the date as a title tooltip
     const links = within(newsSection as HTMLElement).getAllByRole('link')
-    expect(links.map((link) => link.textContent)).toEqual([
-      'https://example.com/newest',
-      'https://example.com/older',
-    ])
     expect(links[0]).toHaveAttribute('title', '2026-07-26')
     expect(links[1]).toHaveAttribute('title', '2026-07-20')
 
-    const toggle = within(newsSection as HTMLElement).getByRole('button', { name: /News/i })
-    expect(toggle).toHaveAttribute('aria-expanded', 'true')
-    fireEvent.click(toggle)
-    expect(toggle).toHaveAttribute('aria-expanded', 'false')
+    // Accordion starts expanded and collapses on click
+    expect(header).toHaveAttribute('aria-expanded', 'true')
+    fireEvent.click(header)
+    expect(header).toHaveAttribute('aria-expanded', 'false')
+  })
+
+  it('sorts news by date desc by default and toggles to asc when the sort label is clicked', () => {
+    renderDashboard()
+    const newsHeading = screen.getByRole('heading', { name: 'Hand Picked News' })
+    const newsSection = newsHeading.closest('section') as HTMLElement
+    const sortLabel = within(newsSection).getByRole('button', { name: /sort news by date/i })
+
+    // Default: newest first (desc)
+    let items = within(newsSection).getAllByRole('listitem')
+    expect(items[0].textContent).toContain('2026-07-26')
+    expect(items[1].textContent).toContain('2026-07-20')
+
+    // Click to toggle to ascending (oldest first)
+    fireEvent.click(sortLabel)
+    items = within(newsSection).getAllByRole('listitem')
+    expect(items[0].textContent).toContain('2026-07-20')
+    expect(items[1].textContent).toContain('2026-07-26')
+
+    // Click again to toggle back to descending
+    fireEvent.click(sortLabel)
+    items = within(newsSection).getAllByRole('listitem')
+    expect(items[0].textContent).toContain('2026-07-26')
+    expect(items[1].textContent).toContain('2026-07-20')
   })
 
   it('renders the SWE metric columns in the existing table', () => {
