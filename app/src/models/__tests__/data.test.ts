@@ -49,11 +49,18 @@ describe('embedded data integrity', () => {
     })
   })
 
+  it('includes Claude Opus 5 (max) at intelligence 61 with a provider', () => {
+    expect(intelligence.find((entry) => entry.model === 'Claude Opus 5 (max)')).toMatchObject({
+      score: 61,
+      provider: 'Anthropic',
+    })
+  })
+
   it('includes all news articles sorted newest first', () => {
-    // The initial seed article should still be first (newest).
+    // The newest articles (2026-07-24) should be first.
     expect(news[0]).toEqual({
-      url: 'https://artificialanalysis.ai/articles/gemini-3-6-flash-3-5-flash-lite-halving-time',
-      date: '2026-07-26',
+      url: 'https://artificialanalysis.ai/articles/opus-5',
+      date: '2026-07-24',
     })
     // Every entry is sorted descending by date.
     for (let i = 1; i < news.length; i++) {
@@ -61,9 +68,16 @@ describe('embedded data integrity', () => {
     }
     // All expected URLs are present.
     const urls = new Set(news.map((entry) => entry.url))
+    expect(urls.has('https://artificialanalysis.ai/articles/opus-5')).toBe(true)
+    expect(urls.has('https://www.coderabbit.ai/blog/opus-5-model-review')).toBe(true)
     expect(urls.has('https://fireworks.ai/blog/kimik3-fable')).toBe(true)
     expect(urls.has('https://www.anthropic.com/news/claude-fable-5-mythos-5')).toBe(true)
     expect(urls.has('https://blog.google/innovation-and-ai/technology/developers-tools/gemma-4/')).toBe(true)
-    expect(news).toHaveLength(13)
+    // The Gemini Flash article date was corrected to 2026-07-21.
+    const geminiArticle = news.find(
+      (entry) => entry.url === 'https://artificialanalysis.ai/articles/gemini-3-6-flash-3-5-flash-lite-halving-time',
+    )
+    expect(geminiArticle?.date).toBe('2026-07-21')
+    expect(news).toHaveLength(15)
   })
 })
