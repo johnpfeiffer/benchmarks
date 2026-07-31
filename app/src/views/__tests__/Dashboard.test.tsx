@@ -46,7 +46,7 @@ const hardwareEntries: HardwareEntry[] = [
 const gpuEntries: GpuEntry[] = [
   { model: 'A100 (SXM)', date: '2020', memory: '40 HBM2e (80* opt)', memory_type: 'HBM2e', memory_bandwidth_gbs: 1555, fp16_tflops: 312 },
   { model: 'H100 (SXM)', date: '2022-10', memory: '80 GB HBM3e', memory_type: 'HBM3e', memory_bandwidth_gbs: 3355, fp16_tflops: 1979 },
-  { model: 'Tesla T4', date: '2018', memory: '16 GB GDDR6', memory_type: 'GDDR6', memory_bandwidth_gbs: 300, fp16_tflops: 65.6 },
+  { model: 'L40 (Ada)', date: '2022-11', memory: '48 GB GDDR6', memory_type: 'GDDR6', memory_bandwidth_gbs: 864, fp16_tflops: 1466 },
 ]
 
 /** Controller stand-in mirroring App.tsx: owns sort state, feeds sorted rows. */
@@ -395,15 +395,15 @@ describe('Dashboard', () => {
     const allText = rows.map((r) => r.textContent).join(' ')
     expect(allText).toContain('3355')
     expect(allText).toContain('1979')
-    expect(allText).toContain('65.6')
+    expect(allText).toContain('1466')
   })
 
   it('sorts the GPU table by date descending by default', () => {
     renderDashboard()
     const gpuTable = screen.getByRole('table', { name: 'GPU Specifications' })
     const rows = within(gpuTable).getAllByRole('row')
-    // Default sort: date desc -> H100 (2022-10) first, T4 (2018) last
-    expect(rows[1].textContent).toContain('H100 (SXM)')
-    expect(rows[rows.length - 1].textContent).toContain('Tesla T4')
+    // Default sort: date desc -> L40 (2022-11) first, A100 (2020) last
+    expect(rows[1].textContent).toContain('L40 (Ada)')
+    expect(rows[rows.length - 1].textContent).toContain('A100 (SXM)')
   })
 })
