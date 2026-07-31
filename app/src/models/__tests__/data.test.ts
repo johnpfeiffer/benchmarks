@@ -1,14 +1,16 @@
 import { describe, it, expect } from 'vitest'
-import { parseModelEntries, parseNewsEntries, parseSweEntries } from '../parse'
+import { parseModelEntries, parseNewsEntries, parseSweEntries, parseHardwareEntries } from '../parse'
 import { modelMatchKey } from '../merge'
 import rawIntelligenceData from '../../data/ai.json'
 import rawSweData from '../../data/swe.json'
 import rawNewsData from '../../data/news.json'
+import rawHardwareData from '../../data/hardware.json'
 
 describe('embedded data integrity', () => {
   const intelligence = parseModelEntries(rawIntelligenceData)
   const swe = parseSweEntries(rawSweData)
   const news = parseNewsEntries(rawNewsData)
+  const hardware = parseHardwareEntries(rawHardwareData)
   const intelligenceKeys = new Set(intelligence.map((entry) => modelMatchKey(entry.model)))
 
   it('every Senior SWE Bench model has a matching Artificial Analysis row', () => {
@@ -79,5 +81,17 @@ describe('embedded data integrity', () => {
     )
     expect(geminiArticle?.date).toBe('2026-07-21')
     expect(news).toHaveLength(15)
+  })
+
+  it('includes hardware entries with 1-bit quant sizes and null for missing quants', () => {
+    expect(hardware).toHaveLength(4)
+    const inkling = hardware.find((e) => e.model === 'Inkling')
+    expect(inkling).toMatchObject({ provider: 'Thinking Machines', total_params: '264B', iq1_s_gb: 74.8, iq1_m_gb: 78.8 })
+    const kimi = hardware.find((e) => e.model === 'Kimi K3')
+    expect(kimi).toMatchObject({ provider: 'Moonshot AI', total_params: '2.8T', iq1_s_gb: 594, iq1_m_gb: 649 })
+    const glm = hardware.find((e) => e.model === 'GLM-5.2 (max)')
+    expect(glm).toMatchObject({ provider: 'Z AI', total_params: '754B', iq1_s_gb: 217, iq1_m_gb: 228 })
+    const gemma = hardware.find((e) => e.model === 'Gemma 4 31B')
+    expect(gemma).toMatchObject({ provider: 'Google', total_params: '31B', iq1_s_gb: null, iq1_m_gb: null })
   })
 })

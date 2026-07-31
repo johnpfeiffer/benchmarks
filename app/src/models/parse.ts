@@ -1,4 +1,4 @@
-import type { ModelEntry, NewsEntry, RawModelEntry, RawNewsEntry, RawSweEntry } from './types'
+import type { HardwareEntry, ModelEntry, NewsEntry, RawHardwareEntry, RawModelEntry, RawNewsEntry, RawSweEntry } from './types'
 
 /**
  * Error raised when raw data violates a kernel invariant.
@@ -188,4 +188,32 @@ export function parseNewsEntries(raw: readonly RawNewsEntry[]): NewsEntry[] {
     throw new InvariantError('Expected an array of news entries', -1, 'SHAPE')
   }
   return raw.map((entry, index) => normalizeNews(entry, index)).sort((a, b) => b.date.localeCompare(a.date))
+}
+
+function normalizeHardware(raw: RawHardwareEntry, index: number): HardwareEntry {
+  const provider = raw?.provider
+  if (typeof provider !== 'string' || provider.trim() === '') {
+    throw new InvariantError(
+      `INV-001 violated at index ${index}: model "${raw?.model ?? '?'}" has no provider`,
+      index,
+      'INV-001',
+    )
+  }
+  const model = assertModelName(raw?.model, index)
+  const total_params = raw?.total_params
+  if (typeof total_params !== 'string' || total_params.trim() === '') {
+    throw new InvariantError(`Hardware entry at index ${index} has no total_params`, index, 'HARDWARE-PARAMS')
+  }
+  const iq1_s_gb = typeof raw?.iq1_s_gb === 'number' ? raw.iq1_s_gb : null
+  const iq1_m_gb = typeof raw?.iq1_m_gb === 'number' ? raw.iq1_m_gb : null
+
+  return { model, provider, total_params, iq1_s_gb, iq1_m_gb }
+}
+
+/** Validate embedded HuggingFace hardware entries. */
+export function parseHardwareEntries(raw: readonly RawHardwareEntry[]): HardwareEntry[] {
+  if (!Array.isArray(raw)) {
+    throw new InvariantError('Expected an array of hardware entries', -1, 'SHAPE')
+  }
+  return raw.map((entry, index) => normalizeHardware(entry, index))
 }

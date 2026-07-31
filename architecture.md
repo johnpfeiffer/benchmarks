@@ -1,10 +1,11 @@
 # Architecture
 
 AI model benchmarks dashboard: visualizes, filters, and sorts embedded model
-benchmark datasets plus a dated news feed. It currently renders Artificial
-Analysis scores and Senior SWE Bench tasteful/basic solve rates. Models can be
-toggled in/out of the charts individually, or restricted to open-weight models
-via the "Open Weights Only" preset. Derived from the immutable
+benchmark datasets, a dated news feed, and HuggingFace estimated hardware
+sizes for 1-bit dynamic quants. It currently renders Artificial Analysis scores
+and Senior SWE Bench tasteful/basic solve rates. Models can be toggled in/out
+of the charts individually, or restricted to open-weight models via the "Open
+Weights Only" preset. Derived from the immutable
 [`/KERNEL/`](./KERNEL/); if anything here conflicts with the kernel, the kernel
 wins.
 
@@ -25,6 +26,7 @@ flowchart TD
     AIJSON["data/ai.json<br/>(embedded)"] --> App["App.tsx<br/>(controller)"]
     SWEJSON["data/swe.json<br/>(embedded)"] --> App
     NEWSJSON["data/news.json<br/>(embedded)"] --> App
+    HWJSON["data/hardware.json<br/>(embedded)"] --> App
     App -->|parse + validate| Models["models/<br/>parse, sort, types"]
     Models -->|INV-001 gate| Validated["ModelEntry[] per source"]
     Models --> Merge["mergeSweMetrics<br/>(SWE columns on AI rows)"]
@@ -34,6 +36,8 @@ flowchart TD
     Dashboard --> Table["ModelTable<br/>(sortable + selectable + SWE columns)"]
     Dashboard --> ChartB["IntelligenceBarChart<br/>(SWE tasteful solve rate)"]
     Dashboard --> ChartC["IntelligenceBarChart<br/>(SWE basic solve rate)"]
+    Dashboard --> HWChart["HardwareChart<br/>(1-bit quant sizes)"]
+    Dashboard --> HWTable["HardwareTable<br/>(sortable hardware details)"]
     Dashboard --> Footer["Footer (source credits)"]
     Table -->|onSortChange / onToggleEntry| App
 ```
@@ -42,8 +46,8 @@ flowchart TD
 
 | File | Responsibility |
 | --- | --- |
-| `types.ts` | `ModelEntry`, `NewsEntry`, their raw JSON shapes, and benchmark sort types; `ModelEntry.open_weight` is always present after parse; `ModelEntry.color` is the explicit bar color carried from `ai.json` |
-| `parse.ts` | `parseModelEntries`, `parseSweEntries`, `parseNewsEntries`, provider/open-weight inference, and `InvariantError`; upholds **INV-001** (every model has a provider) and structural guards at the single gate. News URLs and ISO dates are validated, copied, and sorted newest first before reaching the view |
+| `types.ts` | `ModelEntry`, `NewsEntry`, `HardwareEntry`, their raw JSON shapes, and benchmark sort types; `ModelEntry.open_weight` is always present after parse; `ModelEntry.color` is the explicit bar color carried from `ai.json` |
+| `parse.ts` | `parseModelEntries`, `parseSweEntries`, `parseNewsEntries`, `parseHardwareEntries`, provider/open-weight inference, and `InvariantError`; upholds **INV-001** (every model has a provider) and structural guards at the single gate. News URLs and ISO dates are validated, copied, and sorted newest first before reaching the view. Hardware entries are validated (provider, model, total_params required; quant sizes nullable) |
 | `merge.ts` | `mergeSweMetrics`, `modelMatchKey`; adds optional SWE table columns to matching Artificial Analysis rows |
 | `sort.ts` | `sortModels`, `nextSortState`, `DEFAULT_SORT` (score desc) |
 | `filter.ts` | `openWeightIds`; the id set used by the "Open Weights Only" preset |
@@ -89,14 +93,25 @@ All views are pure (props in, callbacks out, no business logic):
   toggles between descending (default, newest first) and ascending; the sort is
   local `useState`/`useMemo` in the component and does not affect controller
   state.
+- `HardwareChart` - grouped bar chart comparing 1-bit dynamic quant
+  (UD-IQ1_S and UD-IQ1_M) estimated hardware sizes across models, sourced from
+  Unsloth GGUF releases on HuggingFace. Models without 1-bit quants appear on
+  the x-axis but their bars are omitted. Includes a source chip linking to
+  HuggingFace.
+- `HardwareTable` - sortable table of hardware details; headers `Model`,
+  `Provider`, `Total Params`, `UD-IQ1_S (GB)`, `UD-IQ1_M (GB)`; click headers to
+  toggle asc/desc. Missing 1-bit quants render as `*`. Sort is local
+  `useState`/`useMemo` in the component. Total params are parsed to billions
+  for numeric sorting (e.g. "2.8T" -> 2800).
 - `Dashboard` - layout composing the intelligence chart, enriched details
-  table, responsive side-by-side SWE comparison charts, then footer. News sits
+  table, responsive side-by-side SWE comparison charts, HuggingFace estimated
+  hardware chart and table, then footer. News sits
   between the lead intelligence chart and model details.
 
 ### Controller (`App.tsx`)
 
-Parses embedded JSON once (`useMemo`), including validated newest-first news,
-merges SWE metrics into the main
+Parses embedded JSON once (`useMemo`), including validated newest-first news
+and HuggingFace hardware entries, merges SWE metrics into the main
 Artificial Analysis table rows, holds the table `SortState` and selected model
 IDs for the intelligence chart, computes sorted/chart-visible entries, and
 forwards header clicks through `nextSortState`. Deselected table model names are
@@ -142,6 +157,10 @@ journey
     See tasteful/basic charts side by side on desktop: 5: User
     See charts reflow vertically on mobile: 5: User
     Compare tasteful and basic solve rates: 5: User
+  section Explore Hardware
+    See 1-bit quant size chart: 4: User
+    Sort hardware table by column: 4: User
+    See missing 1-bit quants as placeholder: 3: User
   section Credit
     See data sources in footer: 3: User
     Open GitHub repository from footer icon link: 3: User
@@ -152,7 +171,7 @@ journey
 - `npm test` - Vitest unit + component tests (domain logic + dashboard happy
   path / sort interaction / all-chart model filtering / SWE metric merge /
   source credits / news validation, ordering, visible dates, sort toggle, and
-  collapse behavior).
+  collapse behavior / hardware entry validation and dashboard rendering).
 - `npm run build` - `tsc -b` typecheck + Vite production build.
 
 Tests follow Red/Green TDD with concise table-driven cases for the domain

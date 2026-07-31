@@ -1,0 +1,6 @@
+[
+  {"model": "Inkling", "provider": "Thinking Machines", "total_params": "264B", "iq1_s_gb": 74.8, "iq1_m_gb": 78.8},
+  {"model": "Kimi K3", "provider": "Moonshot AI", "total_params": "2.8T", "iq1_s_gb": 594, "iq1_m_gb": 649},
+  {"model": "GLM-5.2 (max)", "provider": "Z AI", "total_params": "754B", "iq1_s_gb": 217, "iq1_m_gb": 228},
+  {"model": "Gemma 4 31B", "provider": "Google", "total_params": "31B", "iq1_s_gb": null, "iq1_m_gb": null}
+]

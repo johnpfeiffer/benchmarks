@@ -43,6 +43,27 @@ export interface NewsEntry {
   date: string
 }
 
+/** A HuggingFace hardware-compatibility row as embedded in hardware.json. */
+export interface RawHardwareEntry {
+  model: string
+  provider: string
+  /** Total parameter count as a human-readable string, e.g. "264B" or "2.8T". */
+  total_params: string
+  /** UD-IQ1_S quant size in GB, or null when the quant is not published. */
+  iq1_s_gb: number | null
+  /** UD-IQ1_M quant size in GB, or null when the quant is not published. */
+  iq1_m_gb: number | null
+}
+
+/** A validated hardware entry. Exists only when INV-001 holds. */
+export interface HardwareEntry {
+  model: string
+  provider: string
+  total_params: string
+  iq1_s_gb: number | null
+  iq1_m_gb: number | null
+}
+
 /** A validated model entry. Exists only when INV-001 holds. */
 export interface ModelEntry {
   id: string

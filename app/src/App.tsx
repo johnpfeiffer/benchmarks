@@ -6,6 +6,7 @@ import {
   parseModelEntries,
   parseNewsEntries,
   parseSweEntries,
+  parseHardwareEntries,
   mergeSweMetrics,
   modelMatchKey,
   sortModels,
@@ -20,6 +21,7 @@ import { Dashboard, type DataSourceCredit } from './views/Dashboard'
 import rawIntelligenceData from './data/ai.json'
 import rawSweData from './data/swe.json'
 import rawNewsData from './data/news.json'
+import rawHardwareData from './data/hardware.json'
 
 export type AppContext = { app: string }
 
@@ -67,6 +69,7 @@ function DashboardPage() {
   const intelligenceEntries = useMemo(() => parseModelEntries(rawIntelligenceData), [])
   const sweEntries = useMemo(() => parseSweEntries(rawSweData), [])
   const news = useMemo(() => parseNewsEntries(rawNewsData), [])
+  const hardware = useMemo(() => parseHardwareEntries(rawHardwareData), [])
   const tableEntries = useMemo(
     () => mergeSweMetrics(intelligenceEntries, sweEntries),
     [intelligenceEntries, sweEntries],
@@ -116,8 +119,10 @@ function DashboardPage() {
   const sources: DataSourceCredit[] = [
     { label: 'Artificial Analysis', href: 'https://artificialanalysis.ai/' },
     { label: 'Senior SWE Bench', href: 'https://senior-swe-bench.snorkel.ai/' },
+    { label: 'HuggingFace', href: 'https://huggingface.co/unsloth' },
   ]
   const intelligenceSource = sources[0]
+  const hardwareSource = sources[2]
 
   return (
     <Dashboard
@@ -132,6 +137,8 @@ function DashboardPage() {
       openWeightsOnly={openWeightsOnly}
       onToggleOpenWeights={handleToggleOpenWeights}
       news={news}
+      hardware={hardware}
+      hardwareSource={hardwareSource}
       intelligenceSource={intelligenceSource}
       sources={sources}
     />

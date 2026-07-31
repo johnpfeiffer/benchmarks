@@ -1,9 +1,11 @@
 import { Box, Container, Typography } from '@mui/material'
-import type { ModelEntry, NewsEntry, SortField, SortState } from '../models'
+import type { HardwareEntry, ModelEntry, NewsEntry, SortField, SortState } from '../models'
 import { IntelligenceBarChart } from './IntelligenceBarChart'
 import { ModelTable } from './ModelTable'
 import { Footer } from './Footer'
 import { NewsSection } from './NewsSection'
+import { HardwareChart } from './HardwareChart'
+import { HardwareTable } from './HardwareTable'
 
 export interface DataSourceCredit {
   label: string
@@ -22,6 +24,8 @@ interface DashboardProps {
   openWeightsOnly: boolean
   onToggleOpenWeights: () => void
   news: readonly NewsEntry[]
+  hardware: readonly HardwareEntry[]
+  hardwareSource: DataSourceCredit
   intelligenceSource: DataSourceCredit
   sources: readonly DataSourceCredit[]
 }
@@ -44,6 +48,8 @@ export function Dashboard({
   openWeightsOnly,
   onToggleOpenWeights,
   news,
+  hardware,
+  hardwareSource,
   intelligenceSource,
   sources,
 }: DashboardProps) {
@@ -110,6 +116,19 @@ export function Dashboard({
             scoreLabel="basic_solve_rate_pct"
             fitWidth
           />
+        </Box>
+      </Box>
+
+      <Box component="section" aria-labelledby="hardware-title" sx={{ mb: 5 }}>
+        <Typography id="hardware-title" variant="h5" component="h2" sx={{ mb: 1 }}>
+          HuggingFace Estimated Hardware
+        </Typography>
+        <Typography variant="body2" color="text.secondary" sx={{ mb: 2 }}>
+          1-bit dynamic quant (UD-IQ1) estimated sizes from Unsloth GGUF releases.
+        </Typography>
+        <HardwareChart entries={hardware} source={hardwareSource} />
+        <Box sx={{ mt: 3 }}>
+          <HardwareTable entries={hardware} title="Hardware Details" />
         </Box>
       </Box>
 
