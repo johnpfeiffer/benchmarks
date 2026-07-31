@@ -83,15 +83,42 @@ describe('embedded data integrity', () => {
     expect(news).toHaveLength(15)
   })
 
-  it('includes hardware entries with 1-bit quant sizes and null for missing quants', () => {
-    expect(hardware).toHaveLength(4)
+  it('includes hardware entries with 1-bit and 2-bit quant sizes, urls, and null for missing quants', () => {
+    expect(hardware).toHaveLength(5)
     const inkling = hardware.find((e) => e.model === 'Inkling')
-    expect(inkling).toMatchObject({ provider: 'Thinking Machines', total_params: '264B', iq1_s_gb: 74.8, iq1_m_gb: 78.8 })
+    expect(inkling).toMatchObject({
+      provider: 'Thinking Machines', total_params: '264B',
+      iq1_s_gb: 74.8, iq1_m_gb: 78.8,
+      iq2_xxs_gb: 82.3, iq2_m_gb: 82.4,
+      url: 'https://huggingface.co/unsloth/Inkling-Small-GGUF',
+    })
     const kimi = hardware.find((e) => e.model === 'Kimi K3')
-    expect(kimi).toMatchObject({ provider: 'Moonshot AI', total_params: '2.8T', iq1_s_gb: 594, iq1_m_gb: 649 })
+    expect(kimi).toMatchObject({
+      provider: 'Moonshot AI', total_params: '2.8T',
+      iq1_s_gb: 594, iq1_m_gb: 649,
+      iq2_xxs_gb: 711, iq2_m_gb: null,
+      url: 'https://huggingface.co/unsloth/Kimi-K3-GGUF',
+    })
     const glm = hardware.find((e) => e.model === 'GLM-5.2 (max)')
-    expect(glm).toMatchObject({ provider: 'Z AI', total_params: '754B', iq1_s_gb: 217, iq1_m_gb: 228 })
+    expect(glm).toMatchObject({
+      provider: 'Z AI', total_params: '754B',
+      iq1_s_gb: 217, iq1_m_gb: 228,
+      iq2_xxs_gb: 238, iq2_m_gb: 239,
+      url: 'https://huggingface.co/unsloth/GLM-5.2-GGUF',
+    })
     const gemma = hardware.find((e) => e.model === 'Gemma 4 31B')
-    expect(gemma).toMatchObject({ provider: 'Google', total_params: '31B', iq1_s_gb: null, iq1_m_gb: null })
+    expect(gemma).toMatchObject({
+      provider: 'Google', total_params: '31B',
+      iq1_s_gb: null, iq1_m_gb: null,
+      iq2_xxs_gb: 8.53, iq2_m_gb: 10.8,
+      url: 'https://huggingface.co/unsloth/gemma-4-31B-it-GGUF',
+    })
+    const deepseek = hardware.find((e) => e.model === 'DeepSeek V4 Flash')
+    expect(deepseek).toMatchObject({
+      provider: 'DeepSeek', total_params: '284B',
+      iq1_s_gb: 82.5, iq1_m_gb: 86.9,
+      iq2_xxs_gb: 90.9, iq2_m_gb: 90.9,
+      url: 'https://huggingface.co/unsloth/DeepSeek-V4-Flash-GGUF',
+    })
   })
 })

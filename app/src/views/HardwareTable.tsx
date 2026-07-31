@@ -1,6 +1,7 @@
 import { useMemo, useState } from 'react'
 import {
   Box,
+  Link,
   Table,
   TableBody,
   TableCell,
@@ -12,7 +13,7 @@ import {
 } from '@mui/material'
 import type { HardwareEntry } from '../models'
 
-type SortField = 'model' | 'provider' | 'total_params' | 'iq1_s_gb' | 'iq1_m_gb'
+type SortField = 'model' | 'provider' | 'total_params' | 'iq1_s_gb' | 'iq1_m_gb' | 'iq2_xxs_gb' | 'iq2_m_gb'
 type SortDirection = 'asc' | 'desc'
 interface SortState { field: SortField; direction: SortDirection }
 
@@ -37,6 +38,8 @@ function fieldValue(entry: HardwareEntry, field: SortField): string | number | n
     case 'total_params': return paramsInBillions(entry.total_params)
     case 'iq1_s_gb': return entry.iq1_s_gb
     case 'iq1_m_gb': return entry.iq1_m_gb
+    case 'iq2_xxs_gb': return entry.iq2_xxs_gb
+    case 'iq2_m_gb': return entry.iq2_m_gb
   }
 }
 
@@ -67,6 +70,8 @@ const COLUMNS: Array<{ label: string; field: SortField }> = [
   { label: 'Total Params', field: 'total_params' },
   { label: 'UD-IQ1_S (GB)', field: 'iq1_s_gb' },
   { label: 'UD-IQ1_M (GB)', field: 'iq1_m_gb' },
+  { label: 'UD-IQ2_XXS (GB)', field: 'iq2_xxs_gb' },
+  { label: 'UD-IQ2_M (GB)', field: 'iq2_m_gb' },
 ]
 
 interface HardwareTableProps {
@@ -116,11 +121,17 @@ export function HardwareTable({ entries, title }: HardwareTableProps) {
           <TableBody>
             {sorted.map((entry) => (
               <TableRow key={`${entry.provider}:${entry.model}`} hover>
-                <TableCell>{entry.model}</TableCell>
+                <TableCell>
+                  <Link href={entry.url} target="_blank" rel="noopener noreferrer">
+                    {entry.model}
+                  </Link>
+                </TableCell>
                 <TableCell>{entry.provider}</TableCell>
                 <TableCell>{entry.total_params}</TableCell>
                 <TableCell>{entry.iq1_s_gb ?? '*'}</TableCell>
                 <TableCell>{entry.iq1_m_gb ?? '*'}</TableCell>
+                <TableCell>{entry.iq2_xxs_gb ?? '*'}</TableCell>
+                <TableCell>{entry.iq2_m_gb ?? '*'}</TableCell>
               </TableRow>
             ))}
           </TableBody>

@@ -1,6 +1,7 @@
 [
-  {"model": "Inkling", "provider": "Thinking Machines", "total_params": "264B", "iq1_s_gb": 74.8, "iq1_m_gb": 78.8},
-  {"model": "Kimi K3", "provider": "Moonshot AI", "total_params": "2.8T", "iq1_s_gb": 594, "iq1_m_gb": 649},
-  {"model": "GLM-5.2 (max)", "provider": "Z AI", "total_params": "754B", "iq1_s_gb": 217, "iq1_m_gb": 228},
-  {"model": "Gemma 4 31B", "provider": "Google", "total_params": "31B", "iq1_s_gb": null, "iq1_m_gb": null}
+  {"model": "Inkling", "provider": "Thinking Machines", "total_params": "264B", "iq1_s_gb": 74.8, "iq1_m_gb": 78.8, "iq2_xxs_gb": 82.3, "iq2_m_gb": 82.4, "url": "https://huggingface.co/unsloth/Inkling-Small-GGUF"},
+  {"model": "Kimi K3", "provider": "Moonshot AI", "total_params": "2.8T", "iq1_s_gb": 594, "iq1_m_gb": 649, "iq2_xxs_gb": 711, "iq2_m_gb": null, "url": "https://huggingface.co/unsloth/Kimi-K3-GGUF"},
+  {"model": "GLM-5.2 (max)", "provider": "Z AI", "total_params": "754B", "iq1_s_gb": 217, "iq1_m_gb": 228, "iq2_xxs_gb": 238, "iq2_m_gb": 239, "url": "https://huggingface.co/unsloth/GLM-5.2-GGUF"},
+  {"model": "Gemma 4 31B", "provider": "Google", "total_params": "31B", "iq1_s_gb": null, "iq1_m_gb": null, "iq2_xxs_gb": 8.53, "iq2_m_gb": 10.8, "url": "https://huggingface.co/unsloth/gemma-4-31B-it-GGUF"},
+  {"model": "DeepSeek V4 Flash", "provider": "DeepSeek", "total_params": "284B", "iq1_s_gb": 82.5, "iq1_m_gb": 86.9, "iq2_xxs_gb": 90.9, "iq2_m_gb": 90.9, "url": "https://huggingface.co/unsloth/DeepSeek-V4-Flash-GGUF"}
 ]

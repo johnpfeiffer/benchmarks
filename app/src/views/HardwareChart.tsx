@@ -8,8 +8,9 @@ interface HardwareChartProps {
 }
 
 /**
- * Grouped bar chart comparing 1-bit dynamic quant (UD-IQ1_S and UD-IQ1_M)
- * estimated hardware sizes across models.
+ * Grouped bar chart comparing 1-bit and 2-bit dynamic quant
+ * (UD-IQ1_S, UD-IQ1_M, UD-IQ2_XXS, UD-IQ2_M) estimated hardware sizes
+ * across models.
  *
  * Pure presentation: renders the given entries. Models with null quant values
  * are included on the x-axis but their bars are omitted by the chart engine.
@@ -45,6 +46,8 @@ export function HardwareChart({ entries, source }: HardwareChartProps) {
             series={[
               { dataKey: 'iq1_s_gb', label: 'UD-IQ1_S', color: '#1976d2' },
               { dataKey: 'iq1_m_gb', label: 'UD-IQ1_M', color: '#64b5f6' },
+              { dataKey: 'iq2_xxs_gb', label: 'UD-IQ2_XXS', color: '#388e3c' },
+              { dataKey: 'iq2_m_gb', label: 'UD-IQ2_M', color: '#81c784' },
             ]}
             xAxis={[
               {

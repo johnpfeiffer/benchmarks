@@ -38,9 +38,9 @@ const sweChartEntries: ModelEntry[] = [
 ]
 
 const hardwareEntries: HardwareEntry[] = [
-  { model: 'Inkling', provider: 'Thinking Machines', total_params: '264B', iq1_s_gb: 74.8, iq1_m_gb: 78.8 },
-  { model: 'Kimi K3', provider: 'Moonshot AI', total_params: '2.8T', iq1_s_gb: 594, iq1_m_gb: 649 },
-  { model: 'Gemma 4 31B', provider: 'Google', total_params: '31B', iq1_s_gb: null, iq1_m_gb: null },
+  { model: 'Inkling', provider: 'Thinking Machines', total_params: '264B', iq1_s_gb: 74.8, iq1_m_gb: 78.8, iq2_xxs_gb: 82.3, iq2_m_gb: 82.4, url: 'https://huggingface.co/unsloth/Inkling-Small-GGUF' },
+  { model: 'Kimi K3', provider: 'Moonshot AI', total_params: '2.8T', iq1_s_gb: 594, iq1_m_gb: 649, iq2_xxs_gb: 711, iq2_m_gb: null, url: 'https://huggingface.co/unsloth/Kimi-K3-GGUF' },
+  { model: 'Gemma 4 31B', provider: 'Google', total_params: '31B', iq1_s_gb: null, iq1_m_gb: null, iq2_xxs_gb: 8.53, iq2_m_gb: 10.8, url: 'https://huggingface.co/unsloth/gemma-4-31B-it-GGUF' },
 ]
 
 /** Controller stand-in mirroring App.tsx: owns sort state, feeds sorted rows. */
@@ -301,9 +301,11 @@ describe('Dashboard', () => {
     expect(within(hwTable).getByRole('button', { name: /Total Params/i })).toBeInTheDocument()
     expect(within(hwTable).getByRole('button', { name: /UD-IQ1_S/i })).toBeInTheDocument()
     expect(within(hwTable).getByRole('button', { name: /UD-IQ1_M/i })).toBeInTheDocument()
+    expect(within(hwTable).getByRole('button', { name: /UD-IQ2_XXS/i })).toBeInTheDocument()
+    expect(within(hwTable).getByRole('button', { name: /UD-IQ2_M/i })).toBeInTheDocument()
   })
 
-  it('shows hardware quant sizes and placeholders for missing 1-bit quants', () => {
+  it('shows hardware quant sizes and placeholders for missing 1-bit and 2-bit quants', () => {
     renderDashboard()
     const hwTable = screen.getByRole('table', { name: 'Hardware Details' })
     const rows = within(hwTable).getAllByRole('row')
@@ -311,7 +313,18 @@ describe('Dashboard', () => {
     const allText = rows.map((r) => r.textContent).join(' ')
     expect(allText).toContain('74.8')
     expect(allText).toContain('594')
+    expect(allText).toContain('82.3')
+    expect(allText).toContain('8.53')
     expect(allText).toContain('*')
+  })
+
+  it('links model names to their HuggingFace URLs', () => {
+    renderDashboard()
+    const hwTable = screen.getByRole('table', { name: 'Hardware Details' })
+    const inklingLink = within(hwTable).getByRole('link', { name: 'Inkling' })
+    expect(inklingLink).toHaveAttribute('href', 'https://huggingface.co/unsloth/Inkling-Small-GGUF')
+    const gemmaLink = within(hwTable).getByRole('link', { name: 'Gemma 4 31B' })
+    expect(gemmaLink).toHaveAttribute('href', 'https://huggingface.co/unsloth/gemma-4-31B-it-GGUF')
   })
 
   it('sorts the hardware table by UD-IQ1_S descending by default', () => {

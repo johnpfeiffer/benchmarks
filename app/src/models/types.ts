@@ -53,6 +53,12 @@ export interface RawHardwareEntry {
   iq1_s_gb: number | null
   /** UD-IQ1_M quant size in GB, or null when the quant is not published. */
   iq1_m_gb: number | null
+  /** UD-IQ2_XXS quant size in GB, or null when the quant is not published. */
+  iq2_xxs_gb: number | null
+  /** UD-IQ2_M quant size in GB, or null when the quant is not published. */
+  iq2_m_gb: number | null
+  /** HuggingFace model page URL. */
+  url: string
 }
 
 /** A validated hardware entry. Exists only when INV-001 holds. */
@@ -62,6 +68,9 @@ export interface HardwareEntry {
   total_params: string
   iq1_s_gb: number | null
   iq1_m_gb: number | null
+  iq2_xxs_gb: number | null
+  iq2_m_gb: number | null
+  url: string
 }
 
 /** A validated model entry. Exists only when INV-001 holds. */

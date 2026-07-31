@@ -2,10 +2,10 @@
 
 AI model benchmarks dashboard: visualizes, filters, and sorts embedded model
 benchmark datasets, a dated news feed, and HuggingFace estimated hardware
-sizes for 1-bit dynamic quants. It currently renders Artificial Analysis scores
-and Senior SWE Bench tasteful/basic solve rates. Models can be toggled in/out
-of the charts individually, or restricted to open-weight models via the "Open
-Weights Only" preset. Derived from the immutable
+sizes for 1-bit and 2-bit dynamic quants. It currently renders Artificial
+Analysis scores and Senior SWE Bench tasteful/basic solve rates. Models can be
+toggled in/out of the charts individually, or restricted to open-weight models
+via the "Open Weights Only" preset. Derived from the immutable
 [`/KERNEL/`](./KERNEL/); if anything here conflicts with the kernel, the kernel
 wins.
 
@@ -47,7 +47,7 @@ flowchart TD
 | File | Responsibility |
 | --- | --- |
 | `types.ts` | `ModelEntry`, `NewsEntry`, `HardwareEntry`, their raw JSON shapes, and benchmark sort types; `ModelEntry.open_weight` is always present after parse; `ModelEntry.color` is the explicit bar color carried from `ai.json` |
-| `parse.ts` | `parseModelEntries`, `parseSweEntries`, `parseNewsEntries`, `parseHardwareEntries`, provider/open-weight inference, and `InvariantError`; upholds **INV-001** (every model has a provider) and structural guards at the single gate. News URLs and ISO dates are validated, copied, and sorted newest first before reaching the view. Hardware entries are validated (provider, model, total_params required; quant sizes nullable) |
+| `parse.ts` | `parseModelEntries`, `parseSweEntries`, `parseNewsEntries`, `parseHardwareEntries`, provider/open-weight inference, and `InvariantError`; upholds **INV-001** (every model has a provider) and structural guards at the single gate. News URLs and ISO dates are validated, copied, and sorted newest first before reaching the view. Hardware entries are validated (provider, model, total_params, url required; 1-bit and 2-bit quant sizes nullable) |
 | `merge.ts` | `mergeSweMetrics`, `modelMatchKey`; adds optional SWE table columns to matching Artificial Analysis rows |
 | `sort.ts` | `sortModels`, `nextSortState`, `DEFAULT_SORT` (score desc) |
 | `filter.ts` | `openWeightIds`; the id set used by the "Open Weights Only" preset |
@@ -93,16 +93,17 @@ All views are pure (props in, callbacks out, no business logic):
   toggles between descending (default, newest first) and ascending; the sort is
   local `useState`/`useMemo` in the component and does not affect controller
   state.
-- `HardwareChart` - grouped bar chart comparing 1-bit dynamic quant
-  (UD-IQ1_S and UD-IQ1_M) estimated hardware sizes across models, sourced from
-  Unsloth GGUF releases on HuggingFace. Models without 1-bit quants appear on
-  the x-axis but their bars are omitted. Includes a source chip linking to
-  HuggingFace.
+- `HardwareChart` - grouped bar chart comparing 1-bit and 2-bit dynamic
+  quant (UD-IQ1_S, UD-IQ1_M, UD-IQ2_XXS, UD-IQ2_M) estimated hardware sizes
+  across models, sourced from Unsloth GGUF releases on HuggingFace. Models
+  without a given quant appear on the x-axis but their bars are omitted.
+  Includes a source chip linking to HuggingFace.
 - `HardwareTable` - sortable table of hardware details; headers `Model`,
-  `Provider`, `Total Params`, `UD-IQ1_S (GB)`, `UD-IQ1_M (GB)`; click headers to
-  toggle asc/desc. Missing 1-bit quants render as `*`. Sort is local
-  `useState`/`useMemo` in the component. Total params are parsed to billions
-  for numeric sorting (e.g. "2.8T" -> 2800).
+  `Provider`, `Total Params`, `UD-IQ1_S (GB)`, `UD-IQ1_M (GB)`,
+  `UD-IQ2_XXS (GB)`, `UD-IQ2_M (GB)`; click headers to toggle asc/desc. Model
+  names link to their HuggingFace model pages. Missing quants render as `*`.
+  Sort is local `useState`/`useMemo` in the component. Total params are parsed
+  to billions for numeric sorting (e.g. "2.8T" -> 2800).
 - `Dashboard` - layout composing the intelligence chart, enriched details
   table, responsive side-by-side SWE comparison charts, HuggingFace estimated
   hardware chart and table, then footer. News sits
@@ -158,9 +159,10 @@ journey
     See charts reflow vertically on mobile: 5: User
     Compare tasteful and basic solve rates: 5: User
   section Explore Hardware
-    See 1-bit quant size chart: 4: User
+    See 1-bit and 2-bit quant size chart: 4: User
     Sort hardware table by column: 4: User
-    See missing 1-bit quants as placeholder: 3: User
+    See missing quants as placeholder: 3: User
+    Click model name to open HuggingFace page: 4: User
   section Credit
     See data sources in footer: 3: User
     Open GitHub repository from footer icon link: 3: User
