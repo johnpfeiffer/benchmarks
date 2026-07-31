@@ -1,4 +1,4 @@
-import { Box, Chip, Container, Typography } from '@mui/material'
+import { Box, Button, Container, Link, Typography } from '@mui/material'
 import type { GpuEntry, HardwareEntry, ModelEntry, NewsEntry, SortField, SortState } from '../models'
 import { IntelligenceBarChart } from './IntelligenceBarChart'
 import { ModelTable } from './ModelTable'
@@ -100,9 +100,21 @@ export function Dashboard({
       </Box>
 
       <Box component="section" aria-labelledby="swe-title" sx={{ mb: 5 }}>
-        <Typography id="swe-title" variant="h5" component="h2" sx={{ mb: 1 }}>
-          Senior SWE Bench
-        </Typography>
+        <Box sx={{ display: 'flex', alignItems: 'center', gap: 1, mb: 1 }}>
+          <Typography id="swe-title" variant="h5" component="h2">
+            Senior SWE Bench
+          </Typography>
+          <Button
+            size="small"
+            variant={openWeightsOnly ? 'contained' : 'outlined'}
+            color={openWeightsOnly ? 'primary' : 'inherit'}
+            aria-pressed={openWeightsOnly}
+            onClick={onToggleOpenWeights}
+            sx={{ textTransform: 'none' }}
+          >
+            Open Weights
+          </Button>
+        </Box>
         <Box
           sx={{
             display: 'grid',
@@ -112,16 +124,16 @@ export function Dashboard({
           }}
         >
           <IntelligenceBarChart
-            entries={tastefulSweChartEntries}
-            title="Tasteful Solve Rate"
-            scoreLabel="tasteful_solve_rate_pct"
+            entries={basicSweChartEntries}
+            title="Basic Solve Rate"
+            scoreLabel="basic_solve_rate_pct"
             fitWidth
             source={sweSource}
           />
           <IntelligenceBarChart
-            entries={basicSweChartEntries}
-            title="Basic Solve Rate"
-            scoreLabel="basic_solve_rate_pct"
+            entries={tastefulSweChartEntries}
+            title="Tasteful Solve Rate"
+            scoreLabel="tasteful_solve_rate_pct"
             fitWidth
             source={sweSource}
           />
@@ -137,7 +149,7 @@ export function Dashboard({
         </Typography>
         <HardwareChart entries={hardware} source={hardwareSource} />
         <Box sx={{ mt: 3 }}>
-          <HardwareTable entries={hardware} title="Hardware Details" />
+          <HardwareTable entries={hardware} title="Open Weight Hosting Sizes" />
         </Box>
       </Box>
 
@@ -145,22 +157,20 @@ export function Dashboard({
         <Typography id="gpu-title" variant="h5" component="h2" sx={{ mb: 1 }}>
           Hardware
         </Typography>
-        <Box sx={{ display: 'flex', gap: 1, flexWrap: 'wrap', mb: 2 }}>
+        <GpuTable entries={gpu} title="GPU Specifications" />
+        <Box sx={{ mt: 2, display: 'flex', gap: 2, flexWrap: 'wrap' }}>
           {gpuSources.map((src) => (
-            <Chip
+            <Link
               key={src.href}
-              component="a"
-              clickable
               href={src.href}
               target="_blank"
               rel="noopener noreferrer"
-              label={`Source: ${src.label}`}
-              size="small"
-              variant="outlined"
-            />
+              variant="body2"
+            >
+              {src.label}
+            </Link>
           ))}
         </Box>
-        <GpuTable entries={gpu} title="GPU Specifications" />
       </Box>
 
       <Footer sources={sources} />
