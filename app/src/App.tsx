@@ -125,11 +125,16 @@ function DashboardPage() {
     { label: 'HuggingFace', href: 'https://huggingface.co/unsloth' },
     { label: 'NVIDIA Hopper Architecture', href: 'https://developer.nvidia.com/blog/nvidia-hopper-architecture-in-depth/' },
     { label: 'NVIDIA RTX Pro 6000', href: 'https://www.nvidia.com/en-us/products/workstations/professional-desktop-gpus/rtx-pro-6000/' },
+    { label: 'NVIDIA H200', href: 'https://www.nvidia.com/en-us/data-center/h200/' },
+    { label: 'NVIDIA Supercharges Hopper', href: 'https://nvidianews.nvidia.com/news/nvidia-supercharges-hopper-the-worlds-leading-ai-computing-platform' },
+    { label: 'TechPowerUp RTX Pro 6000 Blackwell', href: 'https://www.techpowerup.com/gpu-specs/rtx-pro-6000-blackwell.c4272' },
+    { label: 'TechPowerUp L40', href: 'https://www.techpowerup.com/gpu-specs/l40.c3959' },
+    { label: 'Wikipedia Hopper (microarchitecture)', href: 'https://en.wikipedia.org/wiki/Hopper_(microarchitecture)' },
   ]
   const intelligenceSource = sources[0]
   const sweSource = sources[1]
   const hardwareSource = sources[2]
-  const gpuSources: DataSourceCredit[] = [sources[3], sources[4]]
+  const gpuSources: DataSourceCredit[] = [sources[3], sources[4], sources[5], sources[6], sources[7], sources[8], sources[9]]
 
   return (
     <Dashboard

@@ -1,15 +1,15 @@
 [
-  {"model": "NVIDIA A100 (SXM)", "year": 2020, "memory": "40 HBM2e (80* opt)", "memory_type": "HBM2e", "memory_bandwidth_gbs": 1555, "fp16_tflops": 312},
-  {"model": "NVIDIA A100 (PCIe)", "year": 2020, "memory": "40 HBM2e (opt80*)", "memory_type": "HBM2e", "memory_bandwidth_gbs": 1555, "fp16_tflops": 312},
-  {"model": "NVIDIA A800", "year": 2021, "memory": "80 GB GDDR6X", "memory_type": "GDDR6X", "memory_bandwidth_gbs": 1215, "fp16_tflops": 312},
-  {"model": "NVIDIA H100 (SXM)", "year": 2022, "memory": "80 GB HBM3e", "memory_type": "HBM3e", "memory_bandwidth_gbs": 3355, "fp16_tflops": 1979},
-  {"model": "NVIDIA H100 (PCIe)", "year": 2022, "memory": "80 GB HBM3e", "memory_type": "HBM3e", "memory_bandwidth_gbs": 3355, "fp16_tflops": 1671},
-  {"model": "NVIDIA H200 (SXM)", "year": 2025, "memory": "141 GB HBM3e", "memory_type": "HBM3e", "memory_bandwidth_gbs": 4890, "fp16_tflops": 241.3},
-  {"model": "NVIDIA L40S", "year": 2023, "memory": "48 GB GDDR6 w/ECC", "memory_type": "GDDR6", "memory_bandwidth_gbs": 864, "fp16_tflops": 1466},
-  {"model": "NVIDIA B200 (SXM)", "year": 2025, "memory": "192 GB HBM3e", "memory_type": "HBM3e", "memory_bandwidth_gbs": 8000, "fp16_tflops": 20000},
-  {"model": "NVIDIA B300 (Blackwell Ultra)", "year": 2025, "memory": "288 GB HBM3e", "memory_type": "HBM3e", "memory_bandwidth_gbs": 8000, "fp16_tflops": 15000},
-  {"model": "NVIDIA RTX Pro 6000D (B40)", "year": 2025, "memory": "24-48 GB GDDR7", "memory_type": "GDDR7", "memory_bandwidth_gbs": null, "fp16_tflops": null},
-  {"model": "NVIDIA RTX Pro 4000 SFF", "year": 2025, "memory": null, "memory_type": null, "memory_bandwidth_gbs": null, "fp16_tflops": null},
-  {"model": "NVIDIA Tesla V100", "year": 2017, "memory": "32 GB HBM2", "memory_type": "HBM2", "memory_bandwidth_gbs": 900, "fp16_tflops": 125},
-  {"model": "NVIDIA Tesla T4", "year": 2018, "memory": "16 GB GDDR6", "memory_type": "GDDR6", "memory_bandwidth_gbs": 300, "fp16_tflops": 65.6}
+  {"model": "A100 (SXM)", "date": "2020", "memory": "40 HBM2e (80* opt)", "memory_type": "HBM2e", "memory_bandwidth_gbs": 1555, "fp16_tflops": 312},
+  {"model": "A100 (PCIe)", "date": "2020", "memory": "40 HBM2e (opt80*)", "memory_type": "HBM2e", "memory_bandwidth_gbs": 1555, "fp16_tflops": 312},
+  {"model": "A800", "date": "2021", "memory": "80 GB GDDR6X", "memory_type": "GDDR6X", "memory_bandwidth_gbs": 1215, "fp16_tflops": 312},
+  {"model": "H100 (SXM)", "date": "2022-10", "memory": "80 GB HBM3e", "memory_type": "HBM3e", "memory_bandwidth_gbs": 3355, "fp16_tflops": 1979},
+  {"model": "H100 (PCIe)", "date": "2022-10", "memory": "80 GB HBM3e", "memory_type": "HBM3e", "memory_bandwidth_gbs": 3355, "fp16_tflops": 1671},
+  {"model": "H200 (SXM)", "date": "2024-11", "memory": "141 GB HBM3e", "memory_type": "HBM3e", "memory_bandwidth_gbs": 4890, "fp16_tflops": 241.3},
+  {"model": "L40 (Ada)", "date": "2022-11", "memory": "48 GB GDDR6", "memory_type": "GDDR6", "memory_bandwidth_gbs": 864, "fp16_tflops": 1466},
+  {"model": "B200 (SXM)", "date": "2024-03", "memory": "192 GB HBM3e", "memory_type": "HBM3e", "memory_bandwidth_gbs": 8000, "fp16_tflops": 20000},
+  {"model": "B300 (Blackwell Ultra)", "date": "2026-01", "memory": "288 GB HBM3e", "memory_type": "HBM3e", "memory_bandwidth_gbs": 8000, "fp16_tflops": 15000},
+  {"model": "RTX Pro 6000 Blackwell", "date": "2025-03", "memory": "24-48 GB GDDR7", "memory_type": "GDDR7", "memory_bandwidth_gbs": null, "fp16_tflops": null},
+  {"model": "RTX Pro 4000 Blackwell", "date": "2025-03", "memory": "24 GB GDDR7", "memory_type": "GDDR7", "memory_bandwidth_gbs": null, "fp16_tflops": null},
+  {"model": "Tesla V100", "date": "2017", "memory": "32 GB HBM2", "memory_type": "HBM2", "memory_bandwidth_gbs": 900, "fp16_tflops": 125},
+  {"model": "Tesla T4", "date": "2018", "memory": "16 GB GDDR6", "memory_type": "GDDR6", "memory_bandwidth_gbs": 300, "fp16_tflops": 65.6}
 ]

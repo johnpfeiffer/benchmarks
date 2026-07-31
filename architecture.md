@@ -5,7 +5,7 @@ benchmark datasets, a dated news feed, HuggingFace estimated hardware sizes
 for 1-bit and 2-bit dynamic quants, and NVIDIA GPU specifications. It
 currently renders Artificial Analysis scores and Senior SWE Bench
 tasteful/basic solve rates. Models can be toggled in/out of the charts
-individually, or restricted to open-weight models via the "Open Weights Only"
+individually, or restricted to open-weight models via the "Open Weights"
 preset. Derived from the immutable
 [`/KERNEL/`](./KERNEL/); if anything here conflicts with the kernel, the kernel
 wins.
@@ -35,12 +35,12 @@ flowchart TD
     App -->|sorted table rows + selected ids| Dashboard["views/Dashboard"]
     Dashboard --> ChartA["IntelligenceBarChart<br/>(Artificial Analysis)"]
     Dashboard --> News["NewsSection<br/>(expanded + collapsible)"]
-    Dashboard --> Table["ModelTable<br/>(sortable + selectable + SWE columns)"]
+    Dashboard --> Table["ModelTable<br/>(collapsible + sortable + selectable)"]
     Dashboard --> ChartB["IntelligenceBarChart<br/>(SWE tasteful solve rate)"]
     Dashboard --> ChartC["IntelligenceBarChart<br/>(SWE basic solve rate)"]
     Dashboard --> HWChart["HardwareChart<br/>(1-bit + 2-bit quant sizes)"]
     Dashboard --> HWTable["HardwareTable<br/>(sortable hardware details)"]
-    Dashboard --> GPUTable["GpuTable<br/>(sortable GPU specs)"]
+    Dashboard --> GPUTable["GpuTable<br/>(collapsible + sortable GPU specs)"]
     Dashboard --> Footer["Footer (source credits)"]
     Table -->|onSortChange / onToggleEntry| App
 ```
@@ -50,10 +50,10 @@ flowchart TD
 | File | Responsibility |
 | --- | --- |
 | `types.ts` | `ModelEntry`, `NewsEntry`, `HardwareEntry`, `GpuEntry`, their raw JSON shapes, and benchmark sort types; `ModelEntry.open_weight` is always present after parse; `ModelEntry.color` is the explicit bar color carried from `ai.json` |
-| `parse.ts` | `parseModelEntries`, `parseSweEntries`, `parseNewsEntries`, `parseHardwareEntries`, `parseGpuEntries`, provider/open-weight inference, and `InvariantError`; upholds **INV-001** (every model has a provider) and structural guards at the single gate. News URLs and ISO dates are validated, copied, and sorted newest first before reaching the view. Hardware entries are validated (provider, model, total_params, url required; 1-bit and 2-bit quant sizes nullable). GPU entries are validated (model, year required; memory, memory_type, memory_bandwidth_gbs, fp16_tflops nullable). SWE provider rules cover Claude, GPT, Grok, GLM, Kimi, Gemini, MiniMax, and Inkling |
+| `parse.ts` | `parseModelEntries`, `parseSweEntries`, `parseNewsEntries`, `parseHardwareEntries`, `parseGpuEntries`, provider/open-weight inference, and `InvariantError`; upholds **INV-001** (every model has a provider) and structural guards at the single gate. News URLs and ISO dates are validated, copied, and sorted newest first before reaching the view. Hardware entries are validated (provider, model, total_params, url required; 1-bit and 2-bit quant sizes nullable). GPU entries are validated (model, date required; memory, memory_type, memory_bandwidth_gbs, fp16_tflops nullable). SWE provider rules cover Claude, GPT, Grok, GLM, Kimi, Gemini, MiniMax, and Inkling |
 | `merge.ts` | `mergeSweMetrics`, `modelMatchKey`; adds optional SWE table columns to matching Artificial Analysis rows |
 | `sort.ts` | `sortModels`, `nextSortState`, `DEFAULT_SORT` (score desc) |
-| `filter.ts` | `openWeightIds`; the id set used by the "Open Weights Only" preset |
+| `filter.ts` | `openWeightIds`; the id set used by the "Open Weights" preset |
 | `index.ts` | Public re-exports |
 
 `data/swe.json` does not include provider fields, so `parseSweEntries` derives
@@ -74,15 +74,16 @@ All views are pure (props in, callbacks out, no business logic):
   below the x-axis allocation so the "Model" title sits close to the frame. The
   lower SWE comparison charts use fit-to-width mode with skinnier bars to avoid
   horizontal chart scrollbars.
-- `ModelTable` - sortable table; headers `Provider`, `Model Name`, `Intelligence`;
-  `tasteful_solve_rate_pct`, `basic_solve_rate_pct`, `avg_steps`, and
-  `avg_tokens`; click headers to toggle asc/desc. The table expands to full
-  height and scrolls horizontally on narrow viewports. Missing SWE values render
-  as `*`. Model names are buttons; clicking toggles matching model inclusion
-  across all charts while the row remains visible when deselected, with a gray
-  background and faded text. An "Open Weights Only" toggle sits beside the
-  title; turning it on sets the selection to the open-weight models, turning it
-  off re-selects every model.
+- `ModelTable` - collapsible (Accordion, expanded by default) sortable table;
+  headers `Provider`, `Model Name`, `Intelligence`, `basic_solve_rate_pct`,
+  `tasteful_solve_rate_pct`, `avg_steps`, and `avg_tokens`; click headers to
+  toggle asc/desc. The table scrolls horizontally on narrow viewports. Missing
+  SWE values render as `*`. Model names are buttons; clicking toggles matching
+  model inclusion across all charts while the row remains visible when
+  deselected, with a gray background and faded text. An "Open Weights" toggle
+  sits immediately to the right of the title in the accordion summary;
+  clicking it does not toggle the accordion. Turning it on sets the selection
+  to the open-weight models, turning it off re-selects every model.
 - `Footer` - credits all data sources,
   [Artificial Analysis](https://artificialanalysis.ai/),
   [Senior SWE Bench](https://senior-swe-bench.snorkel.ai/),
@@ -112,16 +113,19 @@ All views are pure (props in, callbacks out, no business logic):
   Default sort is total params descending (largest first). Sort is local
   `useState`/`useMemo` in the component. Total params are parsed to billions
   for numeric sorting (e.g. "2.8T" -> 2800).
-- `GpuTable` - sortable table of NVIDIA GPU specifications; headers `GPU
-  Model`, `Year`, `Memory`, `Memory Type`, `Mem BW (GB/s)`, `FP16 (TFLOPS)`;
-  click headers to toggle asc/desc. Missing values render as `*`. Default sort
-  is year descending (newest first). Sort is local `useState`/`useMemo` in the
-  component.
-- `Dashboard` - layout composing the intelligence chart, enriched details
-  table, responsive side-by-side SWE comparison charts (each with a Senior
-  SWE Bench source chip), HuggingFace estimated hardware chart and table,
-  GPU specifications table, then footer. News sits between the lead
-  intelligence chart and model details.
+- `GpuTable` - collapsible (Accordion, expanded by default) sortable table of
+  GPU specifications; headers `GPU Model`, `Date`, `Memory`, `Memory Type`,
+  `Mem BW (GB/s)`, `FP16 (TFLOPS)`; click headers to toggle asc/desc. Missing
+  values render as `*`. Default sort is date descending (newest first). Sort
+  is local `useState`/`useMemo` in the component. GPU source links are
+  rendered as plain links below the table.
+- `Dashboard` - layout composing the intelligence chart, collapsible enriched
+  details table, responsive side-by-side SWE comparison charts (Basic Solve
+  Rate on the left, Tasteful on the right, each with a Senior SWE Bench source
+  chip), an "Open Weights" toggle beside the SWE title, HuggingFace estimated
+  hardware chart and table ("Open Weight Hosting Sizes"), collapsible GPU
+  specifications table with source links below, then footer. News sits
+  between the lead intelligence chart and model details.
 
 ### Controller (`App.tsx`)
 
@@ -134,15 +138,16 @@ converted to match keys and filtered out of the Artificial Analysis chart plus
 both SWE charts when corresponding SWE rows exist. The main table now includes
 the three SWE-only models (Claude Opus 4.7, GPT-5.4 (xhigh), Claude Sonnet 4.6)
 as not-open-weight rows, so every SWE model has an Artificial Analysis
-counterpart and the "Open Weights Only" preset propagates fully to the SWE
+counterpart and the "Open Weights" preset propagates fully to the SWE
 charts. The SWE data covers 19 models from senior-swe-bench.snorkel.ai. The
 preset is a selection: on ->
 `replaceSelection(openWeightIds(...))`; off -> `replaceSelection(allIds)`, so the
 table graying/fading and every chart follow the selection. The SWE charts are
-rendered below the table from `swe.json` rows sorted by score descending: one
-chart for `tasteful_solve_rate_pct`, one for `basic_solve_rate_pct`, each with a
-source chip linking to Senior SWE Bench. Mounted at the router index route
-(react-router retained).
+rendered below the table from `swe.json` rows sorted by score descending:
+Basic Solve Rate on the left, Tasteful Solve Rate on the right, each with a
+source chip linking to Senior SWE Bench. An "Open Weights" toggle beside the
+SWE title mirrors the one in the Model Details table. Mounted at the router
+index route (react-router retained).
 
 ## Invariants
 
@@ -169,7 +174,7 @@ journey
     Click a header, including SWE metrics: 5: User
     Toggle asc/desc: 5: User
     Click model button to remove from all matching charts: 5: User
-    Toggle "Open Weights Only" to restrict selection to open models: 5: User
+    Toggle "Open Weights" to restrict selection to open models: 5: User
   section Explore SWE
     See tasteful/basic charts side by side on desktop: 5: User
     See charts reflow vertically on mobile: 5: User

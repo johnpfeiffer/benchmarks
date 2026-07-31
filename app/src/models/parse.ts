@@ -229,16 +229,16 @@ export function parseHardwareEntries(raw: readonly RawHardwareEntry[]): Hardware
 
 function normalizeGpu(raw: RawGpuEntry, index: number): GpuEntry {
   const model = assertModelName(raw?.model, index)
-  const year = raw?.year
-  if (typeof year !== 'number' || Number.isNaN(year)) {
-    throw new InvariantError(`GPU entry at index ${index} has a non-numeric year`, index, 'GPU-YEAR')
+  const date = raw?.date
+  if (typeof date !== 'string' || date.trim() === '') {
+    throw new InvariantError(`GPU entry at index ${index} has no date`, index, 'GPU-DATE')
   }
   const memory = typeof raw?.memory === 'string' && raw.memory.trim() !== '' ? raw.memory : null
   const memory_type = typeof raw?.memory_type === 'string' && raw.memory_type.trim() !== '' ? raw.memory_type : null
   const memory_bandwidth_gbs = typeof raw?.memory_bandwidth_gbs === 'number' ? raw.memory_bandwidth_gbs : null
   const fp16_tflops = typeof raw?.fp16_tflops === 'number' ? raw.fp16_tflops : null
 
-  return { model, year, memory, memory_type, memory_bandwidth_gbs, fp16_tflops }
+  return { model, date, memory, memory_type, memory_bandwidth_gbs, fp16_tflops }
 }
 
 /** Validate embedded GPU hardware-spec entries. */

@@ -1,5 +1,9 @@
 import { useMemo, useState } from 'react'
+import ExpandMoreIcon from '@mui/icons-material/ExpandMore'
 import {
+  Accordion,
+  AccordionDetails,
+  AccordionSummary,
   Box,
   Table,
   TableBody,
@@ -12,16 +16,16 @@ import {
 } from '@mui/material'
 import type { GpuEntry } from '../models'
 
-type SortField = 'model' | 'year' | 'memory' | 'memory_type' | 'memory_bandwidth_gbs' | 'fp16_tflops'
+type SortField = 'model' | 'date' | 'memory' | 'memory_type' | 'memory_bandwidth_gbs' | 'fp16_tflops'
 type SortDirection = 'asc' | 'desc'
 interface SortState { field: SortField; direction: SortDirection }
 
-const DEFAULT_SORT: SortState = { field: 'year', direction: 'desc' }
+const DEFAULT_SORT: SortState = { field: 'date', direction: 'desc' }
 
 function fieldValue(entry: GpuEntry, field: SortField): string | number | null {
   switch (field) {
     case 'model': return entry.model
-    case 'year': return entry.year
+    case 'date': return entry.date
     case 'memory': return entry.memory
     case 'memory_type': return entry.memory_type
     case 'memory_bandwidth_gbs': return entry.memory_bandwidth_gbs
@@ -52,7 +56,7 @@ function nextSort(current: SortState, field: SortField): SortState {
 
 const COLUMNS: Array<{ label: string; field: SortField }> = [
   { label: 'GPU Model', field: 'model' },
-  { label: 'Year', field: 'year' },
+  { label: 'Date', field: 'date' },
   { label: 'Memory', field: 'memory' },
   { label: 'Memory Type', field: 'memory_type' },
   { label: 'Mem BW (GB/s)', field: 'memory_bandwidth_gbs' },
@@ -64,7 +68,7 @@ interface GpuTableProps {
   title: string
 }
 
-/** Sortable table of NVIDIA GPU hardware specifications. */
+/** Collapsible, sortable table of GPU hardware specifications. */
 export function GpuTable({ entries, title }: GpuTableProps) {
   const [sort, setSort] = useState<SortState>(DEFAULT_SORT)
 
@@ -80,43 +84,49 @@ export function GpuTable({ entries, title }: GpuTableProps) {
 
   return (
     <Box>
-      <Typography variant="h6" component="h2" sx={{ mb: 1 }}>
-        {title}
-      </Typography>
-      <TableContainer
-        component={Box}
-        sx={{ border: '1px solid', borderColor: 'divider', borderRadius: 1, overflowX: 'auto' }}
-      >
-        <Table size="small" aria-label={title}>
-          <TableHead>
-            <TableRow>
-              {COLUMNS.map((col) => (
-                <TableCell key={col.field}>
-                  <TableSortLabel
-                    active={sort.field === col.field}
-                    direction={sort.field === col.field ? sort.direction : 'asc'}
-                    onClick={() => handleSortChange(col.field)}
-                  >
-                    {col.label}
-                  </TableSortLabel>
-                </TableCell>
-              ))}
-            </TableRow>
-          </TableHead>
-          <TableBody>
-            {sorted.map((entry) => (
-              <TableRow key={entry.model} hover>
-                <TableCell>{entry.model}</TableCell>
-                <TableCell>{entry.year}</TableCell>
-                <TableCell>{entry.memory ?? '*'}</TableCell>
-                <TableCell>{entry.memory_type ?? '*'}</TableCell>
-                <TableCell>{entry.memory_bandwidth_gbs ?? '*'}</TableCell>
-                <TableCell>{entry.fp16_tflops ?? '*'}</TableCell>
-              </TableRow>
-            ))}
-          </TableBody>
-        </Table>
-      </TableContainer>
+      <Accordion defaultExpanded disableGutters variant="outlined">
+        <AccordionSummary expandIcon={<ExpandMoreIcon />} aria-controls="gpu-content" id="gpu-header">
+          <Typography variant="h6" component="span">
+            {title}
+          </Typography>
+        </AccordionSummary>
+        <AccordionDetails id="gpu-content" sx={{ p: 0 }}>
+          <TableContainer
+            component={Box}
+            sx={{ overflowX: 'auto' }}
+          >
+            <Table size="small" aria-label={title}>
+              <TableHead>
+                <TableRow>
+                  {COLUMNS.map((col) => (
+                    <TableCell key={col.field}>
+                      <TableSortLabel
+                        active={sort.field === col.field}
+                        direction={sort.field === col.field ? sort.direction : 'asc'}
+                        onClick={() => handleSortChange(col.field)}
+                      >
+                        {col.label}
+                      </TableSortLabel>
+                    </TableCell>
+                  ))}
+                </TableRow>
+              </TableHead>
+              <TableBody>
+                {sorted.map((entry) => (
+                  <TableRow key={entry.model} hover>
+                    <TableCell>{entry.model}</TableCell>
+                    <TableCell>{entry.date}</TableCell>
+                    <TableCell>{entry.memory ?? '*'}</TableCell>
+                    <TableCell>{entry.memory_type ?? '*'}</TableCell>
+                    <TableCell>{entry.memory_bandwidth_gbs ?? '*'}</TableCell>
+                    <TableCell>{entry.fp16_tflops ?? '*'}</TableCell>
+                  </TableRow>
+                ))}
+              </TableBody>
+            </Table>
+          </TableContainer>
+        </AccordionDetails>
+      </Accordion>
     </Box>
   )
 }

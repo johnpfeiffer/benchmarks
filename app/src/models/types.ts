@@ -76,7 +76,8 @@ export interface HardwareEntry {
 /** A GPU hardware-spec row as embedded in gpu.json. */
 export interface RawGpuEntry {
   model: string
-  year: number
+  /** Release date as YYYY or YYYY-MM string. */
+  date: string
   /** Memory description, e.g. "80 GB HBM3e" or "40 HBM2e (80* opt)". */
   memory: string | null
   /** Memory type, e.g. "HBM3e", "GDDR6X". */
@@ -90,7 +91,7 @@ export interface RawGpuEntry {
 /** A validated GPU entry. Exists only when structural guards hold. */
 export interface GpuEntry {
   model: string
-  year: number
+  date: string
   memory: string | null
   memory_type: string | null
   memory_bandwidth_gbs: number | null

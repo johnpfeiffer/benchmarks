@@ -173,29 +173,29 @@ describe('embedded data integrity', () => {
 
   it('includes GPU entries with specs and null for missing values', () => {
     expect(gpu).toHaveLength(13)
-    const h100sxm = gpu.find((e) => e.model === 'NVIDIA H100 (SXM)')
+    const h100sxm = gpu.find((e) => e.model === 'H100 (SXM)')
     expect(h100sxm).toMatchObject({
-      year: 2022, memory: '80 GB HBM3e', memory_type: 'HBM3e',
+      date: '2022-10', memory: '80 GB HBM3e', memory_type: 'HBM3e',
       memory_bandwidth_gbs: 3355, fp16_tflops: 1979,
     })
-    const a100sxm = gpu.find((e) => e.model === 'NVIDIA A100 (SXM)')
+    const a100sxm = gpu.find((e) => e.model === 'A100 (SXM)')
     expect(a100sxm).toMatchObject({
-      year: 2020, memory: '40 HBM2e (80* opt)', memory_type: 'HBM2e',
+      date: '2020', memory: '40 HBM2e (80* opt)', memory_type: 'HBM2e',
       memory_bandwidth_gbs: 1555, fp16_tflops: 312,
     })
-    const b200 = gpu.find((e) => e.model === 'NVIDIA B200 (SXM)')
+    const b200 = gpu.find((e) => e.model === 'B200 (SXM)')
     expect(b200).toMatchObject({
-      year: 2025, memory: '192 GB HBM3e', memory_type: 'HBM3e',
+      date: '2024-03', memory: '192 GB HBM3e', memory_type: 'HBM3e',
       memory_bandwidth_gbs: 8000, fp16_tflops: 20000,
     })
-    const rtxpro = gpu.find((e) => e.model === 'NVIDIA RTX Pro 4000 SFF')
+    const rtxpro = gpu.find((e) => e.model === 'RTX Pro 4000 Blackwell')
     expect(rtxpro).toMatchObject({
-      year: 2025, memory: null, memory_type: null,
+      date: '2025-03', memory: '24 GB GDDR7', memory_type: 'GDDR7',
       memory_bandwidth_gbs: null, fp16_tflops: null,
     })
-    const v100 = gpu.find((e) => e.model === 'NVIDIA Tesla V100')
+    const v100 = gpu.find((e) => e.model === 'Tesla V100')
     expect(v100).toMatchObject({
-      year: 2017, memory: '32 GB HBM2', memory_type: 'HBM2',
+      date: '2017', memory: '32 GB HBM2', memory_type: 'HBM2',
       memory_bandwidth_gbs: 900, fp16_tflops: 125,
     })
   })

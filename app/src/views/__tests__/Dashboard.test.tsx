@@ -44,9 +44,9 @@ const hardwareEntries: HardwareEntry[] = [
 ]
 
 const gpuEntries: GpuEntry[] = [
-  { model: 'NVIDIA A100 (SXM)', year: 2020, memory: '40 HBM2e (80* opt)', memory_type: 'HBM2e', memory_bandwidth_gbs: 1555, fp16_tflops: 312 },
-  { model: 'NVIDIA H100 (SXM)', year: 2022, memory: '80 GB HBM3e', memory_type: 'HBM3e', memory_bandwidth_gbs: 3355, fp16_tflops: 1979 },
-  { model: 'NVIDIA Tesla T4', year: 2018, memory: '16 GB GDDR6', memory_type: 'GDDR6', memory_bandwidth_gbs: 300, fp16_tflops: 65.6 },
+  { model: 'A100 (SXM)', date: '2020', memory: '40 HBM2e (80* opt)', memory_type: 'HBM2e', memory_bandwidth_gbs: 1555, fp16_tflops: 312 },
+  { model: 'H100 (SXM)', date: '2022-10', memory: '80 GB HBM3e', memory_type: 'HBM3e', memory_bandwidth_gbs: 3355, fp16_tflops: 1979 },
+  { model: 'L40 (Ada)', date: '2022-11', memory: '48 GB GDDR6', memory_type: 'GDDR6', memory_bandwidth_gbs: 864, fp16_tflops: 1466 },
 ]
 
 /** Controller stand-in mirroring App.tsx: owns sort state, feeds sorted rows. */
@@ -100,6 +100,7 @@ function DashboardController({ initialSort = DEFAULT_SORT }: { initialSort?: Sor
       gpuSources={[
         { label: 'NVIDIA Hopper Architecture', href: 'https://developer.nvidia.com/blog/nvidia-hopper-architecture-in-depth/' },
         { label: 'NVIDIA RTX Pro 6000', href: 'https://www.nvidia.com/en-us/products/workstations/professional-desktop-gpus/rtx-pro-6000/' },
+        { label: 'NVIDIA H200', href: 'https://www.nvidia.com/en-us/data-center/h200/' },
       ]}
       sources={[
         { label: 'Artificial Analysis', href: 'https://artificialanalysis.ai/' },
@@ -214,8 +215,8 @@ describe('Dashboard', () => {
     renderDashboard()
     const table = intelligenceTable()
     expect(within(table).getByRole('button', { name: /Intelligence/i })).toBeInTheDocument()
-    expect(within(table).getByRole('button', { name: /tasteful_solve_rate_pct/i })).toBeInTheDocument()
     expect(within(table).getByRole('button', { name: /basic_solve_rate_pct/i })).toBeInTheDocument()
+    expect(within(table).getByRole('button', { name: /tasteful_solve_rate_pct/i })).toBeInTheDocument()
     expect(within(table).getByRole('button', { name: /avg_steps/i })).toBeInTheDocument()
     expect(within(table).getByRole('button', { name: /avg_tokens/i })).toBeInTheDocument()
   })
@@ -280,15 +281,19 @@ describe('Dashboard', () => {
     expect(screen.getAllByText('No models selected')).toHaveLength(3)
   })
 
-  it('renders the "Open Weights Only" toggle beside the Model Details title, off by default', () => {
+  it('renders the "Open Weights" toggle beside the Model Details title, off by default', () => {
     renderDashboard()
-    const toggle = screen.getByRole('button', { name: 'Open Weights Only' })
+    const table = intelligenceTable()
+    const section = table.closest('section') as HTMLElement
+    const toggle = within(section).getByRole('button', { name: 'Open Weights' })
     expect(toggle).toHaveAttribute('aria-pressed', 'false')
   })
 
-  it('sets selection to open-weight models when "Open Weights Only" is toggled on', () => {
+  it('sets selection to open-weight models when "Open Weights" is toggled on', () => {
     renderDashboard()
-    const toggle = screen.getByRole('button', { name: 'Open Weights Only' })
+    const table = intelligenceTable()
+    const section = table.closest('section') as HTMLElement
+    const toggle = within(section).getByRole('button', { name: 'Open Weights' })
     fireEvent.click(toggle)
     expect(toggle).toHaveAttribute('aria-pressed', 'true')
     // Only Alpha is open-weight -> stays selected; Beta and Gamma deselected.
@@ -297,15 +302,25 @@ describe('Dashboard', () => {
     expect(screen.getByRole('button', { name: 'Gamma' })).toHaveAttribute('aria-pressed', 'false')
   })
 
-  it('re-selects every model when "Open Weights Only" is toggled back off', () => {
+  it('re-selects every model when "Open Weights" is toggled back off', () => {
     renderDashboard()
-    const toggle = screen.getByRole('button', { name: 'Open Weights Only' })
+    const table = intelligenceTable()
+    const section = table.closest('section') as HTMLElement
+    const toggle = within(section).getByRole('button', { name: 'Open Weights' })
     fireEvent.click(toggle) // on
     fireEvent.click(toggle) // off
     expect(toggle).toHaveAttribute('aria-pressed', 'false')
     expect(screen.getByRole('button', { name: 'Alpha' })).toHaveAttribute('aria-pressed', 'true')
     expect(screen.getByRole('button', { name: 'Beta' })).toHaveAttribute('aria-pressed', 'true')
     expect(screen.getByRole('button', { name: 'Gamma' })).toHaveAttribute('aria-pressed', 'true')
+  })
+
+  it('renders an "Open Weights" toggle beside the Senior SWE Bench title', () => {
+    renderDashboard()
+    const sweHeading = screen.getByRole('heading', { name: 'Senior SWE Bench' })
+    const sweSection = sweHeading.closest('section') as HTMLElement
+    const toggle = within(sweSection).getByRole('button', { name: 'Open Weights' })
+    expect(toggle).toHaveAttribute('aria-pressed', 'false')
   })
 
   it('renders the HuggingFace Estimated Hardware section with chart and table', () => {
@@ -317,7 +332,7 @@ describe('Dashboard', () => {
       'https://huggingface.co/unsloth',
     )
     // Hardware table is present with expected columns
-    const hwTable = screen.getByRole('table', { name: 'Hardware Details' })
+    const hwTable = screen.getByRole('table', { name: 'Open Weight Hosting Sizes' })
     expect(within(hwTable).getByRole('button', { name: /Model/i })).toBeInTheDocument()
     expect(within(hwTable).getByRole('button', { name: /Total Params/i })).toBeInTheDocument()
     expect(within(hwTable).getByRole('button', { name: /UD-IQ1_S/i })).toBeInTheDocument()
@@ -328,7 +343,7 @@ describe('Dashboard', () => {
 
   it('shows hardware quant sizes and placeholders for missing 1-bit and 2-bit quants', () => {
     renderDashboard()
-    const hwTable = screen.getByRole('table', { name: 'Hardware Details' })
+    const hwTable = screen.getByRole('table', { name: 'Open Weight Hosting Sizes' })
     const rows = within(hwTable).getAllByRole('row')
     // At least one row has a numeric value and one has a placeholder
     const allText = rows.map((r) => r.textContent).join(' ')
@@ -341,7 +356,7 @@ describe('Dashboard', () => {
 
   it('links model names to their HuggingFace URLs', () => {
     renderDashboard()
-    const hwTable = screen.getByRole('table', { name: 'Hardware Details' })
+    const hwTable = screen.getByRole('table', { name: 'Open Weight Hosting Sizes' })
     const inklingLink = within(hwTable).getByRole('link', { name: 'Inkling' })
     expect(inklingLink).toHaveAttribute('href', 'https://huggingface.co/unsloth/Inkling-Small-GGUF')
     const gemmaLink = within(hwTable).getByRole('link', { name: 'Gemma 4 31B' })
@@ -350,7 +365,7 @@ describe('Dashboard', () => {
 
   it('sorts the hardware table by Total Params descending by default', () => {
     renderDashboard()
-    const hwTable = screen.getByRole('table', { name: 'Hardware Details' })
+    const hwTable = screen.getByRole('table', { name: 'Open Weight Hosting Sizes' })
     const rows = within(hwTable).getAllByRole('row')
     // Default sort: total_params desc -> Kimi K3 (2.8T) first, Gemma 4 31B (31B) last
     expect(rows[1].textContent).toContain('Kimi K3')
@@ -367,7 +382,7 @@ describe('Dashboard', () => {
     )
     const gpuTable = screen.getByRole('table', { name: 'GPU Specifications' })
     expect(within(gpuTable).getByRole('button', { name: /GPU Model/i })).toBeInTheDocument()
-    expect(within(gpuTable).getByRole('button', { name: /Year/i })).toBeInTheDocument()
+    expect(within(gpuTable).getByRole('button', { name: /Date/i })).toBeInTheDocument()
     expect(within(gpuTable).getByRole('button', { name: /Memory Type/i })).toBeInTheDocument()
     expect(within(gpuTable).getByRole('button', { name: /Mem BW/i })).toBeInTheDocument()
     expect(within(gpuTable).getByRole('button', { name: /FP16/i })).toBeInTheDocument()
@@ -380,15 +395,15 @@ describe('Dashboard', () => {
     const allText = rows.map((r) => r.textContent).join(' ')
     expect(allText).toContain('3355')
     expect(allText).toContain('1979')
-    expect(allText).toContain('65.6')
+    expect(allText).toContain('1466')
   })
 
-  it('sorts the GPU table by year descending by default', () => {
+  it('sorts the GPU table by date descending by default', () => {
     renderDashboard()
     const gpuTable = screen.getByRole('table', { name: 'GPU Specifications' })
     const rows = within(gpuTable).getAllByRole('row')
-    // Default sort: year desc -> H100 (2022) first, T4 (2018) last
-    expect(rows[1].textContent).toContain('NVIDIA H100 (SXM)')
-    expect(rows[rows.length - 1].textContent).toContain('NVIDIA Tesla T4')
+    // Default sort: date desc -> L40 (2022-11) first, A100 (2020) last
+    expect(rows[1].textContent).toContain('L40 (Ada)')
+    expect(rows[rows.length - 1].textContent).toContain('A100 (SXM)')
   })
 })
