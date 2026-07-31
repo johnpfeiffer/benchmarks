@@ -1,11 +1,12 @@
 # Architecture
 
 AI model benchmarks dashboard: visualizes, filters, and sorts embedded model
-benchmark datasets, a dated news feed, and HuggingFace estimated hardware
-sizes for 1-bit and 2-bit dynamic quants. It currently renders Artificial
-Analysis scores and Senior SWE Bench tasteful/basic solve rates. Models can be
-toggled in/out of the charts individually, or restricted to open-weight models
-via the "Open Weights Only" preset. Derived from the immutable
+benchmark datasets, a dated news feed, HuggingFace estimated hardware sizes
+for 1-bit and 2-bit dynamic quants, and NVIDIA GPU specifications. It
+currently renders Artificial Analysis scores and Senior SWE Bench
+tasteful/basic solve rates. Models can be toggled in/out of the charts
+individually, or restricted to open-weight models via the "Open Weights Only"
+preset. Derived from the immutable
 [`/KERNEL/`](./KERNEL/); if anything here conflicts with the kernel, the kernel
 wins.
 
@@ -27,6 +28,7 @@ flowchart TD
     SWEJSON["data/swe.json<br/>(embedded)"] --> App
     NEWSJSON["data/news.json<br/>(embedded)"] --> App
     HWJSON["data/hardware.json<br/>(embedded)"] --> App
+    GPUJSON["data/gpu.json<br/>(embedded)"] --> App
     App -->|parse + validate| Models["models/<br/>parse, sort, types"]
     Models -->|INV-001 gate| Validated["ModelEntry[] per source"]
     Models --> Merge["mergeSweMetrics<br/>(SWE columns on AI rows)"]
@@ -36,8 +38,9 @@ flowchart TD
     Dashboard --> Table["ModelTable<br/>(sortable + selectable + SWE columns)"]
     Dashboard --> ChartB["IntelligenceBarChart<br/>(SWE tasteful solve rate)"]
     Dashboard --> ChartC["IntelligenceBarChart<br/>(SWE basic solve rate)"]
-    Dashboard --> HWChart["HardwareChart<br/>(1-bit quant sizes)"]
+    Dashboard --> HWChart["HardwareChart<br/>(1-bit + 2-bit quant sizes)"]
     Dashboard --> HWTable["HardwareTable<br/>(sortable hardware details)"]
+    Dashboard --> GPUTable["GpuTable<br/>(sortable GPU specs)"]
     Dashboard --> Footer["Footer (source credits)"]
     Table -->|onSortChange / onToggleEntry| App
 ```
@@ -46,8 +49,8 @@ flowchart TD
 
 | File | Responsibility |
 | --- | --- |
-| `types.ts` | `ModelEntry`, `NewsEntry`, `HardwareEntry`, their raw JSON shapes, and benchmark sort types; `ModelEntry.open_weight` is always present after parse; `ModelEntry.color` is the explicit bar color carried from `ai.json` |
-| `parse.ts` | `parseModelEntries`, `parseSweEntries`, `parseNewsEntries`, `parseHardwareEntries`, provider/open-weight inference, and `InvariantError`; upholds **INV-001** (every model has a provider) and structural guards at the single gate. News URLs and ISO dates are validated, copied, and sorted newest first before reaching the view. Hardware entries are validated (provider, model, total_params, url required; 1-bit and 2-bit quant sizes nullable) |
+| `types.ts` | `ModelEntry`, `NewsEntry`, `HardwareEntry`, `GpuEntry`, their raw JSON shapes, and benchmark sort types; `ModelEntry.open_weight` is always present after parse; `ModelEntry.color` is the explicit bar color carried from `ai.json` |
+| `parse.ts` | `parseModelEntries`, `parseSweEntries`, `parseNewsEntries`, `parseHardwareEntries`, `parseGpuEntries`, provider/open-weight inference, and `InvariantError`; upholds **INV-001** (every model has a provider) and structural guards at the single gate. News URLs and ISO dates are validated, copied, and sorted newest first before reaching the view. Hardware entries are validated (provider, model, total_params, url required; 1-bit and 2-bit quant sizes nullable). GPU entries are validated (model, year required; memory, memory_type, memory_bandwidth_gbs, fp16_tflops nullable) |
 | `merge.ts` | `mergeSweMetrics`, `modelMatchKey`; adds optional SWE table columns to matching Artificial Analysis rows |
 | `sort.ts` | `sortModels`, `nextSortState`, `DEFAULT_SORT` (score desc) |
 | `filter.ts` | `openWeightIds`; the id set used by the "Open Weights Only" preset |
@@ -80,9 +83,12 @@ All views are pure (props in, callbacks out, no business logic):
   background and faded text. An "Open Weights Only" toggle sits beside the
   title; turning it on sets the selection to the open-weight models, turning it
   off re-selects every model.
-- `Footer` - credits both data sources,
-  [Artificial Analysis](https://artificialanalysis.ai/) and
-  [Senior SWE Bench](https://senior-swe-bench.snorkel.ai/), and links to the
+- `Footer` - credits all data sources,
+  [Artificial Analysis](https://artificialanalysis.ai/),
+  [Senior SWE Bench](https://senior-swe-bench.snorkel.ai/),
+  [HuggingFace](https://huggingface.co/unsloth), and
+  [NVIDIA](https://developer.nvidia.com/blog/nvidia-hopper-architecture-in-depth/),
+  and links to the
   [GitHub repository](https://github.com/johnpfeiffer/benchmarks) with an inline
   GitHub SVG mark.
 - `NewsSection` - outlined accordion immediately below the lead chart, expanded
@@ -104,15 +110,20 @@ All views are pure (props in, callbacks out, no business logic):
   names link to their HuggingFace model pages. Missing quants render as `*`.
   Sort is local `useState`/`useMemo` in the component. Total params are parsed
   to billions for numeric sorting (e.g. "2.8T" -> 2800).
+- `GpuTable` - sortable table of NVIDIA GPU specifications; headers `GPU
+  Model`, `Year`, `Memory`, `Memory Type`, `Mem BW (GB/s)`, `FP16 (TFLOPS)`;
+  click headers to toggle asc/desc. Missing values render as `*`. Default sort
+  is year descending (newest first). Sort is local `useState`/`useMemo` in the
+  component.
 - `Dashboard` - layout composing the intelligence chart, enriched details
   table, responsive side-by-side SWE comparison charts, HuggingFace estimated
-  hardware chart and table, then footer. News sits
+  hardware chart and table, GPU specifications table, then footer. News sits
   between the lead intelligence chart and model details.
 
 ### Controller (`App.tsx`)
 
-Parses embedded JSON once (`useMemo`), including validated newest-first news
-and HuggingFace hardware entries, merges SWE metrics into the main
+Parses embedded JSON once (`useMemo`), including validated newest-first news,
+HuggingFace hardware entries, and GPU specification entries, merges SWE metrics into the main
 Artificial Analysis table rows, holds the table `SortState` and selected model
 IDs for the intelligence chart, computes sorted/chart-visible entries, and
 forwards header clicks through `nextSortState`. Deselected table model names are
@@ -163,6 +174,11 @@ journey
     Sort hardware table by column: 4: User
     See missing quants as placeholder: 3: User
     Click model name to open HuggingFace page: 4: User
+  section Explore GPU Specs
+    See GPU specifications table: 4: User
+    Sort GPU table by column: 4: User
+    See missing specs as placeholder: 3: User
+    Open NVIDIA source pages from chips: 4: User
   section Credit
     See data sources in footer: 3: User
     Open GitHub repository from footer icon link: 3: User
@@ -173,7 +189,8 @@ journey
 - `npm test` - Vitest unit + component tests (domain logic + dashboard happy
   path / sort interaction / all-chart model filtering / SWE metric merge /
   source credits / news validation, ordering, visible dates, sort toggle, and
-  collapse behavior / hardware entry validation and dashboard rendering).
+  collapse behavior / hardware entry validation and dashboard rendering / GPU
+  entry validation and dashboard rendering).
 - `npm run build` - `tsc -b` typecheck + Vite production build.
 
 Tests follow Red/Green TDD with concise table-driven cases for the domain
