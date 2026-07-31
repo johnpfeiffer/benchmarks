@@ -4,7 +4,7 @@ import { useState } from 'react'
 import { ThemeProvider, CssBaseline } from '@mui/material'
 import { theme } from '../../theme'
 import { Dashboard } from '../Dashboard'
-import { sortModels, nextSortState, openWeightIds, DEFAULT_SORT, type ModelEntry, type HardwareEntry, type SortField, type SortState } from '../../models'
+import { sortModels, nextSortState, openWeightIds, DEFAULT_SORT, type ModelEntry, type HardwareEntry, type GpuEntry, type SortField, type SortState } from '../../models'
 
 const entries: ModelEntry[] = [
   {
@@ -41,6 +41,12 @@ const hardwareEntries: HardwareEntry[] = [
   { model: 'Inkling', provider: 'Thinking Machines', total_params: '264B', iq1_s_gb: 74.8, iq1_m_gb: 78.8, iq2_xxs_gb: 82.3, iq2_m_gb: 82.4, url: 'https://huggingface.co/unsloth/Inkling-Small-GGUF' },
   { model: 'Kimi K3', provider: 'Moonshot AI', total_params: '2.8T', iq1_s_gb: 594, iq1_m_gb: 649, iq2_xxs_gb: 711, iq2_m_gb: null, url: 'https://huggingface.co/unsloth/Kimi-K3-GGUF' },
   { model: 'Gemma 4 31B', provider: 'Google', total_params: '31B', iq1_s_gb: null, iq1_m_gb: null, iq2_xxs_gb: 8.53, iq2_m_gb: 10.8, url: 'https://huggingface.co/unsloth/gemma-4-31B-it-GGUF' },
+]
+
+const gpuEntries: GpuEntry[] = [
+  { model: 'NVIDIA A100 (SXM)', year: 2020, memory: '40 HBM2e (80* opt)', memory_type: 'HBM2e', memory_bandwidth_gbs: 1555, fp16_tflops: 312 },
+  { model: 'NVIDIA H100 (SXM)', year: 2022, memory: '80 GB HBM3e', memory_type: 'HBM3e', memory_bandwidth_gbs: 3355, fp16_tflops: 1979 },
+  { model: 'NVIDIA Tesla T4', year: 2018, memory: '16 GB GDDR6', memory_type: 'GDDR6', memory_bandwidth_gbs: 300, fp16_tflops: 65.6 },
 ]
 
 /** Controller stand-in mirroring App.tsx: owns sort state, feeds sorted rows. */
@@ -89,6 +95,11 @@ function DashboardController({ initialSort = DEFAULT_SORT }: { initialSort?: Sor
       ]}
       hardware={hardwareEntries}
       hardwareSource={{ label: 'HuggingFace', href: 'https://huggingface.co/unsloth' }}
+      gpu={gpuEntries}
+      gpuSources={[
+        { label: 'NVIDIA Hopper Architecture', href: 'https://developer.nvidia.com/blog/nvidia-hopper-architecture-in-depth/' },
+        { label: 'NVIDIA RTX Pro 6000', href: 'https://www.nvidia.com/en-us/products/workstations/professional-desktop-gpus/rtx-pro-6000/' },
+      ]}
       sources={[
         { label: 'Artificial Analysis', href: 'https://artificialanalysis.ai/' },
         { label: 'Senior SWE Bench', href: 'https://senior-swe-bench.snorkel.ai/' },
@@ -334,5 +345,40 @@ describe('Dashboard', () => {
     // Default sort: iq1_s_gb desc -> Kimi K3 (594) first, Gemma (null) last
     expect(rows[1].textContent).toContain('Kimi K3')
     expect(rows[rows.length - 1].textContent).toContain('Gemma 4 31B')
+  })
+
+  it('renders the Hardware section with GPU specifications table', () => {
+    renderDashboard()
+    expect(screen.getByRole('heading', { name: 'Hardware' })).toBeInTheDocument()
+    // Source chips link to NVIDIA pages
+    expect(screen.getByRole('link', { name: /NVIDIA Hopper Architecture/i })).toHaveAttribute(
+      'href',
+      'https://developer.nvidia.com/blog/nvidia-hopper-architecture-in-depth/',
+    )
+    const gpuTable = screen.getByRole('table', { name: 'GPU Specifications' })
+    expect(within(gpuTable).getByRole('button', { name: /GPU Model/i })).toBeInTheDocument()
+    expect(within(gpuTable).getByRole('button', { name: /Year/i })).toBeInTheDocument()
+    expect(within(gpuTable).getByRole('button', { name: /Memory Type/i })).toBeInTheDocument()
+    expect(within(gpuTable).getByRole('button', { name: /Mem BW/i })).toBeInTheDocument()
+    expect(within(gpuTable).getByRole('button', { name: /FP16/i })).toBeInTheDocument()
+  })
+
+  it('shows GPU specs and placeholders for missing values', () => {
+    renderDashboard()
+    const gpuTable = screen.getByRole('table', { name: 'GPU Specifications' })
+    const rows = within(gpuTable).getAllByRole('row')
+    const allText = rows.map((r) => r.textContent).join(' ')
+    expect(allText).toContain('3355')
+    expect(allText).toContain('1979')
+    expect(allText).toContain('65.6')
+  })
+
+  it('sorts the GPU table by year descending by default', () => {
+    renderDashboard()
+    const gpuTable = screen.getByRole('table', { name: 'GPU Specifications' })
+    const rows = within(gpuTable).getAllByRole('row')
+    // Default sort: year desc -> H100 (2022) first, T4 (2018) last
+    expect(rows[1].textContent).toContain('NVIDIA H100 (SXM)')
+    expect(rows[rows.length - 1].textContent).toContain('NVIDIA Tesla T4')
   })
 })

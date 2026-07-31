@@ -73,6 +73,30 @@ export interface HardwareEntry {
   url: string
 }
 
+/** A GPU hardware-spec row as embedded in gpu.json. */
+export interface RawGpuEntry {
+  model: string
+  year: number
+  /** Memory description, e.g. "80 GB HBM3e" or "40 HBM2e (80* opt)". */
+  memory: string | null
+  /** Memory type, e.g. "HBM3e", "GDDR6X". */
+  memory_type: string | null
+  /** Memory bandwidth in GB/s. */
+  memory_bandwidth_gbs: number | null
+  /** FP16 tensor TFLOPS. */
+  fp16_tflops: number | null
+}
+
+/** A validated GPU entry. Exists only when structural guards hold. */
+export interface GpuEntry {
+  model: string
+  year: number
+  memory: string | null
+  memory_type: string | null
+  memory_bandwidth_gbs: number | null
+  fp16_tflops: number | null
+}
+
 /** A validated model entry. Exists only when INV-001 holds. */
 export interface ModelEntry {
   id: string

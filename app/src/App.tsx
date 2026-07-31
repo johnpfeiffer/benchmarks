@@ -7,6 +7,7 @@ import {
   parseNewsEntries,
   parseSweEntries,
   parseHardwareEntries,
+  parseGpuEntries,
   mergeSweMetrics,
   modelMatchKey,
   sortModels,
@@ -22,6 +23,7 @@ import rawIntelligenceData from './data/ai.json'
 import rawSweData from './data/swe.json'
 import rawNewsData from './data/news.json'
 import rawHardwareData from './data/hardware.json'
+import rawGpuData from './data/gpu.json'
 
 export type AppContext = { app: string }
 
@@ -70,6 +72,7 @@ function DashboardPage() {
   const sweEntries = useMemo(() => parseSweEntries(rawSweData), [])
   const news = useMemo(() => parseNewsEntries(rawNewsData), [])
   const hardware = useMemo(() => parseHardwareEntries(rawHardwareData), [])
+  const gpu = useMemo(() => parseGpuEntries(rawGpuData), [])
   const tableEntries = useMemo(
     () => mergeSweMetrics(intelligenceEntries, sweEntries),
     [intelligenceEntries, sweEntries],
@@ -120,9 +123,12 @@ function DashboardPage() {
     { label: 'Artificial Analysis', href: 'https://artificialanalysis.ai/' },
     { label: 'Senior SWE Bench', href: 'https://senior-swe-bench.snorkel.ai/' },
     { label: 'HuggingFace', href: 'https://huggingface.co/unsloth' },
+    { label: 'NVIDIA Hopper Architecture', href: 'https://developer.nvidia.com/blog/nvidia-hopper-architecture-in-depth/' },
+    { label: 'NVIDIA RTX Pro 6000', href: 'https://www.nvidia.com/en-us/products/workstations/professional-desktop-gpus/rtx-pro-6000/' },
   ]
   const intelligenceSource = sources[0]
   const hardwareSource = sources[2]
+  const gpuSources: DataSourceCredit[] = [sources[3], sources[4]]
 
   return (
     <Dashboard
@@ -139,6 +145,8 @@ function DashboardPage() {
       news={news}
       hardware={hardware}
       hardwareSource={hardwareSource}
+      gpu={gpu}
+      gpuSources={gpuSources}
       intelligenceSource={intelligenceSource}
       sources={sources}
     />

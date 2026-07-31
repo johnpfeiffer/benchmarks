@@ -1,11 +1,12 @@
-import { Box, Container, Typography } from '@mui/material'
-import type { HardwareEntry, ModelEntry, NewsEntry, SortField, SortState } from '../models'
+import { Box, Chip, Container, Typography } from '@mui/material'
+import type { GpuEntry, HardwareEntry, ModelEntry, NewsEntry, SortField, SortState } from '../models'
 import { IntelligenceBarChart } from './IntelligenceBarChart'
 import { ModelTable } from './ModelTable'
 import { Footer } from './Footer'
 import { NewsSection } from './NewsSection'
 import { HardwareChart } from './HardwareChart'
 import { HardwareTable } from './HardwareTable'
+import { GpuTable } from './GpuTable'
 
 export interface DataSourceCredit {
   label: string
@@ -26,6 +27,8 @@ interface DashboardProps {
   news: readonly NewsEntry[]
   hardware: readonly HardwareEntry[]
   hardwareSource: DataSourceCredit
+  gpu: readonly GpuEntry[]
+  gpuSources: readonly DataSourceCredit[]
   intelligenceSource: DataSourceCredit
   sources: readonly DataSourceCredit[]
 }
@@ -50,6 +53,8 @@ export function Dashboard({
   news,
   hardware,
   hardwareSource,
+  gpu,
+  gpuSources,
   intelligenceSource,
   sources,
 }: DashboardProps) {
@@ -130,6 +135,28 @@ export function Dashboard({
         <Box sx={{ mt: 3 }}>
           <HardwareTable entries={hardware} title="Hardware Details" />
         </Box>
+      </Box>
+
+      <Box component="section" aria-labelledby="gpu-title" sx={{ mb: 5 }}>
+        <Typography id="gpu-title" variant="h5" component="h2" sx={{ mb: 1 }}>
+          Hardware
+        </Typography>
+        <Box sx={{ display: 'flex', gap: 1, flexWrap: 'wrap', mb: 2 }}>
+          {gpuSources.map((src) => (
+            <Chip
+              key={src.href}
+              component="a"
+              clickable
+              href={src.href}
+              target="_blank"
+              rel="noopener noreferrer"
+              label={`Source: ${src.label}`}
+              size="small"
+              variant="outlined"
+            />
+          ))}
+        </Box>
+        <GpuTable entries={gpu} title="GPU Specifications" />
       </Box>
 
       <Footer sources={sources} />

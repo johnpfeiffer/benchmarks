@@ -1,16 +1,18 @@
 import { describe, it, expect } from 'vitest'
-import { parseModelEntries, parseNewsEntries, parseSweEntries, parseHardwareEntries } from '../parse'
+import { parseModelEntries, parseNewsEntries, parseSweEntries, parseHardwareEntries, parseGpuEntries } from '../parse'
 import { modelMatchKey } from '../merge'
 import rawIntelligenceData from '../../data/ai.json'
 import rawSweData from '../../data/swe.json'
 import rawNewsData from '../../data/news.json'
 import rawHardwareData from '../../data/hardware.json'
+import rawGpuData from '../../data/gpu.json'
 
 describe('embedded data integrity', () => {
   const intelligence = parseModelEntries(rawIntelligenceData)
   const swe = parseSweEntries(rawSweData)
   const news = parseNewsEntries(rawNewsData)
   const hardware = parseHardwareEntries(rawHardwareData)
+  const gpu = parseGpuEntries(rawGpuData)
   const intelligenceKeys = new Set(intelligence.map((entry) => modelMatchKey(entry.model)))
 
   it('every Senior SWE Bench model has a matching Artificial Analysis row', () => {
@@ -84,7 +86,7 @@ describe('embedded data integrity', () => {
   })
 
   it('includes hardware entries with 1-bit and 2-bit quant sizes, urls, and null for missing quants', () => {
-    expect(hardware).toHaveLength(5)
+    expect(hardware).toHaveLength(6)
     const inkling = hardware.find((e) => e.model === 'Inkling')
     expect(inkling).toMatchObject({
       provider: 'Thinking Machines', total_params: '264B',
@@ -119,6 +121,42 @@ describe('embedded data integrity', () => {
       iq1_s_gb: 82.5, iq1_m_gb: 86.9,
       iq2_xxs_gb: 90.9, iq2_m_gb: 90.9,
       url: 'https://huggingface.co/unsloth/DeepSeek-V4-Flash-GGUF',
+    })
+    const nemotron = hardware.find((e) => e.model === 'Nemotron 3 Ultra 550B')
+    expect(nemotron).toMatchObject({
+      provider: 'NVIDIA', total_params: '550B',
+      iq1_s_gb: null, iq1_m_gb: 188,
+      iq2_xxs_gb: null, iq2_m_gb: null,
+      url: 'https://huggingface.co/unsloth/NVIDIA-Nemotron-3-Ultra-550B-A55B-GGUF',
+    })
+  })
+
+  it('includes GPU entries with specs and null for missing values', () => {
+    expect(gpu).toHaveLength(13)
+    const h100sxm = gpu.find((e) => e.model === 'NVIDIA H100 (SXM)')
+    expect(h100sxm).toMatchObject({
+      year: 2022, memory: '80 GB HBM3e', memory_type: 'HBM3e',
+      memory_bandwidth_gbs: 3355, fp16_tflops: 1979,
+    })
+    const a100sxm = gpu.find((e) => e.model === 'NVIDIA A100 (SXM)')
+    expect(a100sxm).toMatchObject({
+      year: 2020, memory: '40 HBM2e (80* opt)', memory_type: 'HBM2e',
+      memory_bandwidth_gbs: 1555, fp16_tflops: 312,
+    })
+    const b200 = gpu.find((e) => e.model === 'NVIDIA B200 (SXM)')
+    expect(b200).toMatchObject({
+      year: 2025, memory: '192 GB HBM3e', memory_type: 'HBM3e',
+      memory_bandwidth_gbs: 8000, fp16_tflops: 20000,
+    })
+    const rtxpro = gpu.find((e) => e.model === 'NVIDIA RTX Pro 4000 SFF')
+    expect(rtxpro).toMatchObject({
+      year: 2025, memory: null, memory_type: null,
+      memory_bandwidth_gbs: null, fp16_tflops: null,
+    })
+    const v100 = gpu.find((e) => e.model === 'NVIDIA Tesla V100')
+    expect(v100).toMatchObject({
+      year: 2017, memory: '32 GB HBM2', memory_type: 'HBM2',
+      memory_bandwidth_gbs: 900, fp16_tflops: 125,
     })
   })
 })
