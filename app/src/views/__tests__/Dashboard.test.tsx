@@ -4,7 +4,7 @@ import { useState } from 'react'
 import { ThemeProvider, CssBaseline } from '@mui/material'
 import { theme } from '../../theme'
 import { Dashboard } from '../Dashboard'
-import { sortModels, nextSortState, openWeightIds, DEFAULT_SORT, type ModelEntry, type SortField, type SortState } from '../../models'
+import { sortModels, nextSortState, openWeightIds, DEFAULT_SORT, type ModelEntry, type HardwareEntry, type SortField, type SortState } from '../../models'
 
 const entries: ModelEntry[] = [
   {
@@ -35,6 +35,12 @@ const sweChartEntries: ModelEntry[] = [
     avg_steps: 159,
     avg_tokens: '290.2K',
   },
+]
+
+const hardwareEntries: HardwareEntry[] = [
+  { model: 'Inkling', provider: 'Thinking Machines', total_params: '264B', iq1_s_gb: 74.8, iq1_m_gb: 78.8, iq2_xxs_gb: 82.3, iq2_m_gb: 82.4, url: 'https://huggingface.co/unsloth/Inkling-Small-GGUF' },
+  { model: 'Kimi K3', provider: 'Moonshot AI', total_params: '2.8T', iq1_s_gb: 594, iq1_m_gb: 649, iq2_xxs_gb: 711, iq2_m_gb: null, url: 'https://huggingface.co/unsloth/Kimi-K3-GGUF' },
+  { model: 'Gemma 4 31B', provider: 'Google', total_params: '31B', iq1_s_gb: null, iq1_m_gb: null, iq2_xxs_gb: 8.53, iq2_m_gb: 10.8, url: 'https://huggingface.co/unsloth/gemma-4-31B-it-GGUF' },
 ]
 
 /** Controller stand-in mirroring App.tsx: owns sort state, feeds sorted rows. */
@@ -81,6 +87,8 @@ function DashboardController({ initialSort = DEFAULT_SORT }: { initialSort?: Sor
         { url: 'https://example.com/newest', date: '2026-07-26' },
         { url: 'https://example.com/older', date: '2026-07-20' },
       ]}
+      hardware={hardwareEntries}
+      hardwareSource={{ label: 'HuggingFace', href: 'https://huggingface.co/unsloth' }}
       sources={[
         { label: 'Artificial Analysis', href: 'https://artificialanalysis.ai/' },
         { label: 'Senior SWE Bench', href: 'https://senior-swe-bench.snorkel.ai/' },
@@ -277,5 +285,54 @@ describe('Dashboard', () => {
     expect(screen.getByRole('button', { name: 'Alpha' })).toHaveAttribute('aria-pressed', 'true')
     expect(screen.getByRole('button', { name: 'Beta' })).toHaveAttribute('aria-pressed', 'true')
     expect(screen.getByRole('button', { name: 'Gamma' })).toHaveAttribute('aria-pressed', 'true')
+  })
+
+  it('renders the HuggingFace Estimated Hardware section with chart and table', () => {
+    renderDashboard()
+    expect(screen.getByRole('heading', { name: 'HuggingFace Estimated Hardware' })).toBeInTheDocument()
+    // Source chip links to HuggingFace
+    expect(screen.getAllByRole('link', { name: /HuggingFace/i })[0]).toHaveAttribute(
+      'href',
+      'https://huggingface.co/unsloth',
+    )
+    // Hardware table is present with expected columns
+    const hwTable = screen.getByRole('table', { name: 'Hardware Details' })
+    expect(within(hwTable).getByRole('button', { name: /Model/i })).toBeInTheDocument()
+    expect(within(hwTable).getByRole('button', { name: /Total Params/i })).toBeInTheDocument()
+    expect(within(hwTable).getByRole('button', { name: /UD-IQ1_S/i })).toBeInTheDocument()
+    expect(within(hwTable).getByRole('button', { name: /UD-IQ1_M/i })).toBeInTheDocument()
+    expect(within(hwTable).getByRole('button', { name: /UD-IQ2_XXS/i })).toBeInTheDocument()
+    expect(within(hwTable).getByRole('button', { name: /UD-IQ2_M/i })).toBeInTheDocument()
+  })
+
+  it('shows hardware quant sizes and placeholders for missing 1-bit and 2-bit quants', () => {
+    renderDashboard()
+    const hwTable = screen.getByRole('table', { name: 'Hardware Details' })
+    const rows = within(hwTable).getAllByRole('row')
+    // At least one row has a numeric value and one has a placeholder
+    const allText = rows.map((r) => r.textContent).join(' ')
+    expect(allText).toContain('74.8')
+    expect(allText).toContain('594')
+    expect(allText).toContain('82.3')
+    expect(allText).toContain('8.53')
+    expect(allText).toContain('*')
+  })
+
+  it('links model names to their HuggingFace URLs', () => {
+    renderDashboard()
+    const hwTable = screen.getByRole('table', { name: 'Hardware Details' })
+    const inklingLink = within(hwTable).getByRole('link', { name: 'Inkling' })
+    expect(inklingLink).toHaveAttribute('href', 'https://huggingface.co/unsloth/Inkling-Small-GGUF')
+    const gemmaLink = within(hwTable).getByRole('link', { name: 'Gemma 4 31B' })
+    expect(gemmaLink).toHaveAttribute('href', 'https://huggingface.co/unsloth/gemma-4-31B-it-GGUF')
+  })
+
+  it('sorts the hardware table by UD-IQ1_S descending by default', () => {
+    renderDashboard()
+    const hwTable = screen.getByRole('table', { name: 'Hardware Details' })
+    const rows = within(hwTable).getAllByRole('row')
+    // Default sort: iq1_s_gb desc -> Kimi K3 (594) first, Gemma (null) last
+    expect(rows[1].textContent).toContain('Kimi K3')
+    expect(rows[rows.length - 1].textContent).toContain('Gemma 4 31B')
   })
 })
