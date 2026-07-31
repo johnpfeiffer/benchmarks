@@ -17,7 +17,7 @@ type SortField = 'model' | 'provider' | 'total_params' | 'iq1_s_gb' | 'iq1_m_gb'
 type SortDirection = 'asc' | 'desc'
 interface SortState { field: SortField; direction: SortDirection }
 
-const DEFAULT_SORT: SortState = { field: 'iq1_s_gb', direction: 'desc' }
+const DEFAULT_SORT: SortState = { field: 'total_params', direction: 'desc' }
 
 /** Parse a param string like "264B" or "2.8T" into billions for numeric sorting. */
 function paramsInBillions(value: string): number {
