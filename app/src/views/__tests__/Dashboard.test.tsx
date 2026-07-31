@@ -95,6 +95,7 @@ function DashboardController({ initialSort = DEFAULT_SORT }: { initialSort?: Sor
       ]}
       hardware={hardwareEntries}
       hardwareSource={{ label: 'HuggingFace', href: 'https://huggingface.co/unsloth' }}
+      sweSource={{ label: 'Senior SWE Bench', href: 'https://senior-swe-bench.snorkel.ai/' }}
       gpu={gpuEntries}
       gpuSources={[
         { label: 'NVIDIA Hopper Architecture', href: 'https://developer.nvidia.com/blog/nvidia-hopper-architecture-in-depth/' },
@@ -129,7 +130,7 @@ describe('Dashboard', () => {
       'href',
       'https://artificialanalysis.ai/',
     )
-    expect(screen.getByRole('link', { name: /Senior SWE Bench/i })).toHaveAttribute(
+    expect(screen.getAllByRole('link', { name: /Senior SWE Bench/i })[0]).toHaveAttribute(
       'href',
       'https://senior-swe-bench.snorkel.ai/',
     )
@@ -145,6 +146,15 @@ describe('Dashboard', () => {
     expect(screen.getByRole('heading', { name: 'Tasteful Solve Rate' })).toBeInTheDocument()
     expect(screen.getByRole('heading', { name: 'Basic Solve Rate' })).toBeInTheDocument()
     expect(screen.queryByRole('heading', { name: 'Intelligence Score' })).not.toBeInTheDocument()
+  })
+
+  it('shows a Source chip on the SWE Bench charts linking to Senior SWE Bench', () => {
+    renderDashboard()
+    const sweLinks = screen.getAllByRole('link', { name: /Source: Senior SWE Bench/i })
+    expect(sweLinks).toHaveLength(2)
+    sweLinks.forEach((link) => {
+      expect(link).toHaveAttribute('href', 'https://senior-swe-bench.snorkel.ai/')
+    })
   })
 
   it('shows Hand Picked News below the lead chart, expanded by default, with visible dates and collapse control', () => {
@@ -338,11 +348,11 @@ describe('Dashboard', () => {
     expect(gemmaLink).toHaveAttribute('href', 'https://huggingface.co/unsloth/gemma-4-31B-it-GGUF')
   })
 
-  it('sorts the hardware table by UD-IQ1_S descending by default', () => {
+  it('sorts the hardware table by Total Params descending by default', () => {
     renderDashboard()
     const hwTable = screen.getByRole('table', { name: 'Hardware Details' })
     const rows = within(hwTable).getAllByRole('row')
-    // Default sort: iq1_s_gb desc -> Kimi K3 (594) first, Gemma (null) last
+    // Default sort: total_params desc -> Kimi K3 (2.8T) first, Gemma 4 31B (31B) last
     expect(rows[1].textContent).toContain('Kimi K3')
     expect(rows[rows.length - 1].textContent).toContain('Gemma 4 31B')
   })

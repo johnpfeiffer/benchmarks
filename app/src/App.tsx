@@ -127,6 +127,7 @@ function DashboardPage() {
     { label: 'NVIDIA RTX Pro 6000', href: 'https://www.nvidia.com/en-us/products/workstations/professional-desktop-gpus/rtx-pro-6000/' },
   ]
   const intelligenceSource = sources[0]
+  const sweSource = sources[1]
   const hardwareSource = sources[2]
   const gpuSources: DataSourceCredit[] = [sources[3], sources[4]]
 
@@ -145,6 +146,7 @@ function DashboardPage() {
       news={news}
       hardware={hardware}
       hardwareSource={hardwareSource}
+      sweSource={sweSource}
       gpu={gpu}
       gpuSources={gpuSources}
       intelligenceSource={intelligenceSource}

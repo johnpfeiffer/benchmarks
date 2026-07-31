@@ -46,6 +46,46 @@ describe('embedded data integrity', () => {
     expect(claudeSonnet46?.open_weight).toBe(false)
   })
 
+  it('includes Claude Fable 5 (max) renamed from with-fallback', () => {
+    expect(intelligence.find((entry) => entry.model === 'Claude Fable 5 (max)')).toMatchObject({
+      score: 60,
+      provider: 'Anthropic',
+    })
+    expect(intelligence.find((entry) => entry.model === 'Claude Fable 5 (with fallback)')).toBeUndefined()
+  })
+
+  it('has 19 SWE entries with updated values from senior-swe-bench.snorkel.ai', () => {
+    expect(swe).toHaveLength(19)
+    // New entries
+    const opus5 = swe.find((e) => e.model === 'Claude Opus 5')
+    expect(opus5).toMatchObject({ tasteful_solve_rate_pct: 34.7, basic_solve_rate_pct: 62.1, avg_steps: 141, avg_tokens: '71.0K' })
+    const terra = swe.find((e) => e.model === 'GPT-5.6 Terra')
+    expect(terra).toMatchObject({ tasteful_solve_rate_pct: 27.4, basic_solve_rate_pct: 36.8, avg_steps: 36, avg_tokens: '18.2K' })
+    const minimax = swe.find((e) => e.model === 'MiniMax-M3')
+    expect(minimax).toMatchObject({ tasteful_solve_rate_pct: 21.1, basic_solve_rate_pct: 41.1, avg_steps: 335, avg_tokens: '75.8K' })
+    const kimiK3 = swe.find((e) => e.model === 'Kimi K3')
+    expect(kimiK3).toMatchObject({ tasteful_solve_rate_pct: 20.2, basic_solve_rate_pct: 40.4, avg_steps: 224, avg_tokens: '54.8K' })
+    const luna = swe.find((e) => e.model === 'GPT-5.6 Luna')
+    expect(luna).toMatchObject({ tasteful_solve_rate_pct: 8.1, basic_solve_rate_pct: 20.3, avg_steps: 14, avg_tokens: '2.6K' })
+    const inkling = swe.find((e) => e.model === 'Inkling')
+    expect(inkling).toMatchObject({ tasteful_solve_rate_pct: 0.0, basic_solve_rate_pct: 3.2, avg_steps: 51, avg_tokens: '3.4K' })
+    // Updated entries
+    const fable = swe.find((e) => e.model === 'Claude Fable 5')
+    expect(fable).toMatchObject({ tasteful_solve_rate_pct: 34.7, basic_solve_rate_pct: 53.7, avg_steps: 119, avg_tokens: '58.4K' })
+    const sol = swe.find((e) => e.model === 'GPT-5.6 Sol')
+    expect(sol).toMatchObject({ tasteful_solve_rate_pct: 34.7, basic_solve_rate_pct: 53.7, avg_steps: 50, avg_tokens: '32.7K' })
+    const opus48 = swe.find((e) => e.model === 'Claude Opus 4.8')
+    expect(opus48).toMatchObject({ tasteful_solve_rate_pct: 30.5, basic_solve_rate_pct: 44.2, avg_steps: 138, avg_tokens: '134.2K' })
+    const glm = swe.find((e) => e.model === 'GLM-5.2')
+    expect(glm).toMatchObject({ tasteful_solve_rate_pct: 17.9, basic_solve_rate_pct: 35.8, avg_steps: 194, avg_tokens: '66.2K' })
+    const gemini35 = swe.find((e) => e.model === 'Gemini 3.5 Flash')
+    expect(gemini35).toMatchObject({ tasteful_solve_rate_pct: 6.3, basic_solve_rate_pct: 22.1, avg_steps: 231, avg_tokens: '70.4K' })
+    const gemini31 = swe.find((e) => e.model === 'Gemini 3.1 Pro')
+    expect(gemini31).toMatchObject({ tasteful_solve_rate_pct: 2.1, basic_solve_rate_pct: 9.5, avg_steps: 108, avg_tokens: '17.3K' })
+    const sonnet46 = swe.find((e) => e.model === 'Claude Sonnet 4.6')
+    expect(sonnet46).toMatchObject({ tasteful_solve_rate_pct: 0.0, basic_solve_rate_pct: 0.0, avg_steps: 0, avg_tokens: 'n/a' })
+  })
+
   it('includes Gemini Flash 3.6 at intelligence 50 with a provider', () => {
     expect(intelligence.find((entry) => entry.model === 'Gemini Flash 3.6')).toMatchObject({
       score: 50,

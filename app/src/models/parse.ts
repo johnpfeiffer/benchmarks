@@ -82,6 +82,8 @@ const SWE_PROVIDER_RULES: Array<{ pattern: RegExp; provider: string }> = [
   { pattern: /^glm\b/i, provider: 'Z AI' },
   { pattern: /^kimi\b/i, provider: 'Moonshot AI' },
   { pattern: /^gemini\b/i, provider: 'Google' },
+  { pattern: /^minimax\b/i, provider: 'MiniMax' },
+  { pattern: /^inkling\b/i, provider: 'Thinking Machines' },
 ]
 
 export function inferProviderFromModel(model: string): string | null {
@@ -103,6 +105,7 @@ const OPEN_WEIGHT_PREFIXES = [
   'mistral',
   'gemma',
   'gpt-oss',
+  'inkling',
 ]
 
 export function isOpenWeightModel(model: string): boolean {

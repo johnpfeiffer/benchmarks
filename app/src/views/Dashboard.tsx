@@ -27,6 +27,7 @@ interface DashboardProps {
   news: readonly NewsEntry[]
   hardware: readonly HardwareEntry[]
   hardwareSource: DataSourceCredit
+  sweSource: DataSourceCredit
   gpu: readonly GpuEntry[]
   gpuSources: readonly DataSourceCredit[]
   intelligenceSource: DataSourceCredit
@@ -53,6 +54,7 @@ export function Dashboard({
   news,
   hardware,
   hardwareSource,
+  sweSource,
   gpu,
   gpuSources,
   intelligenceSource,
@@ -114,12 +116,14 @@ export function Dashboard({
             title="Tasteful Solve Rate"
             scoreLabel="tasteful_solve_rate_pct"
             fitWidth
+            source={sweSource}
           />
           <IntelligenceBarChart
             entries={basicSweChartEntries}
             title="Basic Solve Rate"
             scoreLabel="basic_solve_rate_pct"
             fitWidth
+            source={sweSource}
           />
         </Box>
       </Box>
