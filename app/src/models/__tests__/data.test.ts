@@ -159,8 +159,8 @@ describe('embedded data integrity', () => {
     const deepseek = hardware.find((e) => e.model === 'DeepSeek V4 Flash 0731')
     expect(deepseek).toMatchObject({
       provider: 'DeepSeek', total_params: '284B',
-      iq1_s_gb: null, iq1_m_gb: null,
-      iq2_xxs_gb: null, iq2_m_gb: null,
+      iq1_s_gb: 82.5, iq1_m_gb: 86.9,
+      iq2_xxs_gb: 90.9, iq2_m_gb: 90.9,
       url: 'https://huggingface.co/unsloth/DeepSeek-V4-Flash-0731-GGUF',
     })
     const nemotron = hardware.find((e) => e.model === 'Nemotron 3 Ultra 550B')
