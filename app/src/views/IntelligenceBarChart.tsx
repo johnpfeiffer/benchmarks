@@ -21,7 +21,7 @@ const PROVIDER_COLORS = {
   'z ai': '#1c7ff8',
   google: '#34A853',
   deepseek: '#2243e6',
-  kimi: '#047AFE',
+  kimi: '#00B4D8',
   nvidia: '#86b737',
   qwen: '#F54F35',
   cerebras: '#F15929',
