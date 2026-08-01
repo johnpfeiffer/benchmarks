@@ -20,7 +20,7 @@
   {"model": "DeepSeek V4 Pro (max)", "intelligence_score": 44, "provider": "DeepSeek", "reasoning": true, "open_weight": true, "color": "#2243e6"},
   {"model": "Kimi K2.6", "intelligence_score": 44, "provider": "Moonshot AI", "reasoning": true, "open_weight": true, "color": "#00B4D8"},
   {"model": "Inkling", "intelligence_score": 41, "provider": "Thinking Machines", "reasoning": true, "open_weight": true, "color": "#676767"},
-  {"model": "DeepSeek V4 Flash (max)", "intelligence_score": 40, "provider": "DeepSeek", "reasoning": true, "open_weight": true, "color": "#2243e6"},
+  {"model": "DeepSeek V4 Flash 0731 (max)", "intelligence_score": 50, "provider": "DeepSeek", "reasoning": true, "open_weight": true, "color": "#2243e6"},
   {"model": "Nemotron 3 Ultra", "intelligence_score": 38, "provider": "NVIDIA", "reasoning": true, "open_weight": true, "color": "#86b737"},
   {"model": "Qwen3.6 27B", "intelligence_score": 37, "provider": "Alibaba", "reasoning": true, "open_weight": true, "color": "#ff7018"},
   {"model": "GLM-4.7", "intelligence_score": 34, "provider": "Cerebras", "reasoning": true, "open_weight": true, "color": "#1c7ff8"},

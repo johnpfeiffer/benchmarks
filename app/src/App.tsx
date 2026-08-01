@@ -138,7 +138,8 @@ function DashboardPage() {
   const intelligenceSource = sources[0]
   const sweSource = sources[1]
   const hardwareSource = sources[2]
-  const gpuSources: DataSourceCredit[] = [sources[3], sources[4], sources[5], sources[6], sources[7], sources[8], sources[9], sources[10], sources[11]]
+  const gpuSources: DataSourceCredit[] = sources.slice(3)
+  const footerSources: DataSourceCredit[] = sources.slice(0, 3)
 
   return (
     <Dashboard
@@ -159,7 +160,7 @@ function DashboardPage() {
       gpu={gpu}
       gpuSources={gpuSources}
       intelligenceSource={intelligenceSource}
-      sources={sources}
+      sources={footerSources}
     />
   )
 }

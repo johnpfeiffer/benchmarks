@@ -84,14 +84,13 @@ All views are pure (props in, callbacks out, no business logic):
   sits immediately to the right of the title in the accordion summary;
   clicking it does not toggle the accordion. Turning it on sets the selection
   to the open-weight models, turning it off re-selects every model.
-- `Footer` - credits all data sources,
+- `Footer` - credits the non-GPU data sources,
   [Artificial Analysis](https://artificialanalysis.ai/),
-  [Senior SWE Bench](https://senior-swe-bench.snorkel.ai/),
-  [HuggingFace](https://huggingface.co/unsloth), and
-  [NVIDIA](https://developer.nvidia.com/blog/nvidia-hopper-architecture-in-depth/),
-  and links to the
+  [Senior SWE Bench](https://senior-swe-bench.snorkel.ai/), and
+  [HuggingFace](https://huggingface.co/unsloth), and links to the
   [GitHub repository](https://github.com/johnpfeiffer/benchmarks) with an inline
-  GitHub SVG mark.
+  GitHub SVG mark. GPU-specific source links are rendered uniquely below the
+  GPU specifications table rather than duplicated here.
 - `NewsSection` - outlined accordion immediately below the lead chart, expanded
   by default and user-collapsible, titled "Hand Picked News" with a small
   fresh-tomato SVG mark. Each row shows the ISO publication date in an
