@@ -130,11 +130,13 @@ function DashboardPage() {
     { label: 'TechPowerUp RTX Pro 6000 Blackwell', href: 'https://www.techpowerup.com/gpu-specs/rtx-pro-6000-blackwell.c4272' },
     { label: 'TechPowerUp L40', href: 'https://www.techpowerup.com/gpu-specs/l40.c3959' },
     { label: 'Wikipedia Hopper (microarchitecture)', href: 'https://en.wikipedia.org/wiki/Hopper_(microarchitecture)' },
+    { label: 'ThunderCompute A100 Specs', href: 'https://www.thundercompute.com/blog/nvidia-a100-specs-full-guide' },
+    { label: 'GPUClusters B200 SXM', href: 'https://www.gpuclusters.ai/gpus/nvidia-b200-sxm' },
   ]
   const intelligenceSource = sources[0]
   const sweSource = sources[1]
   const hardwareSource = sources[2]
-  const gpuSources: DataSourceCredit[] = [sources[3], sources[4], sources[5], sources[6], sources[7], sources[8], sources[9]]
+  const gpuSources: DataSourceCredit[] = [sources[3], sources[4], sources[5], sources[6], sources[7], sources[8], sources[9], sources[10], sources[11]]
 
   return (
     <Dashboard

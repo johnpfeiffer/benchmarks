@@ -180,18 +180,18 @@ describe('embedded data integrity', () => {
     })
     const a100sxm = gpu.find((e) => e.model === 'A100 (SXM)')
     expect(a100sxm).toMatchObject({
-      date: '2020', memory: '40 HBM2e (80* opt)', memory_type: 'HBM2e',
+      date: '2020', memory: '40-80 GB HBM2e', memory_type: 'HBM2e',
       memory_bandwidth_gbs: 1555, fp16_tflops: 312,
     })
     const b200 = gpu.find((e) => e.model === 'B200 (SXM)')
     expect(b200).toMatchObject({
       date: '2024-03', memory: '192 GB HBM3e', memory_type: 'HBM3e',
-      memory_bandwidth_gbs: 8000, fp16_tflops: 20000,
+      memory_bandwidth_gbs: 8000, fp16_tflops: 4500,
     })
     const rtxpro = gpu.find((e) => e.model === 'RTX Pro 4000 Blackwell')
     expect(rtxpro).toMatchObject({
       date: '2025-03', memory: '24 GB GDDR7', memory_type: 'GDDR7',
-      memory_bandwidth_gbs: null, fp16_tflops: null,
+      memory_bandwidth_gbs: 672, fp16_tflops: 322,
     })
     const v100 = gpu.find((e) => e.model === 'Tesla V100')
     expect(v100).toMatchObject({
