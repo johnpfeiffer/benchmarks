@@ -138,6 +138,20 @@ export function Dashboard({
             source={sweSource}
           />
         </Box>
+        <Typography
+          variant="body2"
+          sx={{ mt: 2, fontStyle: 'italic', color: 'text.secondary' }}
+        >
+          mini-swe-agent is minimal - a better harness like terminus or pi will
+          perform better.{' '}
+          <Link
+            href="https://blog.john-pfeiffer.com/reproducing-a-coding-benchmark-with-harbor-and-terminal-bench-21/"
+            target="_blank"
+            rel="noopener noreferrer"
+          >
+            Source
+          </Link>
+        </Typography>
       </Box>
 
       <Box component="section" aria-labelledby="hardware-title" sx={{ mb: 5 }}>
