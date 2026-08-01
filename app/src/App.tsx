@@ -122,16 +122,17 @@ function DashboardPage() {
   const sources: DataSourceCredit[] = [
     { label: 'Artificial Analysis', href: 'https://artificialanalysis.ai/' },
     { label: 'Senior SWE Bench', href: 'https://senior-swe-bench.snorkel.ai/' },
-    { label: 'HuggingFace', href: 'https://huggingface.co/unsloth' },
+    { label: 'HuggingFace and Unsloth', href: 'https://huggingface.co/unsloth' },
+    { label: 'Wikipedia Hopper (microarchitecture)', href: 'https://en.wikipedia.org/wiki/Hopper_(microarchitecture)' },
     { label: 'NVIDIA Hopper Architecture', href: 'https://developer.nvidia.com/blog/nvidia-hopper-architecture-in-depth/' },
+    { label: 'NVIDIA Supercharges Hopper', href: 'https://nvidianews.nvidia.com/news/nvidia-supercharges-hopper-the-worlds-leading-ai-computing-platform' },    
+    { label: 'NVIDIA H200', href: 'https://www.nvidia.com/en-us/data-center/h200/' },    
     { label: 'NVIDIA RTX Pro 6000', href: 'https://www.nvidia.com/en-us/products/workstations/professional-desktop-gpus/rtx-pro-6000/' },
-    { label: 'NVIDIA H200', href: 'https://www.nvidia.com/en-us/data-center/h200/' },
-    { label: 'NVIDIA Supercharges Hopper', href: 'https://nvidianews.nvidia.com/news/nvidia-supercharges-hopper-the-worlds-leading-ai-computing-platform' },
     { label: 'TechPowerUp RTX Pro 6000 Blackwell', href: 'https://www.techpowerup.com/gpu-specs/rtx-pro-6000-blackwell.c4272' },
     { label: 'TechPowerUp L40', href: 'https://www.techpowerup.com/gpu-specs/l40.c3959' },
-    { label: 'Wikipedia Hopper (microarchitecture)', href: 'https://en.wikipedia.org/wiki/Hopper_(microarchitecture)' },
+    { label: 'ThunderCompute L40 Specs', href: 'https://www.thundercompute.com/blog/nvidia-l40-specs'},
     { label: 'ThunderCompute A100 Specs', href: 'https://www.thundercompute.com/blog/nvidia-a100-specs-full-guide' },
-    { label: 'GPUClusters B200 SXM', href: 'https://www.gpuclusters.ai/gpus/nvidia-b200-sxm' },
+    { label: 'Inferbase B200 SXM', href: 'https://inferbase.ai/gpu-catalog/gpu/nvidia-b200-sxm' },
   ]
   const intelligenceSource = sources[0]
   const sweSource = sources[1]
