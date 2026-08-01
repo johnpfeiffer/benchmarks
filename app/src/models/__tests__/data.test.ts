@@ -101,10 +101,10 @@ describe('embedded data integrity', () => {
   })
 
   it('includes all news articles sorted newest first', () => {
-    // The newest articles (2026-07-24) should be first.
+    // The newest article (2026-07-31) should be first.
     expect(news[0]).toEqual({
-      url: 'https://artificialanalysis.ai/articles/opus-5',
-      date: '2026-07-24',
+      url: 'https://artificialanalysis.ai/articles/deepseek-v4-flash-0731-scores-50-on-the-artificial-analysis-intelligence-index-10-points-above-previous-deepseek-v4-flash',
+      date: '2026-07-31',
     })
     // Every entry is sorted descending by date.
     for (let i = 1; i < news.length; i++) {
@@ -112,6 +112,7 @@ describe('embedded data integrity', () => {
     }
     // All expected URLs are present.
     const urls = new Set(news.map((entry) => entry.url))
+    expect(urls.has('https://artificialanalysis.ai/articles/deepseek-v4-flash-0731-scores-50-on-the-artificial-analysis-intelligence-index-10-points-above-previous-deepseek-v4-flash')).toBe(true)
     expect(urls.has('https://artificialanalysis.ai/articles/opus-5')).toBe(true)
     expect(urls.has('https://www.coderabbit.ai/blog/opus-5-model-review')).toBe(true)
     expect(urls.has('https://fireworks.ai/blog/kimik3-fable')).toBe(true)
@@ -122,7 +123,7 @@ describe('embedded data integrity', () => {
       (entry) => entry.url === 'https://artificialanalysis.ai/articles/gemini-3-6-flash-3-5-flash-lite-halving-time',
     )
     expect(geminiArticle?.date).toBe('2026-07-21')
-    expect(news).toHaveLength(15)
+    expect(news).toHaveLength(16)
   })
 
   it('includes hardware entries with 1-bit and 2-bit quant sizes, urls, and null for missing quants', () => {
@@ -155,12 +156,12 @@ describe('embedded data integrity', () => {
       iq2_xxs_gb: 8.53, iq2_m_gb: 10.8,
       url: 'https://huggingface.co/unsloth/gemma-4-31B-it-GGUF',
     })
-    const deepseek = hardware.find((e) => e.model === 'DeepSeek V4 Flash')
+    const deepseek = hardware.find((e) => e.model === 'DeepSeek V4 Flash 0731')
     expect(deepseek).toMatchObject({
       provider: 'DeepSeek', total_params: '284B',
-      iq1_s_gb: 82.5, iq1_m_gb: 86.9,
-      iq2_xxs_gb: 90.9, iq2_m_gb: 90.9,
-      url: 'https://huggingface.co/unsloth/DeepSeek-V4-Flash-GGUF',
+      iq1_s_gb: null, iq1_m_gb: null,
+      iq2_xxs_gb: null, iq2_m_gb: null,
+      url: 'https://huggingface.co/unsloth/DeepSeek-V4-Flash-0731-GGUF',
     })
     const nemotron = hardware.find((e) => e.model === 'Nemotron 3 Ultra 550B')
     expect(nemotron).toMatchObject({
