@@ -60,7 +60,7 @@ const COLUMNS: Array<{ label: string; field: SortField }> = [
   { label: 'Memory', field: 'memory' },
   { label: 'Memory Type', field: 'memory_type' },
   { label: 'Mem BW (GB/s)', field: 'memory_bandwidth_gbs' },
-  { label: 'FP16 (TFLOPS)', field: 'fp16_tflops' },
+  { label: 'Dense FP16 TFLOPS', field: 'fp16_tflops' },
 ]
 
 interface GpuTableProps {

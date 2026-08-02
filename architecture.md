@@ -114,7 +114,7 @@ All views are pure (props in, callbacks out, no business logic):
   for numeric sorting (e.g. "2.8T" -> 2800).
 - `GpuTable` - collapsible (Accordion, expanded by default) sortable table of
   GPU specifications; headers `GPU Model`, `Date`, `Memory`, `Memory Type`,
-  `Mem BW (GB/s)`, `FP16 (TFLOPS)`; click headers to toggle asc/desc. Missing
+  `Mem BW (GB/s)`, `Dense FP16`; click headers to toggle asc/desc. Missing
   values render as `*`. Default sort is date descending (newest first). Sort
   is local `useState`/`useMemo` in the component. GPU source links are
   rendered as plain links below the table.
