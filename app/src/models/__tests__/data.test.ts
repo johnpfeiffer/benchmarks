@@ -187,7 +187,7 @@ describe('embedded data integrity', () => {
     const b200 = gpu.find((e) => e.model === 'B200 (SXM)')
     expect(b200).toMatchObject({
       date: '2024-03', memory: '192 GB', memory_type: 'HBM3e',
-      memory_bandwidth_gbs: 8000, fp16_tflops: 4500,
+      memory_bandwidth_gbs: 8000, fp16_tflops: 2250,
     })
     const rtxpro = gpu.find((e) => e.model === 'RTX Pro 4000 Blackwell')
     expect(rtxpro).toMatchObject({
