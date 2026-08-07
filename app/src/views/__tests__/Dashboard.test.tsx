@@ -103,7 +103,7 @@ function DashboardController({ initialSort = DEFAULT_SORT }: { initialSort?: Sor
         { label: 'NVIDIA H200', href: 'https://www.nvidia.com/en-us/data-center/h200/' },
       ]}
       sources={[
-        { label: 'Artificial Analysis', href: 'https://artificialanalysis.ai/' },
+        { label: 'Artificial Analysis', href: 'https://artificialanalysis.ai/articles/artificial-analysis-intelligence-index-v4-1-1' },
         { label: 'Senior SWE Bench', href: 'https://senior-swe-bench.snorkel.ai/' },
       ]}
     />
@@ -127,9 +127,13 @@ describe('Dashboard', () => {
   it('renders the heading and the data-source credit', () => {
     renderDashboard()
     expect(screen.getByRole('heading', { name: /AI Model Benchmarks/i })).toBeInTheDocument()
-    expect(screen.getAllByRole('link', { name: /Artificial Analysis/i })[0]).toHaveAttribute(
+    const artificialAnalysisLinks = screen.getAllByRole('link', { name: /Artificial Analysis/i })
+    // The chart chip links to the AA homepage; the footer credit links to the
+    // Intelligence Index v4.1.1 article.
+    expect(artificialAnalysisLinks[0]).toHaveAttribute('href', 'https://artificialanalysis.ai/')
+    expect(artificialAnalysisLinks[artificialAnalysisLinks.length - 1]).toHaveAttribute(
       'href',
-      'https://artificialanalysis.ai/',
+      'https://artificialanalysis.ai/articles/artificial-analysis-intelligence-index-v4-1-1',
     )
     expect(screen.getAllByRole('link', { name: /Senior SWE Bench/i })[0]).toHaveAttribute(
       'href',
