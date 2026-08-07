@@ -28,24 +28,21 @@ describe('embedded data integrity', () => {
   })
 
   it('incorporates the SWE-only models into the main table as not-open-weight', () => {
-    // These models are no longer on the current Artificial Analysis
-    // leaderboard, so they keep their pre-v4.1.1 scores and carry a
-    // trailing "*" marker (modelMatchKey ignores it for SWE matching).
     const find = (name: string) => intelligence.find((entry) => entry.model === name)
 
-    const claudeOpus47 = find('Claude Opus 4.7*')
+    const claudeOpus47 = find('Claude Opus 4.7 (max)')
     expect(claudeOpus47).toBeDefined()
-    expect(claudeOpus47?.score).toBe(54)
+    expect(claudeOpus47?.score).toBe(55)
     expect(claudeOpus47?.open_weight).toBe(false)
 
-    const gpt54 = find('GPT-5.4 (xhigh)*')
+    const gpt54 = find('GPT-5.4 (xhigh)')
     expect(gpt54).toBeDefined()
-    expect(gpt54?.score).toBe(51)
+    expect(gpt54?.score).toBe(53)
     expect(gpt54?.open_weight).toBe(false)
 
-    const claudeSonnet46 = find('Claude Sonnet 4.6*')
+    const claudeSonnet46 = find('Claude Sonnet 4.6 (max)')
     expect(claudeSonnet46).toBeDefined()
-    expect(claudeSonnet46?.score).toBe(47)
+    expect(claudeSonnet46?.score).toBe(48)
     expect(claudeSonnet46?.open_weight).toBe(false)
   })
 

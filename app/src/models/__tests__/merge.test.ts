@@ -39,11 +39,6 @@ describe('mergeSweMetrics', () => {
     expect(modelMatchKey('Gemini 3.1 Pro Preview')).toBe('gemini 3.1 pro')
   })
 
-  it('ignores the trailing asterisk marking legacy (pre-v4.1.1) scores', () => {
-    expect(modelMatchKey('Claude Opus 4.8 (max)*')).toBe('claude opus 4.8')
-    expect(modelMatchKey('Claude Opus 4.7*')).toBe('claude opus 4.7')
-  })
-
   it('adds SWE metrics to matching intelligence rows', () => {
     const merged = mergeSweMetrics(intelligenceEntries, sweEntries)
     expect(merged[0]).toMatchObject({

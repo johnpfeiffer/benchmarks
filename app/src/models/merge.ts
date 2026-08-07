@@ -5,9 +5,6 @@ export function modelMatchKey(model: string): string {
     .toLowerCase()
     .replace(/\([^)]*\)/g, '')
     .replace(/\bpreview\b/g, '')
-    // Trailing "*" marks a legacy score not refreshed to the current index
-    // version; it is display-only and must not affect matching.
-    .replace(/\*/g, '')
     .replace(/\s+/g, ' ')
     .trim()
 }
