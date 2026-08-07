@@ -120,7 +120,7 @@ function DashboardPage() {
   )
 
   const sources: DataSourceCredit[] = [
-    { label: 'Artificial Analysis', href: 'https://artificialanalysis.ai/' },
+    { label: 'Artificial Analysis', href: 'https://artificialanalysis.ai/articles/artificial-analysis-intelligence-index-v4-1-1' },
     { label: 'Senior SWE Bench', href: 'https://senior-swe-bench.snorkel.ai/' },
     { label: 'HuggingFace and Unsloth', href: 'https://huggingface.co/unsloth' },
     { label: 'Wikipedia Hopper (microarchitecture)', href: 'https://en.wikipedia.org/wiki/Hopper_(microarchitecture)' },

@@ -51,7 +51,7 @@ flowchart TD
 | --- | --- |
 | `types.ts` | `ModelEntry`, `NewsEntry`, `HardwareEntry`, `GpuEntry`, their raw JSON shapes, and benchmark sort types; `ModelEntry.open_weight` is always present after parse; `ModelEntry.color` is the explicit bar color carried from `ai.json` |
 | `parse.ts` | `parseModelEntries`, `parseSweEntries`, `parseNewsEntries`, `parseHardwareEntries`, `parseGpuEntries`, provider/open-weight inference, and `InvariantError`; upholds **INV-001** (every model has a provider) and structural guards at the single gate. News URLs and ISO dates are validated, copied, and sorted newest first before reaching the view. Hardware entries are validated (provider, model, total_params, url required; 1-bit and 2-bit quant sizes nullable). GPU entries are validated (model, date required; memory, memory_type, memory_bandwidth_gbs, fp16_tflops nullable). SWE provider rules cover Claude, GPT, Grok, GLM, Kimi, Gemini, MiniMax, and Inkling |
-| `merge.ts` | `mergeSweMetrics`, `modelMatchKey`; adds optional SWE table columns to matching Artificial Analysis rows |
+| `merge.ts` | `mergeSweMetrics`, `modelMatchKey`; adds optional SWE table columns to matching Artificial Analysis rows. `modelMatchKey` ignores parenthetical effort suffixes, "preview", and the trailing `*` legacy-score marker |
 | `sort.ts` | `sortModels`, `nextSortState`, `DEFAULT_SORT` (score desc) |
 | `filter.ts` | `openWeightIds`; the id set used by the "Open Weights" preset |
 | `index.ts` | Public re-exports |
@@ -60,6 +60,12 @@ flowchart TD
 provider from known model-family prefixes (Claude, GPT, Grok, GLM, Kimi,
 Gemini). Unknown families fail as **INV-001** violations instead of being
 rendered without a provider.
+
+`data/ai.json` scores track the Artificial Analysis Intelligence Index
+(currently v4.1.1). Models that have dropped off the current leaderboard but
+are still referenced (e.g. by SWE rows) keep their last published score with a
+trailing `*` on the model name; the marker is display-only and ignored by
+`modelMatchKey`.
 
 ### Presentation (`views/`)
 
@@ -85,7 +91,7 @@ All views are pure (props in, callbacks out, no business logic):
   clicking it does not toggle the accordion. Turning it on sets the selection
   to the open-weight models, turning it off re-selects every model.
 - `Footer` - credits the non-GPU data sources,
-  [Artificial Analysis](https://artificialanalysis.ai/),
+  [Artificial Analysis](https://artificialanalysis.ai/articles/artificial-analysis-intelligence-index-v4-1-1),
   [Senior SWE Bench](https://senior-swe-bench.snorkel.ai/), and
   [HuggingFace](https://huggingface.co/unsloth), and links to the
   [GitHub repository](https://github.com/johnpfeiffer/benchmarks) with an inline

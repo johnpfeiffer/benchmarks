@@ -28,19 +28,22 @@ describe('embedded data integrity', () => {
   })
 
   it('incorporates the SWE-only models into the main table as not-open-weight', () => {
+    // These models are no longer on the current Artificial Analysis
+    // leaderboard, so they keep their pre-v4.1.1 scores and carry a
+    // trailing "*" marker (modelMatchKey ignores it for SWE matching).
     const find = (name: string) => intelligence.find((entry) => entry.model === name)
 
-    const claudeOpus47 = find('Claude Opus 4.7')
+    const claudeOpus47 = find('Claude Opus 4.7*')
     expect(claudeOpus47).toBeDefined()
     expect(claudeOpus47?.score).toBe(54)
     expect(claudeOpus47?.open_weight).toBe(false)
 
-    const gpt54 = find('GPT-5.4 (xhigh)')
+    const gpt54 = find('GPT-5.4 (xhigh)*')
     expect(gpt54).toBeDefined()
     expect(gpt54?.score).toBe(51)
     expect(gpt54?.open_weight).toBe(false)
 
-    const claudeSonnet46 = find('Claude Sonnet 4.6')
+    const claudeSonnet46 = find('Claude Sonnet 4.6*')
     expect(claudeSonnet46).toBeDefined()
     expect(claudeSonnet46?.score).toBe(47)
     expect(claudeSonnet46?.open_weight).toBe(false)
@@ -48,7 +51,7 @@ describe('embedded data integrity', () => {
 
   it('includes Claude Fable 5 (max) renamed from with-fallback', () => {
     expect(intelligence.find((entry) => entry.model === 'Claude Fable 5 (max)')).toMatchObject({
-      score: 60,
+      score: 62,
       provider: 'Anthropic',
     })
     expect(intelligence.find((entry) => entry.model === 'Claude Fable 5 (with fallback)')).toBeUndefined()
@@ -86,18 +89,30 @@ describe('embedded data integrity', () => {
     expect(sonnet46).toMatchObject({ tasteful_solve_rate_pct: 0.0, basic_solve_rate_pct: 0.0, avg_steps: 0, avg_tokens: 'n/a' })
   })
 
-  it('includes Gemini Flash 3.6 at intelligence 50 with a provider', () => {
+  it('includes Gemini Flash 3.6 at intelligence 52 with a provider', () => {
     expect(intelligence.find((entry) => entry.model === 'Gemini Flash 3.6')).toMatchObject({
-      score: 50,
+      score: 52,
       provider: 'Google',
     })
   })
 
-  it('includes Claude Opus 5 (max) at intelligence 61 with a provider', () => {
+  it('includes Claude Opus 5 (max) at intelligence 63 with a provider', () => {
     expect(intelligence.find((entry) => entry.model === 'Claude Opus 5 (max)')).toMatchObject({
-      score: 61,
+      score: 63,
       provider: 'Anthropic',
     })
+  })
+
+  it('includes Qwen3.8 Max as an open-weight Alibaba model at intelligence 58', () => {
+    expect(intelligence.find((entry) => entry.model === 'Qwen3.8 Max')).toMatchObject({
+      score: 58,
+      provider: 'Alibaba',
+      open_weight: true,
+    })
+  })
+
+  it('no longer includes GLM-4.7 (dropped from the v4.1.1 leaderboard)', () => {
+    expect(intelligence.find((entry) => entry.model === 'GLM-4.7')).toBeUndefined()
   })
 
   it('includes all news articles sorted newest first', () => {

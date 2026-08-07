@@ -88,7 +88,7 @@ function DashboardController({ initialSort = DEFAULT_SORT }: { initialSort?: Sor
       onToggleEntry={handleToggleEntry}
       openWeightsOnly={openWeightsOnly}
       onToggleOpenWeights={handleToggleOpenWeights}
-      intelligenceSource={{ label: 'Artificial Analysis', href: 'https://artificialanalysis.ai/' }}
+      intelligenceSource={{ label: 'Artificial Analysis', href: 'https://artificialanalysis.ai/articles/artificial-analysis-intelligence-index-v4-1-1' }}
       news={[
         { url: 'https://example.com/newest', date: '2026-07-26' },
         { url: 'https://example.com/older', date: '2026-07-20' },
@@ -103,7 +103,7 @@ function DashboardController({ initialSort = DEFAULT_SORT }: { initialSort?: Sor
         { label: 'NVIDIA H200', href: 'https://www.nvidia.com/en-us/data-center/h200/' },
       ]}
       sources={[
-        { label: 'Artificial Analysis', href: 'https://artificialanalysis.ai/' },
+        { label: 'Artificial Analysis', href: 'https://artificialanalysis.ai/articles/artificial-analysis-intelligence-index-v4-1-1' },
         { label: 'Senior SWE Bench', href: 'https://senior-swe-bench.snorkel.ai/' },
       ]}
     />
@@ -129,7 +129,7 @@ describe('Dashboard', () => {
     expect(screen.getByRole('heading', { name: /AI Model Benchmarks/i })).toBeInTheDocument()
     expect(screen.getAllByRole('link', { name: /Artificial Analysis/i })[0]).toHaveAttribute(
       'href',
-      'https://artificialanalysis.ai/',
+      'https://artificialanalysis.ai/articles/artificial-analysis-intelligence-index-v4-1-1',
     )
     expect(screen.getAllByRole('link', { name: /Senior SWE Bench/i })[0]).toHaveAttribute(
       'href',
