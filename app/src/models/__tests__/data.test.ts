@@ -78,6 +78,11 @@ describe('embedded data integrity', () => {
     expect(opus48).toMatchObject({ tasteful_solve_rate_pct: 30.5, basic_solve_rate_pct: 44.2, avg_steps: 138, avg_tokens: '134.2K' })
     const glm = swe.find((e) => e.model === 'GLM-5.2')
     expect(glm).toMatchObject({ tasteful_solve_rate_pct: 17.9, basic_solve_rate_pct: 35.8, avg_steps: 194, avg_tokens: '66.2K' })
+    // Grok 4.5 was re-run at medium effort (previously high: 17.2/49.4, 80 steps, 22.9K).
+    const grok = swe.find((e) => e.model === 'Grok 4.5')
+    expect(grok).toMatchObject({ tasteful_solve_rate_pct: 23.2, basic_solve_rate_pct: 50.5, avg_steps: 72, avg_tokens: '21.2K' })
+    // The effort level is not a ModelEntry field; it is baked into the id.
+    expect(grok?.id).toBe('xai:grok-4.5:mini-swe-agent:medium')
     const gemini35 = swe.find((e) => e.model === 'Gemini 3.5 Flash')
     expect(gemini35).toMatchObject({ tasteful_solve_rate_pct: 6.3, basic_solve_rate_pct: 22.1, avg_steps: 231, avg_tokens: '70.4K' })
     const gemini31 = swe.find((e) => e.model === 'Gemini 3.1 Pro')

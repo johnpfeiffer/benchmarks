@@ -59,7 +59,9 @@ flowchart TD
 `data/swe.json` does not include provider fields, so `parseSweEntries` derives
 provider from known model-family prefixes (Claude, GPT, Grok, GLM, Kimi,
 Gemini). Unknown families fail as **INV-001** violations instead of being
-rendered without a provider.
+rendered without a provider. The source site currently lists 15 runs;
+`swe.json` additionally retains four models no longer listed (Kimi K2.6,
+GPT-5.6 Luna, Inkling, Claude Sonnet 4.6) at their last published values.
 
 `data/ai.json` scores track the Artificial Analysis Intelligence Index
 (currently v4.1.1).
