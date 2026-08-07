@@ -136,7 +136,9 @@ function DashboardPage() {
     { label: 'Wikipedia Blackwell (microarchitecture)', href: 'https://en.wikipedia.org/wiki/Blackwell_(microarchitecture)' },
     { label: 'Inferbase B200 SXM', href: 'https://inferbase.ai/gpu-catalog/gpu/nvidia-b200-sxm' },
   ]
-  const intelligenceSource = sources[0]
+  // The lead chart's source chip keeps linking to the AA homepage; only the
+  // footer credit (sources[0]) links to the Intelligence Index v4.1.1 article.
+  const intelligenceSource: DataSourceCredit = { label: 'Artificial Analysis', href: 'https://artificialanalysis.ai/' }
   const sweSource = sources[1]
   const hardwareSource = sources[2]
   const gpuSources: DataSourceCredit[] = sources.slice(3)

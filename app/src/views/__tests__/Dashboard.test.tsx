@@ -88,7 +88,7 @@ function DashboardController({ initialSort = DEFAULT_SORT }: { initialSort?: Sor
       onToggleEntry={handleToggleEntry}
       openWeightsOnly={openWeightsOnly}
       onToggleOpenWeights={handleToggleOpenWeights}
-      intelligenceSource={{ label: 'Artificial Analysis', href: 'https://artificialanalysis.ai/articles/artificial-analysis-intelligence-index-v4-1-1' }}
+      intelligenceSource={{ label: 'Artificial Analysis', href: 'https://artificialanalysis.ai/' }}
       news={[
         { url: 'https://example.com/newest', date: '2026-07-26' },
         { url: 'https://example.com/older', date: '2026-07-20' },
@@ -127,7 +127,11 @@ describe('Dashboard', () => {
   it('renders the heading and the data-source credit', () => {
     renderDashboard()
     expect(screen.getByRole('heading', { name: /AI Model Benchmarks/i })).toBeInTheDocument()
-    expect(screen.getAllByRole('link', { name: /Artificial Analysis/i })[0]).toHaveAttribute(
+    const artificialAnalysisLinks = screen.getAllByRole('link', { name: /Artificial Analysis/i })
+    // The chart chip links to the AA homepage; the footer credit links to the
+    // Intelligence Index v4.1.1 article.
+    expect(artificialAnalysisLinks[0]).toHaveAttribute('href', 'https://artificialanalysis.ai/')
+    expect(artificialAnalysisLinks[artificialAnalysisLinks.length - 1]).toHaveAttribute(
       'href',
       'https://artificialanalysis.ai/articles/artificial-analysis-intelligence-index-v4-1-1',
     )

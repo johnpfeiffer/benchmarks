@@ -73,7 +73,8 @@ All views are pure (props in, callbacks out, no business logic):
   colored by the explicit `color` field each `ai.json` row carries, falling
   back to a provider/model-family lookup for SWE-only entries, with diagonal
   x-axis labels. The lead chart embeds its Artificial Analysis source credit as
-  a chip in the upper-right of the chart frame and uses only a small margin
+  a chip (linking to the AA homepage) in the upper-right of the chart frame and
+  uses only a small margin
   below the x-axis allocation so the "Model" title sits close to the frame. The
   lower SWE comparison charts use fit-to-width mode with skinnier bars to avoid
   horizontal chart scrollbars.
