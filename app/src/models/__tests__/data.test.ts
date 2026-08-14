@@ -113,6 +113,14 @@ describe('embedded data integrity', () => {
     })
   })
 
+  it('includes Gemini 3.7 Flash (high) at intelligence 56 with a provider', () => {
+    expect(intelligence.find((entry) => entry.model === 'Gemini 3.7 Flash (high)')).toMatchObject({
+      score: 56,
+      provider: 'Google',
+      open_weight: false,
+    })
+  })
+
   it('no longer includes GLM-4.7 (dropped from the v4.1.1 leaderboard)', () => {
     expect(intelligence.find((entry) => entry.model === 'GLM-4.7')).toBeUndefined()
   })

@@ -8,6 +8,7 @@
   {"model": "Claude Opus 4.8 (max)", "intelligence_score": 57, "provider": "Anthropic", "reasoning": true, "open_weight": false, "color": "#cc785c"},
   {"model": "Grok 4.5 (high)", "intelligence_score": 56, "provider": "xAI", "reasoning": true, "open_weight": false, "color": "#736cd3"},
   {"model": "GPT-5.5 (xhigh)", "intelligence_score": 56, "provider": "OpenAI", "reasoning": true, "open_weight": false, "color": "#1f1f1f"},
+  {"model": "Gemini 3.7 Flash (high)", "intelligence_score": 56, "provider": "Google", "reasoning": true, "open_weight": false, "color": "#34A853"},
   {"model": "Claude Sonnet 5 (max)", "intelligence_score": 55, "provider": "Anthropic", "reasoning": true, "open_weight": false, "color": "#cc785c"},
   {"model": "Claude Opus 4.7 (max)", "intelligence_score": 55, "provider": "Anthropic", "reasoning": true, "open_weight": false, "color": "#cc785c"},
   {"model": "GLM-5.2 (max)", "intelligence_score": 53, "provider": "Z AI", "reasoning": true, "open_weight": true, "color": "#1c7ff8"},
