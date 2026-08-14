@@ -129,6 +129,14 @@ describe('embedded data integrity', () => {
     })
   })
 
+  it('includes DeepSeek V4 Pro 0813 (max) as an open-weight model at intelligence 53', () => {
+    expect(intelligence.find((entry) => entry.model === 'DeepSeek V4 Pro 0813 (max)')).toMatchObject({
+      score: 53,
+      provider: 'DeepSeek',
+      open_weight: true,
+    })
+  })
+
   it('no longer includes GLM-4.7 (dropped from the v4.1.1 leaderboard)', () => {
     expect(intelligence.find((entry) => entry.model === 'GLM-4.7')).toBeUndefined()
   })
