@@ -121,6 +121,14 @@ describe('embedded data integrity', () => {
     })
   })
 
+  it('includes Grok 4.6 (high) at intelligence 61 with a provider', () => {
+    expect(intelligence.find((entry) => entry.model === 'Grok 4.6 (high)')).toMatchObject({
+      score: 61,
+      provider: 'xAI',
+      open_weight: false,
+    })
+  })
+
   it('no longer includes GLM-4.7 (dropped from the v4.1.1 leaderboard)', () => {
     expect(intelligence.find((entry) => entry.model === 'GLM-4.7')).toBeUndefined()
   })
