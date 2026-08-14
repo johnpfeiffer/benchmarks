@@ -69,7 +69,6 @@ function normalize(raw: RawModelEntry, index: number): ModelEntry {
     model,
     score,
     provider,
-    reasoning: Boolean(raw.reasoning),
     open_weight: Boolean(raw.open_weight),
     ...(color ? { color } : {}),
   }

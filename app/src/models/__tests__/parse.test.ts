@@ -3,8 +3,8 @@ import { parseModelEntries, parseSweEntries, inferProviderFromModel, isOpenWeigh
 import type { RawModelEntry, RawSweEntry } from '../types'
 
 const valid: RawModelEntry[] = [
-  { model: 'Alpha', intelligence_score: 60, provider: 'Anthropic', reasoning: true, open_weight: true },
-  { model: 'Beta', intelligence_score: 50, provider: 'OpenAI', reasoning: true },
+  { model: 'Alpha', intelligence_score: 60, provider: 'Anthropic', open_weight: true },
+  { model: 'Beta', intelligence_score: 50, provider: 'OpenAI' },
 ]
 
 describe('parseModelEntries', () => {
@@ -16,7 +16,6 @@ describe('parseModelEntries', () => {
       model: 'Alpha',
       score: 60,
       provider: 'Anthropic',
-      reasoning: true,
       open_weight: true,
     })
   })
@@ -28,7 +27,7 @@ describe('parseModelEntries', () => {
 
   it('coerces open_weight to a boolean', () => {
     const out = parseModelEntries([
-      { model: 'X', intelligence_score: 1, provider: 'P', reasoning: true, open_weight: 1 as unknown as boolean },
+      { model: 'X', intelligence_score: 1, provider: 'P', open_weight: 1 as unknown as boolean },
     ])
     expect(out[0].open_weight).toBe(true)
   })
@@ -52,8 +51,8 @@ describe('parseModelEntries', () => {
 
   it('reports the offending index in the InvariantError', () => {
     const bad: RawModelEntry[] = [
-      { model: 'Good', intelligence_score: 1, provider: 'P', reasoning: true },
-      { model: 'Bad', intelligence_score: 1, provider: '', reasoning: true },
+      { model: 'Good', intelligence_score: 1, provider: 'P' },
+      { model: 'Bad', intelligence_score: 1, provider: '' },
     ]
     expect(() => parseModelEntries(bad)).toThrow(InvariantError)
     try {
@@ -78,13 +77,6 @@ describe('parseModelEntries', () => {
       expect(e).toBeInstanceOf(InvariantError)
       expect((e as InvariantError).invariant).toBe(inv)
     }
-  })
-
-  it('coerces reasoning to a boolean', () => {
-    const out = parseModelEntries([
-      { model: 'X', intelligence_score: 1, provider: 'P', reasoning: 0 as unknown as boolean },
-    ])
-    expect(out[0].reasoning).toBe(false)
   })
 
   it('rejects a non-array input', () => {
