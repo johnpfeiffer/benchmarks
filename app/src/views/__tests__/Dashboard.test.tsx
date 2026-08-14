@@ -12,15 +12,14 @@ const entries: ModelEntry[] = [
     model: 'Alpha',
     score: 60,
     provider: 'Anthropic',
-    reasoning: true,
     open_weight: true,
     tasteful_solve_rate_pct: 29.1,
     basic_solve_rate_pct: 46.5,
     avg_steps: 159,
     avg_tokens: '290.2K',
   },
-  { id: 'openai:beta', model: 'Beta', score: 50, provider: 'OpenAI', reasoning: false, open_weight: false },
-  { id: 'google:gamma', model: 'Gamma', score: 55, provider: 'Google', reasoning: true, open_weight: false },
+  { id: 'openai:beta', model: 'Beta', score: 50, provider: 'OpenAI', open_weight: false },
+  { id: 'google:gamma', model: 'Gamma', score: 55, provider: 'Google', open_weight: false },
 ]
 
 const sweChartEntries: ModelEntry[] = [

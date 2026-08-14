@@ -11,7 +11,6 @@ export interface RawModelEntry {
   model: string
   intelligence_score: number
   provider: string
-  reasoning: boolean
   /** Whether the model's weights are openly available. Optional in raw data. */
   open_weight?: boolean
   /** Explicit bar color (hex). Optional in raw data; ai.json carries one per row. */
@@ -105,7 +104,6 @@ export interface ModelEntry {
   /** Primary benchmark score, the "Score" column in the dashboard. */
   score: number
   provider: string
-  reasoning?: boolean
   /** Whether the model's weights are openly available. Always present after parse. */
   open_weight: boolean
   /** Explicit bar color (hex). Set from ai.json; absent for SWE-only entries. */
