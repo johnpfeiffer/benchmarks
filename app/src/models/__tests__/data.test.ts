@@ -118,10 +118,10 @@ describe('embedded data integrity', () => {
   })
 
   it('includes all news articles sorted newest first', () => {
-    // The newest article (2026-08-06) should be first.
+    // The newest article (2026-08-13) should be first.
     expect(news[0]).toEqual({
-      url: 'https://www.theregister.com/systems/2026/08/06/amd-acquires-ai-chip-startup-taalas-to-boost-inference-performance-by-etching-models-into-silicon/5284344',
-      date: '2026-08-06',
+      url: 'https://artificialanalysis.ai/articles/gemini-3-7-time-frontier',
+      date: '2026-08-13',
     })
     // Every entry is sorted descending by date.
     for (let i = 1; i < news.length; i++) {
@@ -129,6 +129,7 @@ describe('embedded data integrity', () => {
     }
     // All expected URLs are present.
     const urls = new Set(news.map((entry) => entry.url))
+    expect(urls.has('https://artificialanalysis.ai/articles/gemini-3-7-time-frontier')).toBe(true)
     expect(urls.has('https://www.theregister.com/systems/2026/08/06/amd-acquires-ai-chip-startup-taalas-to-boost-inference-performance-by-etching-models-into-silicon/5284344')).toBe(true)
     expect(urls.has('https://artificialanalysis.ai/articles/deepseek-v4-flash-0731-scores-50-on-the-artificial-analysis-intelligence-index-10-points-above-previous-deepseek-v4-flash')).toBe(true)
     expect(urls.has('https://artificialanalysis.ai/articles/opus-5')).toBe(true)
@@ -141,7 +142,7 @@ describe('embedded data integrity', () => {
       (entry) => entry.url === 'https://artificialanalysis.ai/articles/gemini-3-6-flash-3-5-flash-lite-halving-time',
     )
     expect(geminiArticle?.date).toBe('2026-07-21')
-    expect(news).toHaveLength(17)
+    expect(news).toHaveLength(18)
   })
 
   it('includes hardware entries with 1-bit and 2-bit quant sizes, urls, and null for missing quants', () => {
