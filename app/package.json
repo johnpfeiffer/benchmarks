@@ -19,7 +19,7 @@
     "@mui/x-charts": "^9.9.0",
     "react": "^18.2.0",
     "react-dom": "^18.2.0",
-    "react-router-dom": "^6.20.0"
+    "react-router-dom": "^7.18.2"
   },
   "devDependencies": {
     "@testing-library/jest-dom": "^6.9.1",
@@ -33,5 +33,8 @@
     "typescript": "~5.9.3",
     "vite": "^8.0.16",
     "vitest": "^4.1.10"
+  },
+  "allowScripts": {
+    "fsevents@2.3.3": true
   }
 }
