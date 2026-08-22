@@ -1,0 +1,4 @@
+interface:
+  display_name: "Benchmark News Lookup"
+  short_description: "Find, vet, and add credible benchmark news articles"
+  default_prompt: "Use $benchmark-news-lookup to find and vet a credible benchmark news article and add it to the Hand Picked News feed."
