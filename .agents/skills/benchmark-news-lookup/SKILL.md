@@ -1,6 +1,6 @@
 ---
 name: benchmark-news-lookup
-description: Find, vet, and add credible benchmark news articles to the Hand Picked News feed (app/src/data/news.json). Use when asked to look up news or coverage of an AI model release or benchmark result, when deciding whether an article is credible enough for the feed (independent benchmarks and technical breakdowns over vendor marketing), or when adding a news link to the benchmarks dashboard.
+description: Find, vet, and add credible benchmark news articles to the Hand Picked News feed (app/src/data/news.json). Use when asked to look up news or coverage of an AI model release or benchmark result, when deciding whether an article is credible enough for the feed (independent benchmarks and technical breakdowns over vendor marketing), when resolving an article's true published date or canonical URL, or when adding a news link to the benchmarks dashboard.
 ---
 
 # Benchmark News Lookup
@@ -32,6 +32,10 @@ Avoid:
 - SEO aggregators and content farms that re-litigate vendor-reported numbers without independent testing
 - Political or geopolitical angles, and AGI or cyber hype without data behind it
 
+Prefer omission over guessing. When an article's credibility is borderline,
+leave it out of `news.json` and list it in the PR body as a candidate for
+human veto instead of silently adding it.
+
 ## Lookup procedure
 
 1. Search per trusted outlet: `"<Model Name>" site:artificialanalysis.ai`,
@@ -40,9 +44,49 @@ Avoid:
    Then run one broad `"<Model Name>" benchmark` search to catch anything new.
 2. Fetch each candidate page and confirm it contains substantive benchmark
    results or technical analysis, not a summary of someone else's numbers.
-3. Resolve the published date from the page itself (byline or URL path), in
-   ISO `YYYY-MM-DD` form.
-4. Dedupe against `app/src/data/news.json` before adding.
+3. Resolve the published date (next section) and the canonical URL.
+4. Dedupe against `app/src/data/news.json`: grep for the URL and for title
+   keywords before adding, and list any skipped duplicates in the PR body.
+
+## Canonical URL rules
+
+- Use the original outlet's URL, not a syndication or aggregator copy
+  (e.g. not the Yahoo republish of another site's article), and strip
+  tracking parameters.
+- Verify the live page actually serves the article. A 403 or Cloudflare
+  challenge means bot-blocked, not defunct; the original URL stays canonical
+  (retry with a browser user-agent to confirm content). On a real 404,
+  web-search the article title for a moved canonical on the same site before
+  giving up; publishers re-slug posts.
+
+## Resolve the published date
+
+The feed needs the original publication date, and dates here have needed
+correction before (see the Gemini Flash date comment in `data.test.ts`), so
+record the date source in the PR body.
+
+Resolution order, cheapest first:
+
+1. URL path (`/2026/08/14/`, or a `/2026/08/` month prefix confirmed against
+   the page).
+2. Page metadata: JSON-LD `"datePublished"`, `article:published_time`,
+   `<time datetime="...">`.
+3. The visible byline date next to the title.
+4. Web-search snippets for the exact article title.
+
+Trust pitfalls:
+
+- Conflicting fields on one page are common (a `datePublished` vs an
+  update-stamped `article:published_time`). The value that agrees with the
+  visible byline wins; document the conflict in the PR body.
+- Related-posts sidebars and page chrome pollute visible-date scans; only the
+  date adjacent to the article's own title or byline counts.
+- Beware CMS restamps: an "updated" or migration date is not the publication
+  date.
+
+No precision fallback exists here: `news.json` requires a real ISO calendar
+date (`parse.ts` enforces `YYYY-MM-DD`). If the exact day stays unverifiable,
+do not guess; omit the entry and flag it in the PR body.
 
 ## Adding an entry
 
@@ -58,6 +102,21 @@ Avoid:
   build). No task is complete with failing tests.
 - Update `architecture.md` only if structure or behavior changed; data-only
   additions usually do not require it.
+- If adding a link surfaces pre-existing anomalies (bad dates, duplicate
+  URLs), surface them in the PR body and fix them in a separate commit, so
+  they are easy to review or drop.
+
+## PR workflow
+
+- Branch off the latest `main`, commit with a short lowercase message
+  (matching repo history, e.g. `news: add ...`), push, and open the PR with
+  `gh pr create --base main`.
+- Push auth: reuse the authenticated `gh` session via
+  `git config credential.helper "!gh auth git-credential"` (or a one-off
+  `git -c credential.helper='!gh auth git-credential' push`), and set a
+  repo-local `user.name`/`user.email` if git has no identity.
+- The PR body should list added links with their resolved published dates and
+  the evidence for each date, plus any omitted candidates and duplicates.
 
 ## Repo guardrails
 
