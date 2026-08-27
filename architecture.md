@@ -35,6 +35,7 @@ flowchart TD
     App -->|sorted table rows + selected ids| Dashboard["views/Dashboard"]
     Dashboard --> ChartA["IntelligenceBarChart<br/>(Artificial Analysis)"]
     Dashboard --> News["NewsSection<br/>(expanded + collapsible)"]
+    Dashboard --> Pareto["ParetoFrontierSection<br/>(expanded + collapsible)"]
     Dashboard --> Table["ModelTable<br/>(collapsible + sortable + selectable)"]
     Dashboard --> ChartB["IntelligenceBarChart<br/>(SWE tasteful solve rate)"]
     Dashboard --> ChartC["IntelligenceBarChart<br/>(SWE basic solve rate)"]
@@ -105,6 +106,13 @@ All views are pure (props in, callbacks out, no business logic):
   toggles between descending (default, newest first) and ascending; the sort is
   local `useState`/`useMemo` in the component and does not affect controller
   state.
+- `ParetoFrontierSection` - outlined accordion between the news and the model
+  details table, expanded by default and user-collapsible, titled "Pareto
+  frontier". Renders a static captured snapshot of Artificial Analysis'
+  "Intelligence Index vs. Cost to Run" scatter chart (dotted Pareto line,
+  provider-colored dots) from `public/images/artificial-analysis-pareto-frontier.png`,
+  scaled responsively with descriptive alt text, plus a caption crediting and
+  linking to Artificial Analysis with the capture date.
 - `HardwareChart` - grouped bar chart comparing 1-bit and 2-bit dynamic
   quant (UD-IQ1_S, UD-IQ1_M, UD-IQ2_XXS, UD-IQ2_M) estimated hardware sizes
   across models, sourced from Unsloth GGUF releases on HuggingFace. Entries
