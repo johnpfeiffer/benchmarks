@@ -54,9 +54,14 @@ describe('embedded data integrity', () => {
     expect(intelligence.find((entry) => entry.model === 'Claude Fable 5 (with fallback)')).toBeUndefined()
   })
 
-  it('has 19 SWE entries with updated values from senior-swe-bench.snorkel.ai', () => {
-    expect(swe).toHaveLength(19)
+  it('has 21 SWE entries with updated values from senior-swe-bench.snorkel.ai', () => {
+    expect(swe).toHaveLength(21)
     // New entries
+    const grok46 = swe.find((e) => e.model === 'Grok 4.6')
+    expect(grok46).toMatchObject({ tasteful_solve_rate_pct: 26.3, basic_solve_rate_pct: 51.6, avg_steps: 125, avg_tokens: '23.9K' })
+    expect(grok46?.id).toBe('xai:grok-4.6:mini-swe-agent:high')
+    const gemini37 = swe.find((e) => e.model === 'Gemini 3.7 Flash')
+    expect(gemini37).toMatchObject({ tasteful_solve_rate_pct: 14.7, basic_solve_rate_pct: 44.2, avg_steps: 254, avg_tokens: '47.3K' })
     const opus5 = swe.find((e) => e.model === 'Claude Opus 5')
     expect(opus5).toMatchObject({ tasteful_solve_rate_pct: 34.7, basic_solve_rate_pct: 62.1, avg_steps: 141, avg_tokens: '71.0K' })
     const terra = swe.find((e) => e.model === 'GPT-5.6 Terra')
@@ -126,6 +131,22 @@ describe('embedded data integrity', () => {
       score: 61,
       provider: 'xAI',
       open_weight: false,
+    })
+  })
+
+  it('includes GLM-5.3 (max) as an open-weight Z AI model at intelligence 60', () => {
+    expect(intelligence.find((entry) => entry.model === 'GLM-5.3 (max)')).toMatchObject({
+      score: 60,
+      provider: 'Z AI',
+      open_weight: true,
+    })
+  })
+
+  it('includes GLM-5.3 Flash as an open-weight Z AI model at intelligence 57', () => {
+    expect(intelligence.find((entry) => entry.model === 'GLM-5.3 Flash')).toMatchObject({
+      score: 57,
+      provider: 'Z AI',
+      open_weight: true,
     })
   })
 
