@@ -142,6 +142,14 @@ describe('embedded data integrity', () => {
     })
   })
 
+  it('includes GLM-5.3 Flash as an open-weight Z AI model at intelligence 57', () => {
+    expect(intelligence.find((entry) => entry.model === 'GLM-5.3 Flash')).toMatchObject({
+      score: 57,
+      provider: 'Z AI',
+      open_weight: true,
+    })
+  })
+
   it('includes DeepSeek V4 Pro 0813 (max) as an open-weight model at intelligence 53', () => {
     expect(intelligence.find((entry) => entry.model === 'DeepSeek V4 Pro 0813 (max)')).toMatchObject({
       score: 53,

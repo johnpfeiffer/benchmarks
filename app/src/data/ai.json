@@ -8,6 +8,7 @@
   {"model": "Qwen3.8 Max", "intelligence_score": 58, "provider": "Alibaba", "open_weight": true, "color": "#F54F35"},
   {"model": "GPT-5.6 Terra (max)", "intelligence_score": 57, "provider": "OpenAI", "open_weight": false, "color": "#1f1f1f"},
   {"model": "Claude Opus 4.8 (max)", "intelligence_score": 57, "provider": "Anthropic", "open_weight": false, "color": "#cc785c"},
+  {"model": "GLM-5.3 Flash", "intelligence_score": 57, "provider": "Z AI", "open_weight": true, "color": "#1c7ff8"},
   {"model": "Grok 4.5 (high)", "intelligence_score": 56, "provider": "xAI", "open_weight": false, "color": "#736cd3"},
   {"model": "GPT-5.5 (xhigh)", "intelligence_score": 56, "provider": "OpenAI", "open_weight": false, "color": "#1f1f1f"},
   {"model": "Gemini 3.7 Flash (high)", "intelligence_score": 56, "provider": "Google", "open_weight": false, "color": "#34A853"},
