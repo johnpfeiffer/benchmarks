@@ -134,11 +134,11 @@ describe('embedded data integrity', () => {
     })
   })
 
-  it('includes GLM-5.3 (max) at intelligence 60, not open weight while the staged release is pending', () => {
+  it('includes GLM-5.3 (max) as an open-weight Z AI model at intelligence 60', () => {
     expect(intelligence.find((entry) => entry.model === 'GLM-5.3 (max)')).toMatchObject({
       score: 60,
       provider: 'Z AI',
-      open_weight: false,
+      open_weight: true,
     })
   })
 
