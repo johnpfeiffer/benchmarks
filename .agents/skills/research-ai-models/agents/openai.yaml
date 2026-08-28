@@ -1,0 +1,4 @@
+interface:
+  display_name: "Research AI Models"
+  short_description: "Research and update AI model benchmark data (ai.json, swe.json)"
+  default_prompt: "Use $research-ai-models to research a model's Artificial Analysis score or Senior SWE Bench run and update the dashboard data."

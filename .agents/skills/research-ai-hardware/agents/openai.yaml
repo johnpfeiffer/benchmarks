@@ -1,0 +1,4 @@
+interface:
+  display_name: "Research AI Hardware"
+  short_description: "Research and update GPU specs and GGUF quant sizes"
+  default_prompt: "Use $research-ai-hardware to research a GPU's specs or a model's Unsloth GGUF quant sizes and update the dashboard data."
