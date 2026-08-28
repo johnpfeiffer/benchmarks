@@ -19,7 +19,6 @@ export interface RawModelEntry {
 
 /** A single Senior SWE Bench row, as embedded in the JSON data. */
 export interface RawSweEntry {
-  rank: number
   model: string
   harness: string
   effort: string

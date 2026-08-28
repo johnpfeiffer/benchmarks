@@ -93,7 +93,6 @@ describe('parseModelEntries', () => {
 describe('parseSweEntries', () => {
   const validSwe: RawSweEntry[] = [
     {
-      rank: 1,
       model: 'Claude Fable 5',
       harness: 'Mini-SWE-Agent',
       effort: 'max',
@@ -103,7 +102,6 @@ describe('parseSweEntries', () => {
       avg_tokens: '290.2K',
     },
     {
-      rank: 2,
       model: 'GPT-5.6 Sol',
       harness: 'Mini-SWE-Agent',
       effort: 'xhigh',
