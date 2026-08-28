@@ -190,6 +190,33 @@ describe('Dashboard', () => {
     expect(header).toHaveAttribute('aria-expanded', 'false')
   })
 
+  it('shows the Pareto frontier image between news and model details, expanded by default', () => {
+    renderDashboard()
+    const paretoHeading = screen.getByRole('heading', { name: 'Pareto frontier' })
+    const paretoSection = paretoHeading.closest('section') as HTMLElement
+    expect(paretoSection).not.toBeNull()
+
+    // Sits between Hand Picked News and Model Details in document order
+    const newsHeading = screen.getByRole('heading', { name: 'Hand Picked News' })
+    const detailsTable = screen.getByRole('table', { name: 'Model Details' })
+    expect(newsHeading.compareDocumentPosition(paretoHeading) & Node.DOCUMENT_POSITION_FOLLOWING).toBeTruthy()
+    expect(paretoHeading.compareDocumentPosition(detailsTable) & Node.DOCUMENT_POSITION_FOLLOWING).toBeTruthy()
+
+    // The captured chart image renders responsively with alt text and a source credit
+    const image = within(paretoSection).getByRole('img', { name: /Intelligence Index versus cost/i })
+    expect(image).toHaveAttribute('src', '/images/artificial-analysis-pareto-frontier.png')
+    expect(within(paretoSection).getByRole('link', { name: 'Artificial Analysis' })).toHaveAttribute(
+      'href',
+      'https://artificialanalysis.ai/',
+    )
+
+    // Accordion starts expanded and collapses on click
+    const header = within(paretoSection).getByRole('button', { name: /Pareto frontier/i })
+    expect(header).toHaveAttribute('aria-expanded', 'true')
+    fireEvent.click(header)
+    expect(header).toHaveAttribute('aria-expanded', 'false')
+  })
+
   it('sorts news by date desc by default and toggles to asc when the sort label is clicked', () => {
     renderDashboard()
     const newsHeading = screen.getByRole('heading', { name: 'Hand Picked News' })

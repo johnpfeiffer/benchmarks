@@ -4,6 +4,7 @@ import { IntelligenceBarChart } from './IntelligenceBarChart'
 import { ModelTable } from './ModelTable'
 import { Footer } from './Footer'
 import { NewsSection } from './NewsSection'
+import { ParetoFrontierSection } from './ParetoFrontierSection'
 import { HardwareChart } from './HardwareChart'
 import { HardwareTable } from './HardwareTable'
 import { GpuTable } from './GpuTable'
@@ -84,6 +85,10 @@ export function Dashboard({
 
       <Box sx={{ mb: 4 }}>
         <NewsSection entries={news} />
+      </Box>
+
+      <Box sx={{ mb: 4 }}>
+        <ParetoFrontierSection />
       </Box>
 
       <Box component="section" aria-labelledby="details-title" sx={{ mb: 5 }}>
