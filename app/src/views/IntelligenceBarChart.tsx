@@ -99,7 +99,23 @@ export function IntelligenceBarChart({
             sx={{ position: 'absolute', zIndex: 1, top: 8, right: 8, bgcolor: 'background.paper' }}
           />
         ) : null}
-        <Box sx={{ overflowX: fitWidth ? 'hidden' : 'auto' }}>
+        <Box
+          sx={{
+            overflowX: fitWidth ? 'hidden' : 'auto',
+            ...(fitWidth
+              ? {}
+              : {
+                  // MUI X v9 hardcodes touch-action: pan-y on its layer
+                  // container (zoom support), which blocks horizontal touch
+                  // scrolling of this overflow container on mobile. The chart
+                  // has no zoom/pan interactions, so restore native panning.
+                  // The layer container only carries its emotion-labeled class
+                  // (css-*-MuiChartsLayerContainer-root), hence the substring
+                  // attribute selector.
+                  '& [class*="MuiChartsLayerContainer-root"]': { touchAction: 'pan-x pan-y' },
+                }),
+          }}
+        >
           {entries.length === 0 ? (
             <Box sx={{ minHeight: 240, display: 'grid', placeItems: 'center', color: 'text.secondary' }}>
               <Typography variant="body2">No models selected</Typography>
