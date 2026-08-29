@@ -13,7 +13,7 @@ import {
 } from '@mui/material'
 import type { HardwareEntry } from '../models'
 
-type SortField = 'model' | 'provider' | 'total_params' | 'iq1_s_gb' | 'iq1_m_gb' | 'iq2_xxs_gb' | 'iq2_m_gb'
+type SortField = 'model' | 'provider' | 'intelligence_score' | 'total_params' | 'iq1_s_gb' | 'iq1_m_gb' | 'iq2_xxs_gb' | 'iq2_m_gb'
 type SortDirection = 'asc' | 'desc'
 interface SortState { field: SortField; direction: SortDirection }
 
@@ -35,6 +35,7 @@ function fieldValue(entry: HardwareEntry, field: SortField): string | number | n
   switch (field) {
     case 'model': return entry.model
     case 'provider': return entry.provider
+    case 'intelligence_score': return entry.intelligence_score ?? null
     case 'total_params': return paramsInBillions(entry.total_params)
     case 'iq1_s_gb': return entry.iq1_s_gb
     case 'iq1_m_gb': return entry.iq1_m_gb
@@ -67,6 +68,7 @@ function nextSort(current: SortState, field: SortField): SortState {
 const COLUMNS: Array<{ label: string; field: SortField }> = [
   { label: 'Model', field: 'model' },
   { label: 'Provider', field: 'provider' },
+  { label: 'Intelligence', field: 'intelligence_score' },
   { label: 'Total Params', field: 'total_params' },
   { label: 'UD-IQ1_S (GB)', field: 'iq1_s_gb' },
   { label: 'UD-IQ1_M (GB)', field: 'iq1_m_gb' },
@@ -127,6 +129,7 @@ export function HardwareTable({ entries, title }: HardwareTableProps) {
                   </Link>
                 </TableCell>
                 <TableCell>{entry.provider}</TableCell>
+                <TableCell>{entry.intelligence_score ?? '*'}</TableCell>
                 <TableCell>{entry.total_params}</TableCell>
                 <TableCell>{entry.iq1_s_gb ?? '*'}</TableCell>
                 <TableCell>{entry.iq1_m_gb ?? '*'}</TableCell>

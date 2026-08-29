@@ -37,9 +37,9 @@ const sweChartEntries: ModelEntry[] = [
 ]
 
 const hardwareEntries: HardwareEntry[] = [
-  { model: 'Inkling', provider: 'Thinking Machines', total_params: '264B', iq1_s_gb: 74.8, iq1_m_gb: 78.8, iq2_xxs_gb: 82.3, iq2_m_gb: 82.4, url: 'https://huggingface.co/unsloth/Inkling-Small-GGUF' },
-  { model: 'Kimi K3', provider: 'Moonshot AI', total_params: '2.8T', iq1_s_gb: 594, iq1_m_gb: 649, iq2_xxs_gb: 711, iq2_m_gb: null, url: 'https://huggingface.co/unsloth/Kimi-K3-GGUF' },
-  { model: 'Gemma 4 31B', provider: 'Google', total_params: '31B', iq1_s_gb: null, iq1_m_gb: null, iq2_xxs_gb: 8.53, iq2_m_gb: 10.8, url: 'https://huggingface.co/unsloth/gemma-4-31B-it-GGUF' },
+  { model: 'Inkling', provider: 'Thinking Machines', total_params: '264B', iq1_s_gb: 74.8, iq1_m_gb: 78.8, iq2_xxs_gb: 82.3, iq2_m_gb: 82.4, url: 'https://huggingface.co/unsloth/Inkling-Small-GGUF', intelligence_score: 42 },
+  { model: 'Kimi K3', provider: 'Moonshot AI', total_params: '2.8T', iq1_s_gb: 594, iq1_m_gb: 649, iq2_xxs_gb: 711, iq2_m_gb: null, url: 'https://huggingface.co/unsloth/Kimi-K3-GGUF', intelligence_score: 60 },
+  { model: 'Gemma 4 31B', provider: 'Google', total_params: '31B', iq1_s_gb: null, iq1_m_gb: null, iq2_xxs_gb: 8.53, iq2_m_gb: 10.8, url: 'https://huggingface.co/unsloth/gemma-4-31B-it-GGUF', intelligence_score: null },
 ]
 
 const gpuEntries: GpuEntry[] = [
@@ -202,9 +202,10 @@ describe('Dashboard', () => {
     expect(newsHeading.compareDocumentPosition(paretoHeading) & Node.DOCUMENT_POSITION_FOLLOWING).toBeTruthy()
     expect(paretoHeading.compareDocumentPosition(detailsTable) & Node.DOCUMENT_POSITION_FOLLOWING).toBeTruthy()
 
-    // The captured chart image renders responsively with alt text and a source credit
+    // The captured chart image renders responsively with alt text and a source
+    // credit. It is a bundled (fingerprinted) asset, so just check the name.
     const image = within(paretoSection).getByRole('img', { name: /Intelligence Index versus cost/i })
-    expect(image).toHaveAttribute('src', '/images/artificial-analysis-pareto-frontier.png')
+    expect(image.getAttribute('src')).toContain('artificial-analysis-pareto-frontier')
     expect(within(paretoSection).getByRole('link', { name: 'Artificial Analysis' })).toHaveAttribute(
       'href',
       'https://artificialanalysis.ai/',
@@ -364,6 +365,7 @@ describe('Dashboard', () => {
     // Hardware table is present with expected columns
     const hwTable = screen.getByRole('table', { name: 'Open Weight Hosting Sizes' })
     expect(within(hwTable).getByRole('button', { name: /Model/i })).toBeInTheDocument()
+    expect(within(hwTable).getByRole('button', { name: /Intelligence/i })).toBeInTheDocument()
     expect(within(hwTable).getByRole('button', { name: /Total Params/i })).toBeInTheDocument()
     expect(within(hwTable).getByRole('button', { name: /UD-IQ1_S/i })).toBeInTheDocument()
     expect(within(hwTable).getByRole('button', { name: /UD-IQ1_M/i })).toBeInTheDocument()
@@ -382,6 +384,11 @@ describe('Dashboard', () => {
     expect(allText).toContain('82.3')
     expect(allText).toContain('8.53')
     expect(allText).toContain('*')
+    // Intelligence column: joined score renders, null renders as '*'
+    const inklingRow = rows.find((r) => r.textContent?.includes('Inkling'))
+    expect(inklingRow?.textContent).toContain('42')
+    const gemmaRow = rows.find((r) => r.textContent?.includes('Gemma 4 31B'))
+    expect(gemmaRow?.textContent).toContain('*')
   })
 
   it('links model names to their HuggingFace URLs', () => {

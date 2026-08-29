@@ -1,6 +1,6 @@
 import { describe, it, expect } from 'vitest'
 import { parseModelEntries, parseNewsEntries, parseSweEntries, parseHardwareEntries, parseGpuEntries } from '../parse'
-import { modelMatchKey } from '../merge'
+import { mergeHardwareIntelligence, modelMatchKey } from '../merge'
 import rawIntelligenceData from '../../data/ai.json'
 import rawSweData from '../../data/swe.json'
 import rawNewsData from '../../data/news.json'
@@ -193,7 +193,7 @@ describe('embedded data integrity', () => {
   })
 
   it('includes hardware entries with 1-bit and 2-bit quant sizes, urls, and null for missing quants', () => {
-    expect(hardware).toHaveLength(6)
+    expect(hardware).toHaveLength(10)
     const inkling = hardware.find((e) => e.model === 'Inkling')
     expect(inkling).toMatchObject({
       provider: 'Thinking Machines', total_params: '264B',
@@ -236,6 +236,49 @@ describe('embedded data integrity', () => {
       iq2_xxs_gb: null, iq2_m_gb: null,
       url: 'https://huggingface.co/unsloth/NVIDIA-Nemotron-3-Ultra-550B-A55B-GGUF',
     })
+    const glm53 = hardware.find((e) => e.model === 'GLM-5.3 (max)')
+    expect(glm53).toMatchObject({
+      provider: 'Z AI', total_params: '754B',
+      iq1_s_gb: 217, iq1_m_gb: 228,
+      iq2_xxs_gb: null, iq2_m_gb: 239,
+      url: 'https://huggingface.co/unsloth/GLM-5.3-GGUF',
+    })
+    const glm53Flash = hardware.find((e) => e.model === 'GLM-5.3 Flash')
+    expect(glm53Flash).toMatchObject({
+      provider: 'Z AI', total_params: '320B',
+      iq1_s_gb: 93.1, iq1_m_gb: 97.6,
+      iq2_xxs_gb: null, iq2_m_gb: null,
+      url: 'https://huggingface.co/unsloth/GLM-5.3-Flash-GGUF',
+    })
+    const qwenFlash = hardware.find((e) => e.model === 'Qwen3.8 Flash Next')
+    expect(qwenFlash).toMatchObject({
+      provider: 'Alibaba', total_params: '125B',
+      iq1_s_gb: 72.5, iq1_m_gb: 74.5,
+      iq2_xxs_gb: null, iq2_m_gb: null,
+      url: 'https://huggingface.co/unsloth/Qwen3.8-Flash-Next-GGUF',
+    })
+    const qwen27b = hardware.find((e) => e.model === 'Qwen3.8 27B')
+    expect(qwen27b).toMatchObject({
+      provider: 'Alibaba', total_params: '27B',
+      iq1_s_gb: 6.19, iq1_m_gb: 6.73,
+      iq2_xxs_gb: 7.27, iq2_m_gb: null,
+      url: 'https://huggingface.co/unsloth/Qwen3.8-27B-GGUF',
+    })
+  })
+
+  it('attaches intelligence scores to hardware rows (null when the model has no AI row)', () => {
+    const enriched = mergeHardwareIntelligence(hardware, intelligence)
+    const byModel = new Map(enriched.map((entry) => [entry.model, entry.intelligence_score]))
+    expect(byModel.get('GLM-5.3 (max)')).toBe(60)
+    expect(byModel.get('GLM-5.3 Flash')).toBe(57)
+    expect(byModel.get('Kimi K3')).toBe(60)
+    expect(byModel.get('Inkling')).toBe(42)
+    // Unique-prefix fallback: hardware's "Nemotron 3 Ultra 550B" matches
+    // ai.json's "Nemotron 3 Ultra".
+    expect(byModel.get('Nemotron 3 Ultra 550B')).toBe(38)
+    // No ai.json rows for these yet.
+    expect(byModel.get('Qwen3.8 Flash Next')).toBeNull()
+    expect(byModel.get('Qwen3.8 27B')).toBeNull()
   })
 
   it('includes GPU entries with specs and null for missing values', () => {

@@ -1,5 +1,5 @@
 export type { GpuEntry, HardwareEntry, ModelEntry, NewsEntry, RawGpuEntry, RawHardwareEntry, RawModelEntry, RawNewsEntry, RawSweEntry, SortField, SortDirection, SortState } from './types'
 export { parseModelEntries, parseNewsEntries, parseSweEntries, parseHardwareEntries, parseGpuEntries, inferProviderFromModel, isOpenWeightModel, InvariantError } from './parse'
 export { sortModels, nextSortState, DEFAULT_SORT } from './sort'
-export { mergeSweMetrics, modelMatchKey } from './merge'
+export { mergeSweMetrics, mergeHardwareIntelligence, modelMatchKey } from './merge'
 export { openWeightIds } from './filter'

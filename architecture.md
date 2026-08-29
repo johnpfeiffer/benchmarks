@@ -110,7 +110,10 @@ All views are pure (props in, callbacks out, no business logic):
   details table, expanded by default and user-collapsible, titled "Pareto
   frontier". Renders a static captured snapshot of Artificial Analysis'
   "Intelligence Index vs. Cost to Run" scatter chart (dotted Pareto line,
-  provider-colored dots) from `public/images/artificial-analysis-pareto-frontier.png`,
+  provider-colored dots) from `src/assets/artificial-analysis-pareto-frontier.png`
+  (a bundled, fingerprinted import so it is served from the same `/assets/`
+  path root as the JS bundle — a root-absolute `public/` URL can be swallowed
+  by SPA-fallback routing on multi-app hosts),
   scaled responsively with descriptive alt text, plus a caption crediting and
   linking to Artificial Analysis with the capture date.
 - `HardwareChart` - grouped bar chart comparing 1-bit and 2-bit dynamic
@@ -120,9 +123,13 @@ All views are pure (props in, callbacks out, no business logic):
   Models without a given quant appear on the x-axis but their bars are
   omitted. Includes a source chip linking to HuggingFace.
 - `HardwareTable` - sortable table of hardware details; headers `Model`,
-  `Provider`, `Total Params`, `UD-IQ1_S (GB)`, `UD-IQ1_M (GB)`,
+  `Provider`, `Intelligence`, `Total Params`, `UD-IQ1_S (GB)`, `UD-IQ1_M (GB)`,
   `UD-IQ2_XXS (GB)`, `UD-IQ2_M (GB)`; click headers to toggle asc/desc. Model
   names link to their HuggingFace model pages. Missing quants render as `*`.
+  The `Intelligence` column is attached by the controller
+  (`mergeHardwareIntelligence`) via the same normalized model-name match as
+  the SWE merge, with a unique-prefix fallback for size-suffixed rows (e.g.
+  "Nemotron 3 Ultra 550B"); models without an `ai.json` row render `*`.
   Default sort is total params descending (largest first). Sort is local
   `useState`/`useMemo` in the component. Total params are parsed to billions
   for numeric sorting (e.g. "2.8T" -> 2800).

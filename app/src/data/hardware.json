@@ -2,7 +2,11 @@
   {"model": "Inkling", "provider": "Thinking Machines", "total_params": "264B", "iq1_s_gb": 74.8, "iq1_m_gb": 78.8, "iq2_xxs_gb": 82.3, "iq2_m_gb": 82.4, "url": "https://huggingface.co/unsloth/Inkling-Small-GGUF"},
   {"model": "Kimi K3", "provider": "Moonshot AI", "total_params": "2.8T", "iq1_s_gb": 594, "iq1_m_gb": 649, "iq2_xxs_gb": 711, "iq2_m_gb": null, "url": "https://huggingface.co/unsloth/Kimi-K3-GGUF"},
   {"model": "GLM-5.2 (max)", "provider": "Z AI", "total_params": "754B", "iq1_s_gb": 217, "iq1_m_gb": 228, "iq2_xxs_gb": 238, "iq2_m_gb": 239, "url": "https://huggingface.co/unsloth/GLM-5.2-GGUF"},
+  {"model": "GLM-5.3 (max)", "provider": "Z AI", "total_params": "754B", "iq1_s_gb": 217, "iq1_m_gb": 228, "iq2_xxs_gb": null, "iq2_m_gb": 239, "url": "https://huggingface.co/unsloth/GLM-5.3-GGUF"},
+  {"model": "GLM-5.3 Flash", "provider": "Z AI", "total_params": "320B", "iq1_s_gb": 93.1, "iq1_m_gb": 97.6, "iq2_xxs_gb": null, "iq2_m_gb": null, "url": "https://huggingface.co/unsloth/GLM-5.3-Flash-GGUF"},
   {"model": "Gemma 4 31B", "provider": "Google", "total_params": "31B", "iq1_s_gb": null, "iq1_m_gb": null, "iq2_xxs_gb": 8.53, "iq2_m_gb": 10.8, "url": "https://huggingface.co/unsloth/gemma-4-31B-it-GGUF"},
   {"model": "DeepSeek V4 Flash 0731", "provider": "DeepSeek", "total_params": "284B", "iq1_s_gb": 82.5, "iq1_m_gb": 86.9, "iq2_xxs_gb": 90.9, "iq2_m_gb": 90.9, "url": "https://huggingface.co/unsloth/DeepSeek-V4-Flash-0731-GGUF"},
-  {"model": "Nemotron 3 Ultra 550B", "provider": "NVIDIA", "total_params": "550B", "iq1_s_gb": null, "iq1_m_gb": 188, "iq2_xxs_gb": null, "iq2_m_gb": null, "url": "https://huggingface.co/unsloth/NVIDIA-Nemotron-3-Ultra-550B-A55B-GGUF"}
+  {"model": "Nemotron 3 Ultra 550B", "provider": "NVIDIA", "total_params": "550B", "iq1_s_gb": null, "iq1_m_gb": 188, "iq2_xxs_gb": null, "iq2_m_gb": null, "url": "https://huggingface.co/unsloth/NVIDIA-Nemotron-3-Ultra-550B-A55B-GGUF"},
+  {"model": "Qwen3.8 Flash Next", "provider": "Alibaba", "total_params": "125B", "iq1_s_gb": 72.5, "iq1_m_gb": 74.5, "iq2_xxs_gb": null, "iq2_m_gb": null, "url": "https://huggingface.co/unsloth/Qwen3.8-Flash-Next-GGUF"},
+  {"model": "Qwen3.8 27B", "provider": "Alibaba", "total_params": "27B", "iq1_s_gb": 6.19, "iq1_m_gb": 6.73, "iq2_xxs_gb": 7.27, "iq2_m_gb": null, "url": "https://huggingface.co/unsloth/Qwen3.8-27B-GGUF"}
 ]
