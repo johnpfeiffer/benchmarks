@@ -69,6 +69,11 @@ export interface HardwareEntry {
   iq2_xxs_gb: number | null
   iq2_m_gb: number | null
   url: string
+  /**
+   * Artificial Analysis intelligence score, attached by the controller via
+   * mergeHardwareIntelligence. Null when the model has no ai.json row.
+   */
+  intelligence_score?: number | null
 }
 
 /** A GPU hardware-spec row as embedded in gpu.json. */

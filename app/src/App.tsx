@@ -9,6 +9,7 @@ import {
   parseHardwareEntries,
   parseGpuEntries,
   mergeSweMetrics,
+  mergeHardwareIntelligence,
   modelMatchKey,
   sortModels,
   nextSortState,
@@ -71,7 +72,10 @@ function DashboardPage() {
   const intelligenceEntries = useMemo(() => parseModelEntries(rawIntelligenceData), [])
   const sweEntries = useMemo(() => parseSweEntries(rawSweData), [])
   const news = useMemo(() => parseNewsEntries(rawNewsData), [])
-  const hardware = useMemo(() => parseHardwareEntries(rawHardwareData), [])
+  const hardware = useMemo(
+    () => mergeHardwareIntelligence(parseHardwareEntries(rawHardwareData), intelligenceEntries),
+    [intelligenceEntries],
+  )
   const gpu = useMemo(() => parseGpuEntries(rawGpuData), [])
   const tableEntries = useMemo(
     () => mergeSweMetrics(intelligenceEntries, sweEntries),
