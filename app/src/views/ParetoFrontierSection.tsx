@@ -1,7 +1,10 @@
 import ExpandMoreIcon from '@mui/icons-material/ExpandMore'
 import { Accordion, AccordionDetails, AccordionSummary, Box, Link, Typography } from '@mui/material'
-
-const PARETO_IMAGE_URL = '/images/artificial-analysis-pareto-frontier.png'
+// Bundled asset (fingerprinted into dist/assets) rather than a public/ file:
+// the deployed host provably serves /assets/* (the JS bundle loads), while a
+// root-absolute /images/* URL can be swallowed by SPA-fallback routing on
+// multi-app hosts.
+import paretoFrontierUrl from '../assets/artificial-analysis-pareto-frontier.png'
 
 /**
  * Collapsible static snapshot of Artificial Analysis' "Intelligence Index vs.
@@ -21,7 +24,7 @@ export function ParetoFrontierSection() {
         <AccordionDetails id="pareto-content" sx={{ pt: 0 }}>
           <Box
             component="img"
-            src={PARETO_IMAGE_URL}
+            src={paretoFrontierUrl}
             alt="Artificial Analysis scatter chart of Intelligence Index versus cost to run the benchmark (USD, log scale), with the dotted Pareto frontier line and provider-colored model dots"
             sx={{
               display: 'block',
