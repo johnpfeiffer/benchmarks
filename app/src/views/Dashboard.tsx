@@ -1,5 +1,5 @@
 import { Box, Button, Container, Link, Typography } from '@mui/material'
-import type { GpuEntry, HardwareEntry, ModelEntry, NewsEntry, SortField, SortState } from '../models'
+import type { GpuEntry, HardwareEntry, MachineEntry, ModelEntry, NewsEntry, SortField, SortState } from '../models'
 import { IntelligenceBarChart } from './IntelligenceBarChart'
 import { ModelTable } from './ModelTable'
 import { Footer } from './Footer'
@@ -8,6 +8,7 @@ import { ParetoFrontierSection } from './ParetoFrontierSection'
 import { HardwareChart } from './HardwareChart'
 import { HardwareTable } from './HardwareTable'
 import { GpuTable } from './GpuTable'
+import { LocalHardwareTable } from './LocalHardwareTable'
 
 export interface DataSourceCredit {
   label: string
@@ -31,6 +32,8 @@ interface DashboardProps {
   sweSource: DataSourceCredit
   gpu: readonly GpuEntry[]
   gpuSources: readonly DataSourceCredit[]
+  machines: readonly MachineEntry[]
+  machineSources: readonly DataSourceCredit[]
   intelligenceSource: DataSourceCredit
   sources: readonly DataSourceCredit[]
 }
@@ -58,6 +61,8 @@ export function Dashboard({
   sweSource,
   gpu,
   gpuSources,
+  machines,
+  machineSources,
   intelligenceSource,
   sources,
 }: DashboardProps) {
@@ -179,6 +184,31 @@ export function Dashboard({
         <GpuTable entries={gpu} title="GPU Specifications" />
         <Box sx={{ mt: 2, display: 'flex', gap: 2, flexWrap: 'wrap' }}>
           {gpuSources.map((src) => (
+            <Link
+              key={src.href}
+              href={src.href}
+              target="_blank"
+              rel="noopener noreferrer"
+              variant="body2"
+            >
+              {src.label}
+            </Link>
+          ))}
+        </Box>
+      </Box>
+
+      <Box component="section" aria-labelledby="local-hw-title" sx={{ mb: 5 }}>
+        <Typography id="local-hw-title" variant="h5" component="h2" sx={{ mb: 1 }}>
+          Local Hardware
+        </Typography>
+        <Typography variant="body2" color="text.secondary" sx={{ mb: 2 }}>
+          Unified-memory machines that run open-weight models locally. Memory is
+          shared between CPU and GPU; the largest configuration per machine is
+          shown with its price.
+        </Typography>
+        <LocalHardwareTable entries={machines} title="Local AI Machines" />
+        <Box sx={{ mt: 2, display: 'flex', gap: 2, flexWrap: 'wrap' }}>
+          {machineSources.map((src) => (
             <Link
               key={src.href}
               href={src.href}
