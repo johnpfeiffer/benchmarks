@@ -24,12 +24,12 @@
     "url": "https://www.nvidia.com/en-us/products/workstations/dgx-spark/"
   },
   {
-    "machine": "Framework Desktop",
+    "machine": "Framework Desktop (DIY Edition)",
     "chip": "AMD Ryzen AI Max+ 395 (Strix Halo)",
     "vram_gb": 128,
     "memory_bandwidth_gbs": 256,
-    "price_usd": 1999,
-    "url": "https://frame.work/desktop"
+    "price_usd": 3689,
+    "url": "https://frame.work/products/desktop-diy-amd-aimax300/configuration/new"
   },
   {
     "machine": "Mac mini (M5 Pro, 2026)",

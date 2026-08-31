@@ -153,7 +153,7 @@ function DashboardPage() {
   const machineSources: DataSourceCredit[] = [
     { label: 'Daring Fireball: Mac configurations and pricing', href: 'https://daringfireball.net/2026/08/configurations_and_pricing_for_new_mac_minis_and_mac_studios' },
     { label: 'NVIDIA DGX Spark', href: 'https://www.nvidia.com/en-us/products/workstations/dgx-spark/' },
-    { label: 'Framework Desktop', href: 'https://frame.work/desktop' },
+    { label: 'Framework Desktop configurator', href: 'https://frame.work/products/desktop-diy-amd-aimax300/configuration/new' },
   ]
 
   return (

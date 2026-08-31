@@ -204,7 +204,8 @@ export function Dashboard({
         <Typography variant="body2" color="text.secondary" sx={{ mb: 2 }}>
           Unified-memory machines that run open-weight models locally. Memory is
           shared between CPU and GPU; the largest configuration per machine is
-          shown with its price.
+          shown with its price. The Framework DIY Edition price includes the
+          required SSD and CPU fan (~$240) on top of the base system.
         </Typography>
         <LocalHardwareTable entries={machines} title="Local AI Machines" />
         <Box sx={{ mt: 2, display: 'flex', gap: 2, flexWrap: 'wrap' }}>

@@ -331,10 +331,13 @@ describe('embedded data integrity', () => {
       chip: 'NVIDIA GB10 Grace Blackwell', vram_gb: 128, memory_bandwidth_gbs: 273, price_usd: 4699,
       url: 'https://www.nvidia.com/en-us/products/workstations/dgx-spark/',
     })
-    const framework = machines.find((e) => e.machine === 'Framework Desktop')
+    const framework = machines.find((e) => e.machine === 'Framework Desktop (DIY Edition)')
+    // Current DIY configurator price: $3,449 for the Max+ 395 128GB system
+    // (was $1,999 at 2025 launch before the RAM price surge) plus ~$240 of
+    // required parts (cheapest 1TB SSD $215 + CPU fan $19 + power cable $5).
     expect(framework).toMatchObject({
-      chip: 'AMD Ryzen AI Max+ 395 (Strix Halo)', vram_gb: 128, memory_bandwidth_gbs: 256, price_usd: 1999,
-      url: 'https://frame.work/desktop',
+      chip: 'AMD Ryzen AI Max+ 395 (Strix Halo)', vram_gb: 128, memory_bandwidth_gbs: 256, price_usd: 3689,
+      url: 'https://frame.work/products/desktop-diy-amd-aimax300/configuration/new',
     })
     const miniM5Pro = machines.find((e) => e.machine === 'Mac mini (M5 Pro, 2026)')
     expect(miniM5Pro).toMatchObject({
