@@ -8,6 +8,7 @@ import {
   parseSweEntries,
   parseHardwareEntries,
   parseGpuEntries,
+  parseMachineEntries,
   mergeSweMetrics,
   mergeHardwareIntelligence,
   modelMatchKey,
@@ -25,6 +26,7 @@ import rawSweData from './data/swe.json'
 import rawNewsData from './data/news.json'
 import rawHardwareData from './data/hardware.json'
 import rawGpuData from './data/gpu.json'
+import rawMachineData from './data/machines.json'
 
 export type AppContext = { app: string }
 
@@ -77,6 +79,7 @@ function DashboardPage() {
     [intelligenceEntries],
   )
   const gpu = useMemo(() => parseGpuEntries(rawGpuData), [])
+  const machines = useMemo(() => parseMachineEntries(rawMachineData), [])
   const tableEntries = useMemo(
     () => mergeSweMetrics(intelligenceEntries, sweEntries),
     [intelligenceEntries, sweEntries],
@@ -147,6 +150,11 @@ function DashboardPage() {
   const hardwareSource = sources[2]
   const gpuSources: DataSourceCredit[] = sources.slice(3)
   const footerSources: DataSourceCredit[] = sources.slice(0, 3)
+  const machineSources: DataSourceCredit[] = [
+    { label: 'Daring Fireball: Mac configurations and pricing', href: 'https://daringfireball.net/2026/08/configurations_and_pricing_for_new_mac_minis_and_mac_studios' },
+    { label: 'NVIDIA DGX Spark', href: 'https://www.nvidia.com/en-us/products/workstations/dgx-spark/' },
+    { label: 'Framework Desktop configurator', href: 'https://frame.work/products/desktop-diy-amd-aimax300/configuration/new' },
+  ]
 
   return (
     <Dashboard
@@ -166,6 +174,8 @@ function DashboardPage() {
       sweSource={sweSource}
       gpu={gpu}
       gpuSources={gpuSources}
+      machines={machines}
+      machineSources={machineSources}
       intelligenceSource={intelligenceSource}
       sources={footerSources}
     />

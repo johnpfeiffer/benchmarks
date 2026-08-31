@@ -1,6 +1,6 @@
 import { describe, it, expect } from 'vitest'
-import { parseModelEntries, parseSweEntries, inferProviderFromModel, isOpenWeightModel, InvariantError } from '../parse'
-import type { RawModelEntry, RawSweEntry } from '../types'
+import { parseModelEntries, parseSweEntries, parseMachineEntries, inferProviderFromModel, isOpenWeightModel, InvariantError } from '../parse'
+import type { RawMachineEntry, RawModelEntry, RawSweEntry } from '../types'
 
 const valid: RawModelEntry[] = [
   { model: 'Alpha', intelligence_score: 60, provider: 'Anthropic', open_weight: true },
@@ -183,5 +183,91 @@ describe('isOpenWeightModel', () => {
   it('is case-insensitive', () => {
     expect(isOpenWeightModel('kimi k2.6')).toBe(true)
     expect(isOpenWeightModel('QWEN3.5 397B')).toBe(true)
+  })
+})
+
+describe('parseMachineEntries', () => {
+  const validMachines: RawMachineEntry[] = [
+    {
+      machine: 'Mac Studio (M5 Ultra, 2026)',
+      chip: 'Apple M5 Ultra',
+      vram_gb: 256,
+      memory_bandwidth_gbs: 1200,
+      price_usd: 9499,
+      url: 'https://example.com/mac-studio',
+    },
+    {
+      machine: 'NVIDIA DGX Spark',
+      chip: 'NVIDIA GB10 Grace Blackwell',
+      vram_gb: 128,
+      memory_bandwidth_gbs: 273,
+      price_usd: 4699,
+      url: 'https://example.com/dgx-spark',
+    },
+  ]
+
+  it('normalizes valid entries', () => {
+    const out = parseMachineEntries(validMachines)
+    expect(out).toHaveLength(2)
+    expect(out[0]).toEqual({
+      machine: 'Mac Studio (M5 Ultra, 2026)',
+      chip: 'Apple M5 Ultra',
+      vram_gb: 256,
+      memory_bandwidth_gbs: 1200,
+      price_usd: 9499,
+      url: 'https://example.com/mac-studio',
+    })
+  })
+
+  it('coerces missing optional bandwidth and price to null', () => {
+    const out = parseMachineEntries([
+      { machine: 'X', chip: 'C', vram_gb: 32, url: 'https://example.com/x' } as unknown as RawMachineEntry,
+    ])
+    expect(out[0].memory_bandwidth_gbs).toBeNull()
+    expect(out[0].price_usd).toBeNull()
+  })
+
+  // Table-driven structural guard cases: each row should be rejected.
+  const structuralCases: Array<{ name: string; raw: Partial<RawMachineEntry>; inv: string }> = [
+    { name: 'missing machine name', raw: { chip: 'C', vram_gb: 1, url: 'https://example.com' }, inv: 'MACHINE-NAME' },
+    { name: 'empty machine name', raw: { machine: '  ', chip: 'C', vram_gb: 1, url: 'https://example.com' }, inv: 'MACHINE-NAME' },
+    { name: 'missing chip', raw: { machine: 'X', vram_gb: 1, url: 'https://example.com' }, inv: 'MACHINE-CHIP' },
+    { name: 'non-numeric vram_gb', raw: { machine: 'X', chip: 'C', vram_gb: 'lots' as unknown as number, url: 'https://example.com' }, inv: 'MACHINE-VRAM' },
+    { name: 'NaN vram_gb', raw: { machine: 'X', chip: 'C', vram_gb: NaN, url: 'https://example.com' }, inv: 'MACHINE-VRAM' },
+    { name: 'missing url', raw: { machine: 'X', chip: 'C', vram_gb: 1 }, inv: 'MACHINE-URL' },
+    { name: 'empty url', raw: { machine: 'X', chip: 'C', vram_gb: 1, url: '' }, inv: 'MACHINE-URL' },
+  ]
+
+  it.each(structuralCases)('throws for structural guard: $name', ({ raw, inv }) => {
+    try {
+      parseMachineEntries([raw as RawMachineEntry])
+      throw new Error('should have thrown')
+    } catch (e) {
+      expect(e).toBeInstanceOf(InvariantError)
+      expect((e as InvariantError).invariant).toBe(inv)
+    }
+  })
+
+  it('reports the offending index in the InvariantError', () => {
+    const bad: RawMachineEntry[] = [
+      validMachines[0],
+      { machine: '', chip: 'C', vram_gb: 1, memory_bandwidth_gbs: null, price_usd: null, url: 'https://example.com' },
+    ]
+    try {
+      parseMachineEntries(bad)
+      throw new Error('should have thrown')
+    } catch (e) {
+      expect((e as InvariantError).index).toBe(1)
+    }
+  })
+
+  it('rejects a non-array input', () => {
+    expect(() => parseMachineEntries({} as unknown as RawMachineEntry[])).toThrow(InvariantError)
+  })
+
+  it('does not mutate the input array', () => {
+    const input = [...validMachines]
+    parseMachineEntries(input)
+    expect(input).toEqual(validMachines)
   })
 })

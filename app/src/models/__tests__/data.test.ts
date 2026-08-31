@@ -1,11 +1,12 @@
 import { describe, it, expect } from 'vitest'
-import { parseModelEntries, parseNewsEntries, parseSweEntries, parseHardwareEntries, parseGpuEntries } from '../parse'
+import { parseModelEntries, parseNewsEntries, parseSweEntries, parseHardwareEntries, parseGpuEntries, parseMachineEntries } from '../parse'
 import { mergeHardwareIntelligence, modelMatchKey } from '../merge'
 import rawIntelligenceData from '../../data/ai.json'
 import rawSweData from '../../data/swe.json'
 import rawNewsData from '../../data/news.json'
 import rawHardwareData from '../../data/hardware.json'
 import rawGpuData from '../../data/gpu.json'
+import rawMachineData from '../../data/machines.json'
 
 describe('embedded data integrity', () => {
   const intelligence = parseModelEntries(rawIntelligenceData)
@@ -13,6 +14,7 @@ describe('embedded data integrity', () => {
   const news = parseNewsEntries(rawNewsData)
   const hardware = parseHardwareEntries(rawHardwareData)
   const gpu = parseGpuEntries(rawGpuData)
+  const machines = parseMachineEntries(rawMachineData)
   const intelligenceKeys = new Set(intelligence.map((entry) => modelMatchKey(entry.model)))
 
   it('every Senior SWE Bench model has a matching Artificial Analysis row', () => {
@@ -307,6 +309,43 @@ describe('embedded data integrity', () => {
     expect(v100).toMatchObject({
       date: '2017', memory: '32 GB', memory_type: 'HBM2',
       memory_bandwidth_gbs: 900, fp16_tflops: 125,
+    })
+  })
+
+  it('includes local hardware machines sorted by VRAM descending, largest config per machine', () => {
+    expect(machines).toHaveLength(6)
+    // Data file is authored largest-first; the table defaults to VRAM desc.
+    for (let i = 1; i < machines.length; i++) {
+      expect(machines[i].vram_gb <= machines[i - 1].vram_gb).toBe(true)
+    }
+    const studioUltra = machines.find((e) => e.machine === 'Mac Studio (M5 Ultra, 2026)')
+    expect(studioUltra).toMatchObject({
+      chip: 'Apple M5 Ultra', vram_gb: 256, memory_bandwidth_gbs: 1200, price_usd: 9499,
+    })
+    const studioMax = machines.find((e) => e.machine === 'Mac Studio (M5 Max, 2026)')
+    expect(studioMax).toMatchObject({
+      chip: 'Apple M5 Max', vram_gb: 128, memory_bandwidth_gbs: 614, price_usd: 5099,
+    })
+    const dgxSpark = machines.find((e) => e.machine === 'NVIDIA DGX Spark')
+    expect(dgxSpark).toMatchObject({
+      chip: 'NVIDIA GB10 Grace Blackwell', vram_gb: 128, memory_bandwidth_gbs: 273, price_usd: 4699,
+      url: 'https://www.nvidia.com/en-us/products/workstations/dgx-spark/',
+    })
+    const framework = machines.find((e) => e.machine === 'Framework Desktop (DIY Edition)')
+    // Current DIY configurator price: $3,449 for the Max+ 395 128GB system
+    // (was $1,999 at 2025 launch before the RAM price surge) plus ~$240 of
+    // required parts (cheapest 1TB SSD $215 + CPU fan $19 + power cable $5).
+    expect(framework).toMatchObject({
+      chip: 'AMD Ryzen AI Max+ 395 (Strix Halo)', vram_gb: 128, memory_bandwidth_gbs: 256, price_usd: 3689,
+      url: 'https://frame.work/products/desktop-diy-amd-aimax300/configuration/new',
+    })
+    const miniM5Pro = machines.find((e) => e.machine === 'Mac mini (M5 Pro, 2026)')
+    expect(miniM5Pro).toMatchObject({
+      chip: 'Apple M5 Pro', vram_gb: 64, memory_bandwidth_gbs: 307, price_usd: 2699,
+    })
+    const miniM6 = machines.find((e) => e.machine === 'Mac mini (M6, 2026)')
+    expect(miniM6).toMatchObject({
+      chip: 'Apple M6', vram_gb: 32, memory_bandwidth_gbs: 170, price_usd: 1299,
     })
   })
 })

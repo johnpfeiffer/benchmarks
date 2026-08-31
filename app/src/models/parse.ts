@@ -1,4 +1,4 @@
-import type { GpuEntry, HardwareEntry, ModelEntry, NewsEntry, RawGpuEntry, RawHardwareEntry, RawModelEntry, RawNewsEntry, RawSweEntry } from './types'
+import type { GpuEntry, HardwareEntry, MachineEntry, ModelEntry, NewsEntry, RawGpuEntry, RawHardwareEntry, RawMachineEntry, RawModelEntry, RawNewsEntry, RawSweEntry } from './types'
 
 /**
  * Error raised when raw data violates a kernel invariant.
@@ -246,4 +246,35 @@ export function parseGpuEntries(raw: readonly RawGpuEntry[]): GpuEntry[] {
     throw new InvariantError('Expected an array of GPU entries', -1, 'SHAPE')
   }
   return raw.map((entry, index) => normalizeGpu(entry, index))
+}
+
+function normalizeMachine(raw: RawMachineEntry, index: number): MachineEntry {
+  const machine = raw?.machine
+  if (typeof machine !== 'string' || machine.trim() === '') {
+    throw new InvariantError(`Machine entry at index ${index} has no machine name`, index, 'MACHINE-NAME')
+  }
+  const chip = raw?.chip
+  if (typeof chip !== 'string' || chip.trim() === '') {
+    throw new InvariantError(`Machine entry at index ${index} ("${machine}") has no chip`, index, 'MACHINE-CHIP')
+  }
+  const vram_gb = raw?.vram_gb
+  if (typeof vram_gb !== 'number' || Number.isNaN(vram_gb)) {
+    throw new InvariantError(`Machine entry at index ${index} ("${machine}") has a non-numeric vram_gb`, index, 'MACHINE-VRAM')
+  }
+  const url = raw?.url
+  if (typeof url !== 'string' || url.trim() === '') {
+    throw new InvariantError(`Machine entry at index ${index} ("${machine}") has no url`, index, 'MACHINE-URL')
+  }
+  const memory_bandwidth_gbs = typeof raw?.memory_bandwidth_gbs === 'number' ? raw.memory_bandwidth_gbs : null
+  const price_usd = typeof raw?.price_usd === 'number' ? raw.price_usd : null
+
+  return { machine, chip, vram_gb, memory_bandwidth_gbs, price_usd, url }
+}
+
+/** Validate embedded local-AI machine entries. */
+export function parseMachineEntries(raw: readonly RawMachineEntry[]): MachineEntry[] {
+  if (!Array.isArray(raw)) {
+    throw new InvariantError('Expected an array of machine entries', -1, 'SHAPE')
+  }
+  return raw.map((entry, index) => normalizeMachine(entry, index))
 }

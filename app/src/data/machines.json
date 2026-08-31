@@ -1,0 +1,50 @@
+[
+  {
+    "machine": "Mac Studio (M5 Ultra, 2026)",
+    "chip": "Apple M5 Ultra",
+    "vram_gb": 256,
+    "memory_bandwidth_gbs": 1200,
+    "price_usd": 9499,
+    "url": "https://daringfireball.net/2026/08/configurations_and_pricing_for_new_mac_minis_and_mac_studios"
+  },
+  {
+    "machine": "Mac Studio (M5 Max, 2026)",
+    "chip": "Apple M5 Max",
+    "vram_gb": 128,
+    "memory_bandwidth_gbs": 614,
+    "price_usd": 5099,
+    "url": "https://daringfireball.net/2026/08/configurations_and_pricing_for_new_mac_minis_and_mac_studios"
+  },
+  {
+    "machine": "NVIDIA DGX Spark",
+    "chip": "NVIDIA GB10 Grace Blackwell",
+    "vram_gb": 128,
+    "memory_bandwidth_gbs": 273,
+    "price_usd": 4699,
+    "url": "https://www.nvidia.com/en-us/products/workstations/dgx-spark/"
+  },
+  {
+    "machine": "Framework Desktop (DIY Edition)",
+    "chip": "AMD Ryzen AI Max+ 395 (Strix Halo)",
+    "vram_gb": 128,
+    "memory_bandwidth_gbs": 256,
+    "price_usd": 3689,
+    "url": "https://frame.work/products/desktop-diy-amd-aimax300/configuration/new"
+  },
+  {
+    "machine": "Mac mini (M5 Pro, 2026)",
+    "chip": "Apple M5 Pro",
+    "vram_gb": 64,
+    "memory_bandwidth_gbs": 307,
+    "price_usd": 2699,
+    "url": "https://daringfireball.net/2026/08/configurations_and_pricing_for_new_mac_minis_and_mac_studios"
+  },
+  {
+    "machine": "Mac mini (M6, 2026)",
+    "chip": "Apple M6",
+    "vram_gb": 32,
+    "memory_bandwidth_gbs": 170,
+    "price_usd": 1299,
+    "url": "https://daringfireball.net/2026/08/configurations_and_pricing_for_new_mac_minis_and_mac_studios"
+  }
+]

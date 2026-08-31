@@ -4,7 +4,7 @@ import { useState } from 'react'
 import { ThemeProvider, CssBaseline } from '@mui/material'
 import { theme } from '../../theme'
 import { Dashboard } from '../Dashboard'
-import { sortModels, nextSortState, openWeightIds, DEFAULT_SORT, type ModelEntry, type HardwareEntry, type GpuEntry, type SortField, type SortState } from '../../models'
+import { sortModels, nextSortState, openWeightIds, DEFAULT_SORT, type ModelEntry, type HardwareEntry, type GpuEntry, type MachineEntry, type SortField, type SortState } from '../../models'
 
 const entries: ModelEntry[] = [
   {
@@ -46,6 +46,13 @@ const gpuEntries: GpuEntry[] = [
   { model: 'A100 (SXM)', date: '2020', memory: '40 HBM2e (80* opt)', memory_type: 'HBM2e', memory_bandwidth_gbs: 1555, fp16_tflops: 312 },
   { model: 'H100 (SXM)', date: '2022-10', memory: '80 GB HBM3e', memory_type: 'HBM3e', memory_bandwidth_gbs: 3355, fp16_tflops: 1979 },
   { model: 'L40 (Ada)', date: '2022-11', memory: '48 GB GDDR6', memory_type: 'GDDR6', memory_bandwidth_gbs: 864, fp16_tflops: 1466 },
+]
+
+// Deliberately unordered so the default VRAM-descending sort is exercised.
+const machineEntries: MachineEntry[] = [
+  { machine: 'Mac mini (M6, 2026)', chip: 'Apple M6', vram_gb: 32, memory_bandwidth_gbs: 170, price_usd: 1299, url: 'https://example.com/mac-mini' },
+  { machine: 'Mac Studio (M5 Ultra, 2026)', chip: 'Apple M5 Ultra', vram_gb: 256, memory_bandwidth_gbs: 1200, price_usd: 9499, url: 'https://example.com/mac-studio' },
+  { machine: 'NVIDIA DGX Spark', chip: 'NVIDIA GB10 Grace Blackwell', vram_gb: 128, memory_bandwidth_gbs: 273, price_usd: 4699, url: 'https://example.com/dgx-spark' },
 ]
 
 /** Controller stand-in mirroring App.tsx: owns sort state, feeds sorted rows. */
@@ -100,6 +107,10 @@ function DashboardController({ initialSort = DEFAULT_SORT }: { initialSort?: Sor
         { label: 'NVIDIA Hopper Architecture', href: 'https://developer.nvidia.com/blog/nvidia-hopper-architecture-in-depth/' },
         { label: 'NVIDIA RTX Pro 6000', href: 'https://www.nvidia.com/en-us/products/workstations/professional-desktop-gpus/rtx-pro-6000/' },
         { label: 'NVIDIA H200', href: 'https://www.nvidia.com/en-us/data-center/h200/' },
+      ]}
+      machines={machineEntries}
+      machineSources={[
+        { label: 'Daring Fireball: Mac configurations and pricing', href: 'https://daringfireball.net/2026/08/configurations_and_pricing_for_new_mac_minis_and_mac_studios' },
       ]}
       sources={[
         { label: 'Artificial Analysis', href: 'https://artificialanalysis.ai/articles/artificial-analysis-intelligence-index-v4-1-1' },
@@ -442,5 +453,50 @@ describe('Dashboard', () => {
     // Default sort: date desc -> L40 (2022-11) first, A100 (2020) last
     expect(rows[1].textContent).toContain('L40 (Ada)')
     expect(rows[rows.length - 1].textContent).toContain('A100 (SXM)')
+  })
+
+  it('renders the Local Hardware section after the GPU section with source links', () => {
+    renderDashboard()
+    const localHeading = screen.getByRole('heading', { name: 'Local Hardware' })
+    const gpuHeading = screen.getByRole('heading', { name: 'Hardware' })
+    expect(
+      gpuHeading.compareDocumentPosition(localHeading) & Node.DOCUMENT_POSITION_FOLLOWING,
+    ).toBeTruthy()
+    const localSection = localHeading.closest('section') as HTMLElement
+    expect(localSection).not.toBeNull()
+    expect(
+      within(localSection).getByRole('link', { name: /Daring Fireball/i }),
+    ).toHaveAttribute(
+      'href',
+      'https://daringfireball.net/2026/08/configurations_and_pricing_for_new_mac_minis_and_mac_studios',
+    )
+    const table = within(localSection).getByRole('table', { name: 'Local AI Machines' })
+    expect(within(table).getByRole('button', { name: /^Machine$/i })).toBeInTheDocument()
+    expect(within(table).getByRole('button', { name: /Chip/i })).toBeInTheDocument()
+    expect(within(table).getByRole('button', { name: /Unified Memory/i })).toBeInTheDocument()
+    expect(within(table).getByRole('button', { name: /Mem BW/i })).toBeInTheDocument()
+    expect(within(table).getByRole('button', { name: /Price/i })).toBeInTheDocument()
+  })
+
+  it('sorts the local hardware table by VRAM descending by default', () => {
+    renderDashboard()
+    const table = screen.getByRole('table', { name: 'Local AI Machines' })
+    const rows = within(table).getAllByRole('row')
+    // Default sort: vram_gb desc -> Mac Studio (256 GB) first, Mac mini (32 GB) last
+    expect(rows[1].textContent).toContain('Mac Studio (M5 Ultra, 2026)')
+    expect(rows[rows.length - 1].textContent).toContain('Mac mini (M6, 2026)')
+  })
+
+  it('shows local hardware prices formatted and links machine names to their sources', () => {
+    renderDashboard()
+    const table = screen.getByRole('table', { name: 'Local AI Machines' })
+    const rows = within(table).getAllByRole('row')
+    const studioRow = rows.find((r) => r.textContent?.includes('Mac Studio'))
+    expect(studioRow?.textContent).toContain('$9,499')
+    expect(studioRow?.textContent).toContain('1200')
+    expect(within(table).getByRole('link', { name: 'NVIDIA DGX Spark' })).toHaveAttribute(
+      'href',
+      'https://example.com/dgx-spark',
+    )
   })
 })

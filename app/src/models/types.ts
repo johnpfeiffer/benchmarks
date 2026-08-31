@@ -101,6 +101,30 @@ export interface GpuEntry {
   fp16_tflops: number | null
 }
 
+/** A local-AI machine row as embedded in machines.json. */
+export interface RawMachineEntry {
+  machine: string
+  chip: string
+  /** Unified memory usable by the GPU, in GB. */
+  vram_gb: number
+  /** Memory bandwidth in GB/s, or null when not published. */
+  memory_bandwidth_gbs: number | null
+  /** USD price of the configuration with this much memory, or null. */
+  price_usd: number | null
+  /** Source URL for the configuration and price. */
+  url: string
+}
+
+/** A validated local-AI machine entry. */
+export interface MachineEntry {
+  machine: string
+  chip: string
+  vram_gb: number
+  memory_bandwidth_gbs: number | null
+  price_usd: number | null
+  url: string
+}
+
 /** A validated model entry. Exists only when INV-001 holds. */
 export interface ModelEntry {
   id: string
