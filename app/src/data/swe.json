@@ -1,4 +1,5 @@
 [
+  {"model": "Claude Fable 5.1", "harness": "Mini-SWE-Agent", "effort": "medium", "tasteful_solve_rate_pct": 34.7, "basic_solve_rate_pct": 57.9, "avg_steps": 77, "avg_tokens": "37.9K"},
   {"model": "Claude Fable 5", "harness": "Mini-SWE-Agent", "effort": "high", "tasteful_solve_rate_pct": 34.7, "basic_solve_rate_pct": 53.7, "avg_steps": 119, "avg_tokens": "58.4K"},
   {"model": "Claude Opus 5", "harness": "Mini-SWE-Agent", "effort": "high", "tasteful_solve_rate_pct": 34.7, "basic_solve_rate_pct": 62.1, "avg_steps": 141, "avg_tokens": "71.0K"},
   {"model": "GPT-5.6 Sol", "harness": "Mini-SWE-Agent", "effort": "xhigh", "tasteful_solve_rate_pct": 34.7, "basic_solve_rate_pct": 53.7, "avg_steps": 50, "avg_tokens": "32.7K"},
