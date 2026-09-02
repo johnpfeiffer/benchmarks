@@ -63,7 +63,7 @@ flowchart TD
 `data/swe.json` does not include provider fields, so `parseSweEntries` derives
 provider from known model-family prefixes (Claude, GPT, Grok, GLM, Kimi,
 Gemini). Unknown families fail as **INV-001** violations instead of being
-rendered without a provider. The source site currently lists 17 runs;
+rendered without a provider. The source site currently lists 18 runs;
 `swe.json` additionally retains four models no longer listed (Kimi K2.6,
 GPT-5.6 Luna, Inkling, Claude Sonnet 4.6) at their last published values.
 
@@ -172,7 +172,7 @@ both SWE charts when corresponding SWE rows exist. The main table now includes
 the three SWE-only models (Claude Opus 4.7, GPT-5.4 (xhigh), Claude Sonnet 4.6)
 as not-open-weight rows, so every SWE model has an Artificial Analysis
 counterpart and the "Open Weights" preset propagates fully to the SWE
-charts. The SWE data covers 21 models from senior-swe-bench.snorkel.ai. The
+charts. The SWE data covers 22 models from senior-swe-bench.snorkel.ai. The
 preset is a selection: on ->
 `replaceSelection(openWeightIds(...))`; off -> `replaceSelection(allIds)`, so the
 table graying/fading and every chart follow the selection. The SWE charts are
