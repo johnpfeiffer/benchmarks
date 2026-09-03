@@ -17,6 +17,12 @@ wins.
 - **MUI** (`@mui/material`) for the UI, light-mode defaults per `KERNEL/DESIGN.md`
 - **@mui/x-charts** for the bar chart
 - **Vitest + Testing Library** for Red/Green TDD
+- **Go** (`tools/benchtool/`) for the benchmark-lookup CLI used by the
+  `.agents/skills/` workflows: fetches source pages and prints just the
+  fields the agent needs (AA model score/provider/open-weights/release, SWE
+  leaderboard as TSV, news-page date signals) so whole pages stay out of
+  context, and inserts rows into the data JSON with the repo's formatting,
+  ordering, and dedupe conventions (`news-add`, `ai-add`, `swe-add`)
 
 ## Layering (DDD / MVC)
 
@@ -240,6 +246,8 @@ journey
   entry validation and dashboard rendering / machine entry validation and
   dashboard rendering).
 - `npm run build` - `tsc -b` typecheck + Vite production build.
+- `go test ./tools/...` - benchtool extraction/insertion unit tests (fixture
+  HTML, temp-repo data writes; no network).
 
 Tests follow Red/Green TDD with concise table-driven cases for the domain
 (parse/INV-001, sorting, SWE metric merge) and high-value dashboard paths for
