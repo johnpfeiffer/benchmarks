@@ -185,7 +185,9 @@ describe('embedded data integrity', () => {
     // All expected URLs are present.
     const urls = new Set(news.map((entry) => entry.url))
     expect(urls.has('https://artificialanalysis.ai/articles/gemini-3-8-flash')).toBe(true)
-    expect(urls.has('https://blog.google/innovation-and-ai/models-and-research/gemini-models/3-8-flash-and-3-8-flash-cyber/')).toBe(true)
+    // The blog.google launch post was vetted and dropped: few facts and
+    // cherry-picked benchmarks (see benchmark-news-lookup skill).
+    expect(urls.has('https://blog.google/innovation-and-ai/models-and-research/gemini-models/3-8-flash-and-3-8-flash-cyber/')).toBe(false)
     expect(urls.has('https://www.interconnects.ai/p/glm-53-how-chinese-labs-keep-stride')).toBe(true)
     expect(urls.has('https://artificialanalysis.ai/articles/gemini-3-7-time-frontier')).toBe(true)
     expect(urls.has('https://unsloth.ai/docs/models/qwen3.8')).toBe(true)
@@ -201,7 +203,7 @@ describe('embedded data integrity', () => {
       (entry) => entry.url === 'https://artificialanalysis.ai/articles/gemini-3-6-flash-3-5-flash-lite-halving-time',
     )
     expect(geminiArticle?.date).toBe('2026-07-21')
-    expect(news).toHaveLength(22)
+    expect(news).toHaveLength(21)
   })
 
   it('includes hardware entries with 1-bit and 2-bit quant sizes, urls, and null for missing quants', () => {
