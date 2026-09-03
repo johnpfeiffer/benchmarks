@@ -128,6 +128,14 @@ describe('embedded data integrity', () => {
     })
   })
 
+  it('includes Gemini 3.8 Flash (high) at intelligence 59 with a provider', () => {
+    expect(intelligence.find((entry) => entry.model === 'Gemini 3.8 Flash (high)')).toMatchObject({
+      score: 59,
+      provider: 'Google',
+      open_weight: false,
+    })
+  })
+
   it('includes Grok 4.6 (high) at intelligence 61 with a provider', () => {
     expect(intelligence.find((entry) => entry.model === 'Grok 4.6 (high)')).toMatchObject({
       score: 61,
@@ -165,10 +173,10 @@ describe('embedded data integrity', () => {
   })
 
   it('includes all news articles sorted newest first', () => {
-    // The newest article (2026-08-14) should be first.
+    // The newest article (2026-09-02) should be first.
     expect(news[0]).toEqual({
-      url: 'https://www.interconnects.ai/p/glm-53-how-chinese-labs-keep-stride',
-      date: '2026-08-14',
+      url: 'https://artificialanalysis.ai/articles/gemini-3-8-flash',
+      date: '2026-09-02',
     })
     // Every entry is sorted descending by date.
     for (let i = 1; i < news.length; i++) {
@@ -176,6 +184,8 @@ describe('embedded data integrity', () => {
     }
     // All expected URLs are present.
     const urls = new Set(news.map((entry) => entry.url))
+    expect(urls.has('https://artificialanalysis.ai/articles/gemini-3-8-flash')).toBe(true)
+    expect(urls.has('https://blog.google/innovation-and-ai/models-and-research/gemini-models/3-8-flash-and-3-8-flash-cyber/')).toBe(true)
     expect(urls.has('https://www.interconnects.ai/p/glm-53-how-chinese-labs-keep-stride')).toBe(true)
     expect(urls.has('https://artificialanalysis.ai/articles/gemini-3-7-time-frontier')).toBe(true)
     expect(urls.has('https://unsloth.ai/docs/models/qwen3.8')).toBe(true)
@@ -191,7 +201,7 @@ describe('embedded data integrity', () => {
       (entry) => entry.url === 'https://artificialanalysis.ai/articles/gemini-3-6-flash-3-5-flash-lite-halving-time',
     )
     expect(geminiArticle?.date).toBe('2026-07-21')
-    expect(news).toHaveLength(20)
+    expect(news).toHaveLength(22)
   })
 
   it('includes hardware entries with 1-bit and 2-bit quant sizes, urls, and null for missing quants', () => {
