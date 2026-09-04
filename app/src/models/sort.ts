@@ -26,6 +26,10 @@ function fieldValue(entry: ModelEntry, field: SortField): string | number | unde
   switch (field) {
     case 'provider':
       return entry.provider
+    case 'released':
+      // ISO dates compare chronologically as plain strings; null (unknown
+      // date) is treated as missing and sorts after populated values.
+      return entry.released ?? undefined
     case 'model':
       return entry.model
     case 'score':

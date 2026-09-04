@@ -19,10 +19,12 @@ wins.
 - **Vitest + Testing Library** for Red/Green TDD
 - **Go** (`tools/benchtool/`) for the benchmark-lookup CLI used by the
   `.agents/skills/` workflows: fetches source pages and prints just the
-  fields the agent needs (AA model score/provider/open-weights/release, SWE
+  fields the agent needs (AA model score/provider/open-weights/release,
+  every leaderboard variant's release date via `aa-releases`, SWE
   leaderboard as TSV, news-page date signals) so whole pages stay out of
   context, and inserts rows into the data JSON with the repo's formatting,
-  ordering, and dedupe conventions (`news-add`, `ai-add`, `swe-add`)
+  ordering, and dedupe conventions (`news-add`, `ai-add`, `ai-set-released`,
+  `swe-add`)
 
 ## Layering (DDD / MVC)
 
@@ -60,8 +62,8 @@ flowchart TD
 
 | File | Responsibility |
 | --- | --- |
-| `types.ts` | `ModelEntry`, `NewsEntry`, `HardwareEntry`, `GpuEntry`, `MachineEntry`, their raw JSON shapes, and benchmark sort types; `ModelEntry.open_weight` is always present after parse; `ModelEntry.color` is the explicit bar color carried from `ai.json` |
-| `parse.ts` | `parseModelEntries`, `parseSweEntries`, `parseNewsEntries`, `parseHardwareEntries`, `parseGpuEntries`, `parseMachineEntries`, provider/open-weight inference, and `InvariantError`; upholds **INV-001** (every model has a provider) and structural guards at the single gate. News URLs and ISO dates are validated, copied, and sorted newest first before reaching the view. Hardware entries are validated (provider, model, total_params, url required; 1-bit and 2-bit quant sizes nullable). GPU entries are validated (model, date required; memory, memory_type, memory_bandwidth_gbs, fp16_tflops nullable). Machine entries are validated (machine, chip, vram_gb, url required; memory_bandwidth_gbs, price_usd nullable). SWE provider rules cover Claude, GPT, Grok, GLM, Kimi, Gemini, MiniMax, and Inkling |
+| `types.ts` | `ModelEntry`, `NewsEntry`, `HardwareEntry`, `GpuEntry`, `MachineEntry`, their raw JSON shapes, and benchmark sort types; `ModelEntry.open_weight` is always present after parse; `ModelEntry.color` is the explicit bar color carried from `ai.json`; `ModelEntry.released` is the release date (`YYYY-MM-DD` or null) |
+| `parse.ts` | `parseModelEntries`, `parseSweEntries`, `parseNewsEntries`, `parseHardwareEntries`, `parseGpuEntries`, `parseMachineEntries`, provider/open-weight inference, and `InvariantError`; upholds **INV-001** (every model has a provider) and structural guards at the single gate. News URLs and ISO dates are validated, copied, and sorted newest first before reaching the view; model release dates share the same strict calendar-date guard (`MODEL-RELEASED`). Hardware entries are validated (provider, model, total_params, url required; 1-bit and 2-bit quant sizes nullable). GPU entries are validated (model, date required; memory, memory_type, memory_bandwidth_gbs, fp16_tflops nullable). Machine entries are validated (machine, chip, vram_gb, url required; memory_bandwidth_gbs, price_usd nullable). SWE provider rules cover Claude, GPT, Grok, GLM, Kimi, Gemini, MiniMax, and Inkling |
 | `merge.ts` | `mergeSweMetrics`, `modelMatchKey`; adds optional SWE table columns to matching Artificial Analysis rows. `modelMatchKey` ignores parenthetical effort suffixes and "preview" |
 | `sort.ts` | `sortModels`, `nextSortState`, `DEFAULT_SORT` (score desc) |
 | `filter.ts` | `openWeightIds`; the id set used by the "Open Weights" preset |
@@ -75,7 +77,10 @@ rendered without a provider. The source site currently lists 18 runs;
 GPT-5.6 Luna, Inkling, Claude Sonnet 4.6) at their last published values.
 
 `data/ai.json` scores track the Artificial Analysis Intelligence Index
-(currently v4.1.1).
+(currently v4.1.1). Rows are authored sorted by score descending (ties keep
+file order; `benchtool ai-add` maintains this), and every row carries a
+verified `released` date sourced from the Artificial Analysis leaderboard
+(`benchtool aa-releases`).
 
 ### Presentation (`views/`)
 
@@ -85,16 +90,23 @@ All views are pure (props in, callbacks out, no business logic):
   the left by default), horizontally scrollable so labels stay readable,
   colored by the explicit `color` field each `ai.json` row carries, falling
   back to a provider/model-family lookup for SWE-only entries, with diagonal
-  x-axis labels. The lead chart embeds its Artificial Analysis source credit as
+  x-axis labels. The lead chart embeds each bar's score inside the bar in
+  white bold text (MUI X `barLabel`, `barValues` prop) and embeds its
+  Artificial Analysis source credit as
   a chip (linking to the AA homepage) in the upper-right of the chart frame and
   uses only a small margin
   below the x-axis allocation so the "Model" title sits close to the frame. The
-  lower SWE comparison charts use fit-to-width mode with skinnier bars to avoid
+  lower SWE comparison charts use fit-to-width mode with skinnier bars (and no
+  in-bar labels) to avoid
   horizontal chart scrollbars.
 - `ModelTable` - collapsible (Accordion, expanded by default) sortable table;
-  headers `Provider`, `Model Name`, `Intelligence`, `basic_solve_rate_pct`,
+  headers `Provider`, `Released`, `Model Name`, `Intelligence`,
+  `basic_solve_rate_pct`,
   `tasteful_solve_rate_pct`, `avg_steps`, and `avg_tokens`; click headers to
-  toggle asc/desc. The table scrolls horizontally on narrow viewports. Missing
+  toggle asc/desc. The release date renders in italics between provider and
+  model name, `*` when unknown; ISO dates sort chronologically and unknown
+  dates sort last in both directions. The table scrolls horizontally on narrow
+  viewports. Missing
   SWE values render as `*`. Model names are buttons; clicking toggles matching
   model inclusion across all charts while the row remains visible when
   deselected, with a gray background and faded text. An "Open Weights" toggle
@@ -209,6 +221,7 @@ journey
     JSON parsed + INV-001 validated: 3: System
   section Explore Intelligence
     See Artificial Analysis chart (score desc): 5: User
+    Read scores inside the chart bars: 4: User
     Open Artificial Analysis from source chip: 4: User
     Scroll chart horizontally for labels: 4: User
     Read Hand Picked News with visible dates and links: 4: User
@@ -217,6 +230,7 @@ journey
     Load Pareto image from the app-relative public path: 4: System
     View or collapse the Pareto frontier snapshot: 4: User
     Read details table with SWE columns: 5: User
+    See release dates beside model names: 4: User
     Click a header, including SWE metrics: 5: User
     Toggle asc/desc: 5: User
     Click model button to remove from all matching charts: 5: User
@@ -246,18 +260,27 @@ journey
 
 ## Validation
 
-- `npm test` - Vitest unit + component tests (domain logic + dashboard happy
-  path / sort interaction / all-chart model filtering / SWE metric merge /
-  source credits / news validation, ordering, visible dates, sort toggle, and
-  collapse behavior / hardware entry validation and dashboard rendering / GPU
-  entry validation and dashboard rendering / machine entry validation and
-  dashboard rendering).
-- Pareto image regression tests check exact relative `src`, resolution with
-  local and deployed document bases, and a valid PNG in the public directory.
-- `npm run build` - `tsc -b` typecheck + Vite production build. Confirm the
-  public PNG is copied unchanged to `app/dist/images/` (not fingerprinted in
-  `dist/assets/`). `cloud-deploy.sh` includes `public/` when syncing the app;
-  the host must rebuild/redeploy before the fixed URL is available in production.
+- `npm test` - Vitest, three layers:
+  - **Unit tests with fixtures** (`models/__tests__/parse|sort|filter|merge|news.test.ts`):
+    domain logic — INV-001 and structural guards (including release-date
+    validation), sorting, merges, news parsing.
+  - **Data-integrity invariants** (`models/__tests__/data.test.ts`): only
+    properties the parser and UI cannot see — cross-file relationships (every
+    SWE model has an AI row; hardware↔AI name matching re-derived
+    independently), ordering and uniqueness conventions (ai.json score-desc,
+    unique names, unique news URLs, machines VRAM-desc), and value-shape
+    invariants (integer 0-100 scores, hex colors, populated past release
+    dates). Per-row value assertions were removed as tautological.
+  - **Acceptance tests** (`views/__tests__/acceptance.test.tsx` +
+    `Dashboard.test.tsx` + `IntelligenceBarChart.test.tsx`): the acceptance
+    suite renders the real app with the real embedded JSON and asserts every
+    row of every data file appears in its UI listing (models table incl.
+    italic release dates and merged SWE metrics, news feed, hardware, GPU,
+    local machines). Dashboard behavior tests (sort interactions, selection,
+    toggles, collapse, credits) use small fixtures. The chart label test
+    mocks `<BarChart>` and asserts props, because jsdom has no layout engine
+    and MUI X draws nothing there.
+- `npm run build` - `tsc -b` typecheck + Vite production build.
 - `go test ./tools/...` - benchtool extraction/insertion unit tests (fixture
   HTML, temp-repo data writes; no network).
 
@@ -265,16 +288,4 @@ Tests follow Red/Green TDD with concise table-driven cases for the domain
 (parse/INV-001, sorting, SWE metric merge) and high-value dashboard paths for
 rendering, sorting, filtering, placeholders, and credits.
 
-### Pareto public-asset refactor validation (2026-09-03)
 
-- Confirmed the old production `/assets/artificial-analysis-pareto-frontier-DMY4AUlU.png`
-  returns 404, while AIEWF's app-prefixed public PNG returns 200 `image/png`.
-- Confirmed production HTML injects `<base href="/benchmarks/">`.
-- Red/Green: new URL-resolution and public-PNG tests failed before the change;
-  all 31 view tests pass after it. Production build passes and `cmp` confirms
-  `public/images/` and `dist/images/` PNG bytes are identical.
-- Full suite: 125 pass, one unrelated existing failure in `data.test.ts`:
-  it expects `https://www.anthropic.com/claude-fable-and-mythos-5-1`, which
-  is absent from the committed `news.json`. Neither the news data nor that
-  assertion was changed by this refactor.
-- Production deployment has not been performed by this refactor.

@@ -62,6 +62,25 @@ func orMissing(s string) string {
 	return s
 }
 
+const aaLeaderboardURL = "https://artificialanalysis.ai/leaderboards/models"
+
+// cmdAAReleases prints every leaderboard variant's release date as TSV so
+// the agent can map ai.json rows to dates without per-model page fetches.
+func cmdAAReleases() error {
+	_, body, err := fetch(aaLeaderboardURL)
+	if err != nil {
+		return err
+	}
+	releases := extractAAReleases(body)
+	fmt.Printf("source: %s\n", aaLeaderboardURL)
+	fmt.Printf("%d variants\n", len(releases))
+	fmt.Println("variant\teffort\trelease\tslug\treleased")
+	for _, r := range releases {
+		fmt.Printf("%s\t%s\t%s\t%s\t%s\n", r.Variant, orMissing(r.Effort), r.Release, r.Slug, r.Released)
+	}
+	return nil
+}
+
 const sweAgentsURL = "https://senior-swe-bench.snorkel.ai/agents?f_behavior=no_cheating"
 
 // cmdSweList prints the Senior SWE Bench leaderboard table as TSV so the

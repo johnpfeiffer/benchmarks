@@ -115,9 +115,10 @@ do not guess; omit the entry and flag it in the PR body.
   ISO real calendar dates — the tool mirrors it, and `npm test` remains the
   final gate. The parser re-sorts newest first, so file order is convention,
   not correctness.
-- Follow Red/Green TDD: update the news test in
-  `app/src/models/__tests__/data.test.ts` (first-entry expectation, the URL
-  presence set, and the total count), then the data.
+- No test edits are needed for a new entry: the acceptance suite
+  (`app/src/views/__tests__/acceptance.test.tsx`) renders news.json through
+  the UI and checks every entry appears as a dated link, and `data.test.ts`
+  holds the uniqueness invariant.
 - From `app/`, run `npm test` and `npm run build` (typecheck + production
   build). No task is complete with failing tests.
 - Update `architecture.md` only if structure or behavior changed; data-only

@@ -33,6 +33,7 @@ interface ModelTableProps {
 /** Column config: header label -> domain sort field + cell accessor. */
 const COLUMNS: Array<{ label: string; field: SortField; accessor: (e: ModelEntry) => string | number | undefined }> = [
   { label: 'Provider', field: 'provider', accessor: (e) => e.provider },
+  { label: 'Released', field: 'released', accessor: (e) => e.released ?? undefined },
   { label: 'Model Name', field: 'model', accessor: (e) => e.model },
   { label: 'Intelligence', field: 'score', accessor: (e) => e.score },
   { label: 'basic_solve_rate_pct', field: 'basic_solve_rate_pct', accessor: (e) => e.basic_solve_rate_pct },
@@ -110,7 +111,12 @@ export function ModelTable({ entries, sort, onSortChange, selectedIds, onToggleE
                     >
                       {COLUMNS.map((col) => (
                         <TableCell key={col.field}>
-                          {col.field === 'model' ? (
+                          {col.field === 'released' ? (
+                            // Release dates render in italics per design; "*"
+                            // when the date is unknown. <em> carries the style
+                            // semantically and survives in the DOM for tests.
+                            <em>{col.accessor(entry) ?? '*'}</em>
+                          ) : col.field === 'model' ? (
                             <Button
                               size="small"
                               variant={isSelected ? 'text' : 'contained'}
