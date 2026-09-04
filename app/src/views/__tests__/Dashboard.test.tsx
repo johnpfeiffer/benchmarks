@@ -214,9 +214,9 @@ describe('Dashboard', () => {
     expect(paretoHeading.compareDocumentPosition(detailsTable) & Node.DOCUMENT_POSITION_FOLLOWING).toBeTruthy()
 
     // The captured chart image renders responsively with alt text and a source
-    // credit. It is a bundled (fingerprinted) asset, so just check the name.
+    // credit. Keep the URL relative so the host's /benchmarks/ base applies.
     const image = within(paretoSection).getByRole('img', { name: /Intelligence Index versus cost/i })
-    expect(image.getAttribute('src')).toContain('artificial-analysis-pareto-frontier')
+    expect(image).toHaveAttribute('src', 'images/artificial-analysis-pareto-frontier.png')
     expect(within(paretoSection).getByRole('link', { name: 'Artificial Analysis' })).toHaveAttribute(
       'href',
       'https://artificialanalysis.ai/',
