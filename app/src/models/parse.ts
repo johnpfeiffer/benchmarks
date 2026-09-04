@@ -51,6 +51,16 @@ function assertScore(score: unknown, index: number, model: string, field: string
   return score
 }
 
+/** Strict YYYY-MM-DD real-calendar-date check, shared by news and released. */
+function assertISODate(date: unknown, index: number, invariant: string, what: string): string {
+  const isIso = typeof date === 'string' && /^\d{4}-\d{2}-\d{2}$/.test(date)
+  const parsed = isIso ? new Date(`${date}T00:00:00Z`) : null
+  if (!parsed || Number.isNaN(parsed.getTime()) || parsed.toISOString().slice(0, 10) !== date) {
+    throw new InvariantError(`${what} at index ${index} has an invalid date`, index, invariant)
+  }
+  return date as string
+}
+
 function normalize(raw: RawModelEntry, index: number): ModelEntry {
   const provider = raw?.provider
   if (typeof provider !== 'string' || provider.trim() === '') {
@@ -63,6 +73,9 @@ function normalize(raw: RawModelEntry, index: number): ModelEntry {
   const model = assertModelName(raw?.model, index)
   const score = assertScore(raw?.intelligence_score, index, model, 'intelligence_score')
   const color = typeof raw?.color === 'string' && raw.color.trim() !== '' ? raw.color : undefined
+  const released = raw?.released === undefined || raw?.released === null
+    ? null
+    : assertISODate(raw.released, index, 'MODEL-RELEASED', `Model entry ("${model}")`)
 
   return {
     id: makeId(provider, model),
@@ -70,6 +83,7 @@ function normalize(raw: RawModelEntry, index: number): ModelEntry {
     score,
     provider,
     open_weight: Boolean(raw.open_weight),
+    released,
     ...(color ? { color } : {}),
   }
 }
@@ -130,6 +144,8 @@ function normalizeSwe(raw: RawSweEntry, index: number): ModelEntry {
     score,
     provider,
     open_weight: isOpenWeightModel(model),
+    // swe.json carries no release dates; the table shows the ai.json row's.
+    released: null,
     tasteful_solve_rate_pct: score,
     basic_solve_rate_pct: assertScore(raw?.basic_solve_rate_pct, index, model, 'basic_solve_rate_pct'),
     avg_steps: assertScore(raw?.avg_steps, index, model, 'avg_steps'),
@@ -174,12 +190,7 @@ function normalizeNews(raw: RawNewsEntry, index: number): NewsEntry {
     throw new InvariantError(`News entry at index ${index} has an invalid URL`, index, 'NEWS-URL')
   }
 
-  const date = raw?.date
-  const isIsoDate = typeof date === 'string' && /^\d{4}-\d{2}-\d{2}$/.test(date)
-  const parsedDate = isIsoDate ? new Date(`${date}T00:00:00Z`) : null
-  if (!parsedDate || Number.isNaN(parsedDate.getTime()) || parsedDate.toISOString().slice(0, 10) !== date) {
-    throw new InvariantError(`News entry at index ${index} has an invalid date`, index, 'NEWS-DATE')
-  }
+  const date = assertISODate(raw?.date, index, 'NEWS-DATE', 'News entry')
 
   return { url, date }
 }

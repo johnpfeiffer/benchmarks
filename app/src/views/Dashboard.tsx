@@ -84,6 +84,7 @@ export function Dashboard({
         <IntelligenceBarChart
           entries={intelligenceChartEntries}
           scoreLabel="Score"
+          barValues
           source={intelligenceSource}
         />
       </Box>

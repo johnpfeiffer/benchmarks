@@ -8,6 +8,8 @@ interface IntelligenceBarChartProps {
   title?: string
   scoreLabel: string
   fitWidth?: boolean
+  /** Embed each bar's value inside the bar in white (for dark/colored fills). */
+  barValues?: boolean
   source?: {
     label: string
     href: string
@@ -58,6 +60,7 @@ export function IntelligenceBarChart({
   title,
   scoreLabel,
   fitWidth = false,
+  barValues = false,
   source,
 }: IntelligenceBarChartProps) {
   const theme = useTheme()
@@ -128,8 +131,19 @@ export function IntelligenceBarChart({
                   {
                     dataKey: 'score',
                     label: scoreLabel,
+                    // In-bar value labels; default placement is 'center'
+                    // (inside the bar), which suits white text on the
+                    // provider-colored bars.
+                    ...(barValues ? { barLabel: 'value' as const } : {}),
                   },
                 ]}
+                sx={
+                  barValues
+                    ? // MUI X v9 renders bar labels with the MuiBarChart-label
+                      // class; white bold text contrasts the colored bars.
+                      { '& .MuiBarChart-label': { fill: '#fff', fontWeight: 600 } }
+                    : undefined
+                }
                 xAxis={[
                   {
                     dataKey: 'model',

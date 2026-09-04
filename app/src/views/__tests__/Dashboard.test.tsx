@@ -13,13 +13,14 @@ const entries: ModelEntry[] = [
     score: 60,
     provider: 'Anthropic',
     open_weight: true,
+    released: '2026-07-01',
     tasteful_solve_rate_pct: 29.1,
     basic_solve_rate_pct: 46.5,
     avg_steps: 159,
     avg_tokens: '290.2K',
   },
-  { id: 'openai:beta', model: 'Beta', score: 50, provider: 'OpenAI', open_weight: false },
-  { id: 'google:gamma', model: 'Gamma', score: 55, provider: 'Google', open_weight: false },
+  { id: 'openai:beta', model: 'Beta', score: 50, provider: 'OpenAI', open_weight: false, released: null },
+  { id: 'google:gamma', model: 'Gamma', score: 55, provider: 'Google', open_weight: false, released: '2026-03-15' },
 ]
 
 const sweChartEntries: ModelEntry[] = [
@@ -29,6 +30,7 @@ const sweChartEntries: ModelEntry[] = [
     score: 29.1,
     provider: 'Anthropic',
     open_weight: true,
+    released: '2026-07-01',
     tasteful_solve_rate_pct: 29.1,
     basic_solve_rate_pct: 46.5,
     avg_steps: 159,
@@ -261,6 +263,34 @@ describe('Dashboard', () => {
     expect(within(table).getByRole('button', { name: /tasteful_solve_rate_pct/i })).toBeInTheDocument()
     expect(within(table).getByRole('button', { name: /avg_steps/i })).toBeInTheDocument()
     expect(within(table).getByRole('button', { name: /avg_tokens/i })).toBeInTheDocument()
+  })
+
+  it('shows the release date in italics between Provider and Model Name, "*" when unknown', () => {
+    renderDashboard()
+    const table = intelligenceTable()
+    const headers = within(table).getAllByRole('columnheader')
+    // Column order: Provider, Released, Model Name, ...
+    expect(headers[0]).toHaveTextContent('Provider')
+    expect(headers[1]).toHaveTextContent('Released')
+    expect(headers[2]).toHaveTextContent('Model Name')
+
+    const alphaRow = screen.getByRole('button', { name: 'Alpha' }).closest('tr') as HTMLElement
+    const italic = alphaRow.querySelector('em')
+    expect(italic).not.toBeNull()
+    expect(italic).toHaveTextContent('2026-07-01')
+
+    const betaRow = screen.getByRole('button', { name: 'Beta' }).closest('tr') as HTMLElement
+    expect(betaRow.querySelector('em')).toHaveTextContent('*')
+  })
+
+  it('sorts by release date when the Released header is clicked', () => {
+    renderDashboard()
+    fireEvent.click(within(intelligenceTable()).getByRole('button', { name: /Released/i }))
+    const rows = within(intelligenceTable()).getAllByRole('row')
+    // Ascending: Gamma (2026-03-15) before Alpha (2026-07-01); unknown (Beta) last.
+    expect(rows[1].textContent).toContain('Gamma')
+    expect(rows[2].textContent).toContain('Alpha')
+    expect(rows[3].textContent).toContain('Beta')
   })
 
   it('shows all rows in the table', () => {

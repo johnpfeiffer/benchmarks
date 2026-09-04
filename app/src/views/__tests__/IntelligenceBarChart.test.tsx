@@ -1,46 +1,51 @@
-import { describe, it, expect } from 'vitest'
-import { render } from '@testing-library/react'
+import { describe, it, expect, vi } from 'vitest'
+import { render, screen } from '@testing-library/react'
 import { ThemeProvider } from '@mui/material'
 import { theme } from '../../theme'
 import { IntelligenceBarChart } from '../IntelligenceBarChart'
 import type { ModelEntry } from '../../models'
 
+/**
+ * jsdom has no layout engine, so MUI X Charts never draws bars or labels in
+ * tests. Instead of asserting on SVG output, capture the props handed to
+ * <BarChart> and check the label configuration directly.
+ */
+const lastBarChartProps = vi.hoisted(() => ({ current: null as Record<string, unknown> | null }))
+
+vi.mock('@mui/x-charts/BarChart', () => ({
+  BarChart: (props: Record<string, unknown>) => {
+    lastBarChartProps.current = props
+    return <div data-testid="bar-chart" />
+  },
+}))
+
 const entries: ModelEntry[] = [
-  { id: 'anthropic:alpha', model: 'Alpha', score: 60, provider: 'Anthropic', open_weight: true },
-  { id: 'openai:beta', model: 'Beta', score: 50, provider: 'OpenAI', open_weight: false },
+  { id: 'anthropic:alpha', model: 'Alpha', score: 60, provider: 'Anthropic', open_weight: false, released: null, color: '#cc785c' },
 ]
 
-function renderChart(fitWidth = false) {
-  return render(
+function renderChart(barValues?: boolean) {
+  render(
     <ThemeProvider theme={theme}>
-      <IntelligenceBarChart entries={entries} scoreLabel="Score" fitWidth={fitWidth} />
+      <IntelligenceBarChart entries={entries} scoreLabel="Score" barValues={barValues} />
     </ThemeProvider>,
   )
+  return lastBarChartProps.current as {
+    series: Array<{ barLabel?: string }>
+    sx?: Record<string, { fill?: string }>
+  }
 }
 
-/** All CSS text emotion has injected into the document. */
-function injectedCss(): string {
-  return Array.from(document.querySelectorAll('style'))
-    .map((style) => style.textContent ?? '')
-    .join('\n')
-}
+describe('IntelligenceBarChart in-bar value labels', () => {
+  it('embeds the score inside each bar in white when barValues is on', () => {
+    const props = renderChart(true)
+    expect(screen.getByTestId('bar-chart')).toBeInTheDocument()
+    expect(props.series[0].barLabel).toBe('value')
+    expect(props.sx?.['& .MuiBarChart-label']?.fill).toBe('#fff')
+  })
 
-describe('IntelligenceBarChart', () => {
-  it('wraps the wide chart in a horizontally scrollable container that allows touch panning', () => {
-    const { container } = renderChart()
-    const layer = container.querySelector('[class*="MuiChartsLayerContainer"]')
-    expect(layer).not.toBeNull()
-    // The override selector must actually match the layer container: MUI X v9
-    // gives it only an emotion-labeled class (css-*-MuiChartsLayerContainer-root),
-    // no literal MuiChartsLayerContainer-root class.
-    expect(layer!.matches('[class*="MuiChartsLayerContainer-root"]')).toBe(true)
-    const css = injectedCss()
-    // The wide chart scrolls horizontally (mobile regression: MUI X v9 sets
-    // touch-action: pan-y on its layer container, which used to block
-    // horizontal touch scrolling of the overflow container).
-    expect(css).toContain('overflow-x:auto')
-    expect(css).toMatch(/\[class\*=["']?MuiChartsLayerContainer-root["']?\]\{[^}]*touch-action:pan-x pan-y/)
-    // Behavioral check: the computed style reflects the override.
-    expect(getComputedStyle(layer!).touchAction).toBe('pan-x pan-y')
+  it('leaves bar labels off by default (SWE charts stay unlabeled)', () => {
+    const props = renderChart()
+    expect(props.series[0].barLabel).toBeUndefined()
+    expect(props.sx).toBeUndefined()
   })
 })

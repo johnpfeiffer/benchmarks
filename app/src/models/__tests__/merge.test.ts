@@ -3,9 +3,9 @@ import { mergeHardwareIntelligence, mergeSweMetrics, modelMatchKey } from '../me
 import type { HardwareEntry, ModelEntry } from '../types'
 
 const intelligenceEntries: ModelEntry[] = [
-  { id: 'anthropic:claude-fable-5-with-fallback', model: 'Claude Fable 5 (with fallback)', score: 60, provider: 'Anthropic', open_weight: false },
-  { id: 'openai:gpt-5.6-sol-max', model: 'GPT-5.6 Sol (max)', score: 59, provider: 'OpenAI', open_weight: false },
-  { id: 'minimax:minimax-m3', model: 'MiniMax-M3', score: 44, provider: 'MiniMax', open_weight: true },
+  { id: 'anthropic:claude-fable-5-with-fallback', model: 'Claude Fable 5 (with fallback)', score: 60, provider: 'Anthropic', open_weight: false, released: null },
+  { id: 'openai:gpt-5.6-sol-max', model: 'GPT-5.6 Sol (max)', score: 59, provider: 'OpenAI', open_weight: false, released: null },
+  { id: 'minimax:minimax-m3', model: 'MiniMax-M3', score: 44, provider: 'MiniMax', open_weight: true, released: null },
 ]
 
 const sweEntries: ModelEntry[] = [
@@ -15,6 +15,7 @@ const sweEntries: ModelEntry[] = [
     score: 29.1,
     provider: 'Anthropic',
     open_weight: false,
+    released: null,
     tasteful_solve_rate_pct: 29.1,
     basic_solve_rate_pct: 46.5,
     avg_steps: 159,
@@ -26,6 +27,7 @@ const sweEntries: ModelEntry[] = [
     score: 24.4,
     provider: 'OpenAI',
     open_weight: false,
+    released: null,
     tasteful_solve_rate_pct: 24.4,
     basic_solve_rate_pct: 54.7,
     avg_steps: 49,
@@ -60,9 +62,9 @@ describe('mergeSweMetrics', () => {
 
 describe('mergeHardwareIntelligence', () => {
   const ai: ModelEntry[] = [
-    { id: 'openai:gpt-5.6-sol-max', model: 'GPT-5.6 Sol (max)', score: 59, provider: 'OpenAI', open_weight: false },
-    { id: 'openai:gpt-5.6-terra-max', model: 'GPT-5.6 Terra (max)', score: 56, provider: 'OpenAI', open_weight: false },
-    { id: 'minimax:minimax-m3', model: 'MiniMax-M3', score: 44, provider: 'MiniMax', open_weight: true },
+    { id: 'openai:gpt-5.6-sol-max', model: 'GPT-5.6 Sol (max)', score: 59, provider: 'OpenAI', open_weight: false, released: null },
+    { id: 'openai:gpt-5.6-terra-max', model: 'GPT-5.6 Terra (max)', score: 56, provider: 'OpenAI', open_weight: false, released: null },
+    { id: 'minimax:minimax-m3', model: 'MiniMax-M3', score: 44, provider: 'MiniMax', open_weight: true, released: null },
   ]
   const hardwareRow = (model: string): HardwareEntry => ({
     model,

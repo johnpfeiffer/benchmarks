@@ -3,10 +3,10 @@ import { openWeightIds } from '../filter'
 import type { ModelEntry } from '../types'
 
 const entries: ModelEntry[] = [
-  { id: 'anthropic:alpha', model: 'Alpha', score: 60, provider: 'Anthropic', open_weight: true },
-  { id: 'openai:beta', model: 'Beta', score: 50, provider: 'OpenAI', open_weight: false },
-  { id: 'google:gamma', model: 'Gamma', score: 55, provider: 'Google', open_weight: true },
-  { id: 'xai:delta', model: 'Delta', score: 40, provider: 'xAI', open_weight: false },
+  { id: 'anthropic:alpha', model: 'Alpha', score: 60, provider: 'Anthropic', open_weight: true, released: null },
+  { id: 'openai:beta', model: 'Beta', score: 50, provider: 'OpenAI', open_weight: false, released: null },
+  { id: 'google:gamma', model: 'Gamma', score: 55, provider: 'Google', open_weight: true, released: null },
+  { id: 'xai:delta', model: 'Delta', score: 40, provider: 'xAI', open_weight: false, released: null },
 ]
 
 describe('openWeightIds', () => {

@@ -9,6 +9,7 @@ const entries: ModelEntry[] = [
     score: 50,
     provider: 'OpenAI',
     open_weight: false,
+    released: '2026-05-01',
     tasteful_solve_rate_pct: 10,
     basic_solve_rate_pct: 20,
     avg_steps: 100,
@@ -20,12 +21,13 @@ const entries: ModelEntry[] = [
     score: 60,
     provider: 'Anthropic',
     open_weight: false,
+    released: '2026-07-01',
     tasteful_solve_rate_pct: 20,
     basic_solve_rate_pct: 30,
     avg_steps: 200,
     avg_tokens: '100.1K',
   },
-  { id: 'openai:beta', model: 'Beta', score: 60, provider: 'OpenAI', open_weight: false },
+  { id: 'openai:beta', model: 'Beta', score: 60, provider: 'OpenAI', open_weight: false, released: null },
 ]
 
 describe('sortModels', () => {
@@ -46,6 +48,9 @@ describe('sortModels', () => {
     { name: 'provider asc', sort: { field: 'provider', direction: 'asc' }, key: (e) => e.provider, expected: ['Anthropic', 'OpenAI', 'OpenAI'] },
     { name: 'provider desc', sort: { field: 'provider', direction: 'desc' }, key: (e) => e.provider, expected: ['OpenAI', 'OpenAI', 'Anthropic'] },
     { name: 'model asc', sort: { field: 'model', direction: 'asc' }, key: (e) => e.model, expected: ['Alpha', 'Beta', 'Gamma'] },
+    // ISO dates sort chronologically as strings; unknown dates (null) sort last in both directions.
+    { name: 'released asc', sort: { field: 'released', direction: 'asc' }, key: (e) => e.model, expected: ['Gamma', 'Alpha', 'Beta'] },
+    { name: 'released desc', sort: { field: 'released', direction: 'desc' }, key: (e) => e.model, expected: ['Alpha', 'Gamma', 'Beta'] },
     { name: 'model desc', sort: { field: 'model', direction: 'desc' }, key: (e) => e.model, expected: ['Gamma', 'Beta', 'Alpha'] },
     { name: 'score asc', sort: { field: 'score', direction: 'asc' }, key: (e) => String(e.score), expected: ['50', '60', '60'] },
     { name: 'score desc', sort: { field: 'score', direction: 'desc' }, key: (e) => String(e.score), expected: ['60', '60', '50'] },

@@ -15,6 +15,11 @@ export interface RawModelEntry {
   open_weight?: boolean
   /** Explicit bar color (hex). Optional in raw data; ai.json carries one per row. */
   color?: string
+  /**
+   * Release date in YYYY-MM-DD format, or null when unknown. Optional in
+   * raw data; validated as a strict calendar date when present.
+   */
+  released?: string | null
 }
 
 /** A single Senior SWE Bench row, as embedded in the JSON data. */
@@ -134,6 +139,8 @@ export interface ModelEntry {
   provider: string
   /** Whether the model's weights are openly available. Always present after parse. */
   open_weight: boolean
+  /** Release date (YYYY-MM-DD), or null when unknown. Always present after parse. */
+  released: string | null
   /** Explicit bar color (hex). Set from ai.json; absent for SWE-only entries. */
   color?: string
   tasteful_solve_rate_pct?: number
@@ -145,6 +152,7 @@ export interface ModelEntry {
 /** Columns the dashboard table can sort by. */
 export type SortField =
   | 'provider'
+  | 'released'
   | 'model'
   | 'score'
   | 'tasteful_solve_rate_pct'

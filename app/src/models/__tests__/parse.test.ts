@@ -17,7 +17,41 @@ describe('parseModelEntries', () => {
       score: 60,
       provider: 'Anthropic',
       open_weight: true,
+      released: null,
     })
+  })
+
+  it('passes through a valid ISO release date', () => {
+    const out = parseModelEntries([
+      { model: 'X', intelligence_score: 1, provider: 'P', released: '2026-09-01' },
+    ])
+    expect(out[0].released).toBe('2026-09-01')
+  })
+
+  it('defaults released to null when the raw field is missing or null', () => {
+    const out = parseModelEntries([
+      { model: 'X', intelligence_score: 1, provider: 'P' },
+      { model: 'Y', intelligence_score: 2, provider: 'P', released: null },
+    ])
+    expect(out[0].released).toBeNull()
+    expect(out[1].released).toBeNull()
+  })
+
+  it.each([
+    { name: 'non-ISO string', released: 'September 1, 2026' },
+    { name: 'impossible date', released: '2026-02-30' },
+    { name: 'partial date', released: '2026-09' },
+    { name: 'non-string', released: 20260901 },
+  ])('rejects a bad release date: $name', ({ released }) => {
+    try {
+      parseModelEntries([
+        { model: 'X', intelligence_score: 1, provider: 'P', released: released as unknown as string },
+      ])
+      throw new Error('should have thrown')
+    } catch (e) {
+      expect(e).toBeInstanceOf(InvariantError)
+      expect((e as InvariantError).invariant).toBe('MODEL-RELEASED')
+    }
   })
 
   it('defaults open_weight to false when the raw field is missing', () => {
