@@ -3,6 +3,7 @@ package main
 import (
 	"html"
 	"regexp"
+	"strconv"
 	"strings"
 )
 
@@ -132,6 +133,73 @@ func extractAAModel(rawHTML, finalURL string) aaModel {
 		m.OpenSource = s[1]
 	}
 	return m
+}
+
+// --- Artificial Analysis leaderboard release data ---
+
+// aaRelease is one leaderboard variant row: the display variant, its effort
+// label ("" for non-reasoning variants), the base release it belongs to, and
+// the release date, all from the JSON payload embedded in the leaderboard
+// page (one fetch instead of one /models/<slug> page per model).
+type aaRelease struct {
+	Variant  string
+	Effort   string
+	Release  string
+	Slug     string
+	Released string
+}
+
+// The leaderboard embeds two variant object shapes with stable key orders:
+//   - intelligence payload: "name","deprecated","isReasoning","effort","release","releaseDate"
+//     (non-reasoning variants have "effort":null)
+//   - full catalog (incl. deprecated models): "slug","name","deprecated",
+//     "isReasoning","release","releaseDate" (no effort key)
+var (
+	reAAVariant = regexp.MustCompile(`"name":"((?:[^"\\]|\\.)*)","deprecated":(?:true|false),"isReasoning":(?:true|false),"effort":(?:null|\{"slug":"(?:[^"\\]|\\.)*","label":"((?:[^"\\]|\\.)*)","level":\d+\}),"release":\{"slug":"((?:[^"\\]|\\.)*)","name":"((?:[^"\\]|\\.)*)"\},"releaseDate":"((?:[^"\\]|\\.)*)"`)
+	reAACatalog = regexp.MustCompile(`\{"slug":"(?:[^"\\]|\\.)*","name":"((?:[^"\\]|\\.)*)","deprecated":(?:true|false),"isReasoning":(?:true|false),"release":\{"slug":"((?:[^"\\]|\\.)*)","name":"((?:[^"\\]|\\.)*)"\},"releaseDate":"((?:[^"\\]|\\.)*)"`)
+)
+
+func unquoteJSON(s string) string {
+	v, err := strconv.Unquote(`"` + s + `"`)
+	if err != nil {
+		return s
+	}
+	return v
+}
+
+// extractAAReleases pulls every variant tuple, deduped (the page embeds the
+// same rows in several payloads), preserving first-seen order. The payload
+// lives inside JS strings, so escaped quotes are normalized first.
+func extractAAReleases(rawHTML string) []aaRelease {
+	normalized := strings.ReplaceAll(rawHTML, `\"`, `"`)
+	seen := map[string]bool{}
+	var out []aaRelease
+	add := func(r aaRelease) {
+		key := r.Variant + "|" + r.Released
+		if seen[key] {
+			return
+		}
+		seen[key] = true
+		out = append(out, r)
+	}
+	for _, m := range reAAVariant.FindAllStringSubmatch(normalized, -1) {
+		add(aaRelease{
+			Variant:  unquoteJSON(m[1]),
+			Effort:   unquoteJSON(m[2]),
+			Slug:     unquoteJSON(m[3]),
+			Release:  unquoteJSON(m[4]),
+			Released: unquoteJSON(m[5]),
+		})
+	}
+	for _, m := range reAACatalog.FindAllStringSubmatch(normalized, -1) {
+		add(aaRelease{
+			Variant:  unquoteJSON(m[1]),
+			Slug:     unquoteJSON(m[2]),
+			Release:  unquoteJSON(m[3]),
+			Released: unquoteJSON(m[4]),
+		})
+	}
+	return out
 }
 
 // --- Senior SWE Bench leaderboard table ---

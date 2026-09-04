@@ -107,11 +107,14 @@ func cmdNewsAdd(rawURL, date string) error {
 // --- ai.json ---
 
 type aiRow struct {
-	Model      string `json:"model"`
-	Score      int    `json:"intelligence_score"`
-	Provider   string `json:"provider"`
-	OpenWeight bool   `json:"open_weight"`
-	Color      string `json:"color"`
+	Model      string  `json:"model"`
+	Score      int     `json:"intelligence_score"`
+	Provider   string  `json:"provider"`
+	OpenWeight bool    `json:"open_weight"`
+	Color      string  `json:"color"`
+	// Released is the model's release date (YYYY-MM-DD); nil renders null
+	// for models whose date is unknown or unverified.
+	Released *string `json:"released"`
 }
 
 // providerColors mirrors the palette in the research-ai-models skill and
@@ -130,8 +133,12 @@ var providerColors = map[string]string{
 }
 
 func renderAIRow(r aiRow) string {
-	return fmt.Sprintf(`{"model": %s, "intelligence_score": %d, "provider": %s, "open_weight": %t, "color": %s}`,
-		jsonString(r.Model), r.Score, jsonString(r.Provider), r.OpenWeight, jsonString(r.Color))
+	released := "null"
+	if r.Released != nil {
+		released = jsonString(*r.Released)
+	}
+	return fmt.Sprintf(`{"model": %s, "intelligence_score": %d, "provider": %s, "open_weight": %t, "color": %s, "released": %s}`,
+		jsonString(r.Model), r.Score, jsonString(r.Provider), r.OpenWeight, jsonString(r.Color), released)
 }
 
 func cmdAIAdd(args []string) error {
@@ -143,12 +150,18 @@ func cmdAIAdd(args []string) error {
 			row.OpenWeight = true
 		case strings.HasPrefix(a, "--color="):
 			row.Color = strings.TrimPrefix(a, "--color=")
+		case strings.HasPrefix(a, "--released="):
+			date := strings.TrimPrefix(a, "--released=")
+			if err := validateISODate(date); err != nil {
+				return err
+			}
+			row.Released = &date
 		default:
 			positional = append(positional, a)
 		}
 	}
 	if len(positional) != 3 {
-		return fmt.Errorf("ai-add expects <model> <score> <provider> [--open-weight] [--color=#hex]")
+		return fmt.Errorf("ai-add expects <model> <score> <provider> [--open-weight] [--color=#hex] [--released=YYYY-MM-DD]")
 	}
 	row.Model, row.Provider = positional[0], positional[2]
 	score, err := strconv.Atoi(positional[1])
@@ -194,6 +207,38 @@ func cmdAIAdd(args []string) error {
 	}
 	fmt.Printf("ai.json: inserted %q at position %d, now %d entries\n", row.Model, at+1, len(rows))
 	return nil
+}
+
+// cmdAISetReleased sets (or clears, with "null") the released date on an
+// existing ai.json row, preserving order and one-row-per-line formatting.
+func cmdAISetReleased(model, date string) error {
+	var released *string
+	if date != "null" {
+		if err := validateISODate(date); err != nil {
+			return err
+		}
+		released = &date
+	}
+	dir, err := dataDir()
+	if err != nil {
+		return err
+	}
+	path := filepath.Join(dir, "ai.json")
+	var rows []aiRow
+	if err := readJSON(path, &rows); err != nil {
+		return err
+	}
+	for i := range rows {
+		if rows[i].Model == model {
+			rows[i].Released = released
+			if err := writeSingleLineJSON(path, renderAIRow, rows); err != nil {
+				return err
+			}
+			fmt.Printf("ai.json: %q released -> %s\n", model, date)
+			return nil
+		}
+	}
+	return fmt.Errorf("model %q not found in ai.json", model)
 }
 
 // --- swe.json ---

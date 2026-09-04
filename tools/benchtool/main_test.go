@@ -101,10 +101,44 @@ func TestValidateHTTPURL(t *testing.T) {
 }
 
 func TestRenderAIRow(t *testing.T) {
-	got := renderAIRow(aiRow{Model: "Claude Fable 5.1 (max)", Score: 66, Provider: "Anthropic", OpenWeight: false, Color: "#cc785c"})
-	want := `{"model": "Claude Fable 5.1 (max)", "intelligence_score": 66, "provider": "Anthropic", "open_weight": false, "color": "#cc785c"}`
+	date := "2026-09-01"
+	got := renderAIRow(aiRow{Model: "Claude Fable 5.1 (max)", Score: 66, Provider: "Anthropic", OpenWeight: false, Color: "#cc785c", Released: &date})
+	want := `{"model": "Claude Fable 5.1 (max)", "intelligence_score": 66, "provider": "Anthropic", "open_weight": false, "color": "#cc785c", "released": "2026-09-01"}`
 	if got != want {
 		t.Errorf("renderAIRow =\n%s\nwant\n%s", got, want)
+	}
+	// Unknown release dates render as explicit null.
+	got = renderAIRow(aiRow{Model: "Inkling", Score: 42, Provider: "Thinking Machines", OpenWeight: true, Color: "#676767"})
+	if !strings.HasSuffix(got, `"released": null}`) {
+		t.Errorf("nil released = %s", got)
+	}
+}
+
+func TestExtractAAReleases(t *testing.T) {
+	// The live page embeds the payload as an escaped JS string; the first
+	// row here mirrors that, the rest use plain JSON.
+	fixture := `<script>self.__next_f.push(["1:{\"rows\":[` +
+		`{\"name\":\"Claude Fable 5.1 (Adaptive Reasoning, Max Effort, Default Fallback)\",\"deprecated\":false,\"isReasoning\":true,\"effort\":{\"slug\":\"max\",\"label\":\"max\",\"level\":60},\"release\":{\"slug\":\"claude-fable-5-1\",\"name\":\"Claude Fable 5.1\"},\"releaseDate\":\"2026-09-01\"},` +
+		`{\"name\":\"Gemini 3.6 Flash (Non-reasoning)\",\"deprecated\":false,\"isReasoning\":false,\"effort\":null,\"release\":{\"slug\":\"gemini-3-6-flash\",\"name\":\"Gemini 3.6 Flash\"},\"releaseDate\":\"2026-07-21\"},` +
+		`{\"name\":\"Claude Fable 5.1 (Adaptive Reasoning, Max Effort, Default Fallback)\",\"deprecated\":false,\"isReasoning\":true,\"effort\":{\"slug\":\"max\",\"label\":\"max\",\"level\":60},\"release\":{\"slug\":\"claude-fable-5-1\",\"name\":\"Claude Fable 5.1\"},\"releaseDate\":\"2026-09-01\"}` +
+		`]}"])</script>` +
+		// The full-catalog shape (slug first, no effort key) covers models the
+		// intelligence payload omits, e.g. deprecated ones.
+		`<script>[{\"slug\":\"claude-4-5-haiku\",\"name\":\"Claude 4.5 Haiku (Non-reasoning)\",\"deprecated\":false,\"isReasoning\":false,\"release\":{\"slug\":\"claude-4-5-haiku\",\"name\":\"Claude 4.5 Haiku\"},\"releaseDate\":\"2025-10-15\"}]</script>`
+	releases := extractAAReleases(fixture)
+	if len(releases) != 3 {
+		t.Fatalf("releases = %d, want 3 (duplicate embedded row deduped)", len(releases))
+	}
+	if releases[2].Variant != "Claude 4.5 Haiku (Non-reasoning)" || releases[2].Released != "2025-10-15" || releases[2].Effort != "" {
+		t.Errorf("releases[2] = %+v", releases[2])
+	}
+	if releases[0].Variant != "Claude Fable 5.1 (Adaptive Reasoning, Max Effort, Default Fallback)" ||
+		releases[0].Effort != "max" || releases[0].Release != "Claude Fable 5.1" ||
+		releases[0].Slug != "claude-fable-5-1" || releases[0].Released != "2026-09-01" {
+		t.Errorf("releases[0] = %+v", releases[0])
+	}
+	if releases[1].Effort != "" || releases[1].Released != "2026-07-21" {
+		t.Errorf("releases[1] = %+v", releases[1])
 	}
 }
 
@@ -192,6 +226,58 @@ func TestCmdAIAdd(t *testing.T) {
 	}
 	if err := cmdAIAdd([]string{"Mystery", "50", "UnknownLab"}); err == nil {
 		t.Error("unknown provider without --color accepted")
+	}
+	if err := cmdAIAdd([]string{"Bad Date", "40", "Anthropic", "--released=September 1, 2026"}); err == nil {
+		t.Error("non-ISO --released accepted")
+	}
+}
+
+func TestCmdAIAddReleasedFlag(t *testing.T) {
+	data := chdirToTempRepo(t)
+	if err := os.WriteFile(filepath.Join(data, "ai.json"), []byte("[]\n"), 0o644); err != nil {
+		t.Fatal(err)
+	}
+	if err := cmdAIAdd([]string{"Gemini 3.8 Flash (high)", "59", "Google", "--released=2026-09-02"}); err != nil {
+		t.Fatal(err)
+	}
+	out, _ := os.ReadFile(filepath.Join(data, "ai.json"))
+	if !strings.Contains(string(out), `"released": "2026-09-02"`) {
+		t.Errorf("released missing:\n%s", out)
+	}
+}
+
+func TestCmdAISetReleased(t *testing.T) {
+	data := chdirToTempRepo(t)
+	seed := []byte("[\n  {\"model\": \"Claude Opus 5 (max)\", \"intelligence_score\": 63, \"provider\": \"Anthropic\", \"open_weight\": false, \"color\": \"#cc785c\", \"released\": null},\n  {\"model\": \"GPT-5.6 Sol (max)\", \"intelligence_score\": 61, \"provider\": \"OpenAI\", \"open_weight\": false, \"color\": \"#1f1f1f\", \"released\": null}\n]\n")
+	if err := os.WriteFile(filepath.Join(data, "ai.json"), seed, 0o644); err != nil {
+		t.Fatal(err)
+	}
+	if err := cmdAISetReleased("Claude Opus 5 (max)", "2026-07-24"); err != nil {
+		t.Fatal(err)
+	}
+	out, _ := os.ReadFile(filepath.Join(data, "ai.json"))
+	text := string(out)
+	if !strings.Contains(text, `"Claude Opus 5 (max)", "intelligence_score": 63, "provider": "Anthropic", "open_weight": false, "color": "#cc785c", "released": "2026-07-24"`) {
+		t.Errorf("row not updated in place:\n%s", text)
+	}
+	// Other rows untouched, order preserved.
+	lines := strings.Split(text, "\n")
+	if !strings.Contains(lines[1], "Claude Opus 5") || !strings.Contains(lines[2], `"GPT-5.6 Sol (max)"`) || !strings.Contains(lines[2], `"released": null`) {
+		t.Errorf("order/content wrong:\n%s", text)
+	}
+	// "null" clears a date.
+	if err := cmdAISetReleased("Claude Opus 5 (max)", "null"); err != nil {
+		t.Fatal(err)
+	}
+	out, _ = os.ReadFile(filepath.Join(data, "ai.json"))
+	if strings.Contains(string(out), "2026-07-24") {
+		t.Errorf("null did not clear:\n%s", out)
+	}
+	if err := cmdAISetReleased("No Such Model", "2026-01-01"); err == nil {
+		t.Error("unknown model accepted")
+	}
+	if err := cmdAISetReleased("GPT-5.6 Sol (max)", "2026-13-40"); err == nil {
+		t.Error("invalid date accepted")
 	}
 }
 
