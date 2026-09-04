@@ -52,11 +52,16 @@ human veto instead of silently adding it.
    `site:coderabbit.ai`, `site:semgrep.dev`, `site:fireworks.ai`,
    `site:huggingface.co/blog`, `site:interconnects.ai`, `site:metr.org`.
    Then run one broad `"<Model Name>" benchmark` search to catch anything new.
-2. Fetch each candidate page and confirm it contains substantive benchmark
-   results or technical analysis, not a summary of someone else's numbers.
+2. Run `go run ./tools/benchtool fetch-meta <url>` for each candidate
+   instead of fetching whole pages into context: it prints the title,
+   canonical URL, final URL after redirects, and every date signal (URL
+   path, JSON-LD, `article:published_time`, `<time>`, visible-date
+   candidates). Only full-fetch a page when fetch-meta leaves the credibility
+   or date genuinely undecidable.
 3. Resolve the published date (next section) and the canonical URL.
-4. Dedupe against `app/src/data/news.json`: grep for the URL and for title
-   keywords before adding, and list any skipped duplicates in the PR body.
+4. Dedupe against `app/src/data/news.json` (`benchtool news-add` also
+   hard-fails on duplicate URLs), and list any skipped duplicates in the PR
+   body.
 
 ## Canonical URL rules
 
@@ -75,7 +80,7 @@ The feed needs the original publication date, and dates here have needed
 correction before (see the Gemini Flash date comment in `data.test.ts`), so
 record the date source in the PR body.
 
-Resolution order, cheapest first:
+Resolution order, cheapest first (fetch-meta prints all of these signals):
 
 1. URL path (`/2026/08/14/`, or a `/2026/08/` month prefix confirmed against
    the page).
@@ -89,8 +94,9 @@ Trust pitfalls:
 - Conflicting fields on one page are common (a `datePublished` vs an
   update-stamped `article:published_time`). The value that agrees with the
   visible byline wins; document the conflict in the PR body.
-- Related-posts sidebars and page chrome pollute visible-date scans; only the
-  date adjacent to the article's own title or byline counts.
+- Related-posts sidebars and page chrome pollute visible-date scans;
+  fetch-meta lists every visible date candidate on the page, and only the
+  one adjacent to the article's own title or byline counts.
 - Beware CMS restamps: an "updated" or migration date is not the publication
   date.
 
@@ -100,11 +106,15 @@ do not guess; omit the entry and flag it in the PR body.
 
 ## Adding an entry
 
-- Entries are `{ "url": "https://…", "date": "YYYY-MM-DD" }`; keep the file
-  ordered newest first.
+- Add entries with `go run ./tools/benchtool news-add <url> <YYYY-MM-DD>`
+  (run from anywhere in the repo): it validates the http(s) URL and strict
+  ISO calendar date, hard-fails on duplicate URLs, and inserts the entry so
+  the file stays ordered newest first.
+- Entries are `{ "url": "https://…", "date": "YYYY-MM-DD" }`.
 - Validation contract (`app/src/models/parse.ts`): http(s) URLs only, strict
-  ISO real calendar dates. The parser re-sorts newest first, so file order is
-  convention, not correctness.
+  ISO real calendar dates — the tool mirrors it, and `npm test` remains the
+  final gate. The parser re-sorts newest first, so file order is convention,
+  not correctness.
 - Follow Red/Green TDD: update the news test in
   `app/src/models/__tests__/data.test.ts` (first-entry expectation, the URL
   presence set, and the total count), then the data.

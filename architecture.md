@@ -17,6 +17,12 @@ wins.
 - **MUI** (`@mui/material`) for the UI, light-mode defaults per `KERNEL/DESIGN.md`
 - **@mui/x-charts** for the bar chart
 - **Vitest + Testing Library** for Red/Green TDD
+- **Go** (`tools/benchtool/`) for the benchmark-lookup CLI used by the
+  `.agents/skills/` workflows: fetches source pages and prints just the
+  fields the agent needs (AA model score/provider/open-weights/release, SWE
+  leaderboard as TSV, news-page date signals) so whole pages stay out of
+  context, and inserts rows into the data JSON with the repo's formatting,
+  ordering, and dedupe conventions (`news-add`, `ai-add`, `swe-add`)
 
 ## Layering (DDD / MVC)
 
@@ -63,7 +69,7 @@ flowchart TD
 `data/swe.json` does not include provider fields, so `parseSweEntries` derives
 provider from known model-family prefixes (Claude, GPT, Grok, GLM, Kimi,
 Gemini). Unknown families fail as **INV-001** violations instead of being
-rendered without a provider. The source site currently lists 17 runs;
+rendered without a provider. The source site currently lists 18 runs;
 `swe.json` additionally retains four models no longer listed (Kimi K2.6,
 GPT-5.6 Luna, Inkling, Claude Sonnet 4.6) at their last published values.
 
@@ -172,7 +178,7 @@ both SWE charts when corresponding SWE rows exist. The main table now includes
 the three SWE-only models (Claude Opus 4.7, GPT-5.4 (xhigh), Claude Sonnet 4.6)
 as not-open-weight rows, so every SWE model has an Artificial Analysis
 counterpart and the "Open Weights" preset propagates fully to the SWE
-charts. The SWE data covers 21 models from senior-swe-bench.snorkel.ai. The
+charts. The SWE data covers 22 models from senior-swe-bench.snorkel.ai. The
 preset is a selection: on ->
 `replaceSelection(openWeightIds(...))`; off -> `replaceSelection(allIds)`, so the
 table graying/fading and every chart follow the selection. The SWE charts are
@@ -240,6 +246,8 @@ journey
   entry validation and dashboard rendering / machine entry validation and
   dashboard rendering).
 - `npm run build` - `tsc -b` typecheck + Vite production build.
+- `go test ./tools/...` - benchtool extraction/insertion unit tests (fixture
+  HTML, temp-repo data writes; no network).
 
 Tests follow Red/Green TDD with concise table-driven cases for the domain
 (parse/INV-001, sorting, SWE metric merge) and high-value dashboard paths for

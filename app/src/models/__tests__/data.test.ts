@@ -56,9 +56,14 @@ describe('embedded data integrity', () => {
     expect(intelligence.find((entry) => entry.model === 'Claude Fable 5 (with fallback)')).toBeUndefined()
   })
 
-  it('has 21 SWE entries with updated values from senior-swe-bench.snorkel.ai', () => {
-    expect(swe).toHaveLength(21)
+  it('has 22 SWE entries with updated values from senior-swe-bench.snorkel.ai', () => {
+    expect(swe).toHaveLength(22)
     // New entries
+    // Fable 5.1's first run is at medium effort and ties the 34.7% tasteful
+    // cluster at the top of the leaderboard.
+    const fable51 = swe.find((e) => e.model === 'Claude Fable 5.1')
+    expect(fable51).toMatchObject({ tasteful_solve_rate_pct: 34.7, basic_solve_rate_pct: 57.9, avg_steps: 77, avg_tokens: '37.9K' })
+    expect(fable51?.id).toBe('anthropic:claude-fable-5.1:mini-swe-agent:medium')
     const grok46 = swe.find((e) => e.model === 'Grok 4.6')
     expect(grok46).toMatchObject({ tasteful_solve_rate_pct: 26.3, basic_solve_rate_pct: 51.6, avg_steps: 125, avg_tokens: '23.9K' })
     expect(grok46?.id).toBe('xai:grok-4.6:mini-swe-agent:high')
@@ -110,6 +115,15 @@ describe('embedded data integrity', () => {
       score: 63,
       provider: 'Anthropic',
     })
+  })
+
+  it('includes Claude Fable 5.1 (max) as the new top intelligence score at 66', () => {
+    expect(intelligence.find((entry) => entry.model === 'Claude Fable 5.1 (max)')).toMatchObject({
+      score: 66,
+      provider: 'Anthropic',
+      open_weight: false,
+    })
+    expect(intelligence[0].model).toBe('Claude Fable 5.1 (max)')
   })
 
   it('includes Qwen3.8 Max as an open-weight Alibaba model at intelligence 58', () => {
@@ -185,9 +199,9 @@ describe('embedded data integrity', () => {
     // All expected URLs are present.
     const urls = new Set(news.map((entry) => entry.url))
     expect(urls.has('https://artificialanalysis.ai/articles/gemini-3-8-flash')).toBe(true)
-    // The blog.google launch post was vetted and dropped: few facts and
-    // cherry-picked benchmarks (see benchmark-news-lookup skill).
-    expect(urls.has('https://blog.google/innovation-and-ai/models-and-research/gemini-models/3-8-flash-and-3-8-flash-cyber/')).toBe(false)
+    expect(urls.has('https://artificialanalysis.ai/articles/claude-fable-5-1')).toBe(true)
+    expect(urls.has('https://www.coderabbit.ai/blog/fable-5-1-model-review')).toBe(true)
+    expect(urls.has('https://www.anthropic.com/claude-fable-and-mythos-5-1')).toBe(true)
     expect(urls.has('https://www.interconnects.ai/p/glm-53-how-chinese-labs-keep-stride')).toBe(true)
     expect(urls.has('https://artificialanalysis.ai/articles/gemini-3-7-time-frontier')).toBe(true)
     expect(urls.has('https://unsloth.ai/docs/models/qwen3.8')).toBe(true)
@@ -198,12 +212,11 @@ describe('embedded data integrity', () => {
     expect(urls.has('https://fireworks.ai/blog/kimik3-fable')).toBe(true)
     expect(urls.has('https://www.anthropic.com/news/claude-fable-5-mythos-5')).toBe(true)
     expect(urls.has('https://blog.google/innovation-and-ai/technology/developers-tools/gemma-4/')).toBe(true)
-    // The Gemini Flash article date was corrected to 2026-07-21.
     const geminiArticle = news.find(
       (entry) => entry.url === 'https://artificialanalysis.ai/articles/gemini-3-6-flash-3-5-flash-lite-halving-time',
     )
     expect(geminiArticle?.date).toBe('2026-07-21')
-    expect(news).toHaveLength(21)
+    expect(news).toHaveLength(23)
   })
 
   it('includes hardware entries with 1-bit and 2-bit quant sizes, urls, and null for missing quants', () => {

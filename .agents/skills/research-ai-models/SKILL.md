@@ -12,6 +12,16 @@ runs). News coverage of models is a separate concern handled by the
 
 ## Sources of truth
 
+Fetch these pages through the Go tool instead of pulling whole pages into
+context (run from anywhere in the repo):
+
+- `go run ./tools/benchtool aa-model <slug-or-url>` prints the model page's
+  Intelligence Index score, provider, open-weights status, and release date
+  (exits non-zero when no score is found — wrong slug or estimate-only).
+- `go run ./tools/benchtool swe-list` prints the Senior SWE Bench
+  leaderboard (no_cheating filter) as TSV: rank, model, harness, effort,
+  tasteful, basic, steps, tokens, cost.
+
 Artificial Analysis:
 
 - Leaderboard: https://artificialanalysis.ai/leaderboards/models
@@ -89,12 +99,20 @@ Row shape: `{ "model", "harness", "effort", "tasteful_solve_rate_pct",
 
 Add a model:
 
-1. Fetch the AA leaderboard (or the model's `/models/<slug>` page) for the
-   score and variant; confirm provider and open-weight status.
-2. Insert the row in score order with the provider color.
+1. Run `go run ./tools/benchtool aa-model <slug>` for the score, provider,
+   open-weights status, and release date; confirm the variant matches the
+   naming convention.
+2. Insert the row with
+   `go run ./tools/benchtool ai-add "<model>" <score> "<provider>" [--open-weight] [--color=#hex]`.
+   The tool keeps score-descending order, rejects duplicates, and applies
+   the provider palette automatically (`--color` only for providers missing
+   from the palette).
 3. Add a per-model assertion in `app/src/models/__tests__/data.test.ts`
    (score, provider, open_weight) following the existing test style.
-4. If the model also has a SWE run, add that row too (contract above).
+4. If the model also has a SWE run (`benchtool swe-list`), add that row with
+   `go run ./tools/benchtool swe-add "<model>" <harness> <effort> <tasteful> <basic> <steps> <tokens>`
+   (contract above; the tool inserts tasteful-descending and formats rates
+   with one decimal).
 
 Refresh scores for a new Intelligence Index version:
 
