@@ -142,6 +142,14 @@ describe('embedded data integrity', () => {
     })
   })
 
+  it('includes Gemini 3.8 Flash (high) at intelligence 59 with a provider', () => {
+    expect(intelligence.find((entry) => entry.model === 'Gemini 3.8 Flash (high)')).toMatchObject({
+      score: 59,
+      provider: 'Google',
+      open_weight: false,
+    })
+  })
+
   it('includes Grok 4.6 (high) at intelligence 61 with a provider', () => {
     expect(intelligence.find((entry) => entry.model === 'Grok 4.6 (high)')).toMatchObject({
       score: 61,
@@ -179,10 +187,10 @@ describe('embedded data integrity', () => {
   })
 
   it('includes all news articles sorted newest first', () => {
-    // The newest article (2026-09-01) should be first.
+    // The newest article (2026-09-02) should be first.
     expect(news[0]).toEqual({
-      url: 'https://artificialanalysis.ai/articles/claude-fable-5-1',
-      date: '2026-09-01',
+      url: 'https://artificialanalysis.ai/articles/gemini-3-8-flash',
+      date: '2026-09-02',
     })
     // Every entry is sorted descending by date.
     for (let i = 1; i < news.length; i++) {
@@ -190,6 +198,7 @@ describe('embedded data integrity', () => {
     }
     // All expected URLs are present.
     const urls = new Set(news.map((entry) => entry.url))
+    expect(urls.has('https://artificialanalysis.ai/articles/gemini-3-8-flash')).toBe(true)
     expect(urls.has('https://artificialanalysis.ai/articles/claude-fable-5-1')).toBe(true)
     expect(urls.has('https://www.coderabbit.ai/blog/fable-5-1-model-review')).toBe(true)
     expect(urls.has('https://www.anthropic.com/claude-fable-and-mythos-5-1')).toBe(true)
@@ -203,7 +212,6 @@ describe('embedded data integrity', () => {
     expect(urls.has('https://fireworks.ai/blog/kimik3-fable')).toBe(true)
     expect(urls.has('https://www.anthropic.com/news/claude-fable-5-mythos-5')).toBe(true)
     expect(urls.has('https://blog.google/innovation-and-ai/technology/developers-tools/gemma-4/')).toBe(true)
-    // The Gemini Flash article date was corrected to 2026-07-21.
     const geminiArticle = news.find(
       (entry) => entry.url === 'https://artificialanalysis.ai/articles/gemini-3-6-flash-3-5-flash-lite-halving-time',
     )

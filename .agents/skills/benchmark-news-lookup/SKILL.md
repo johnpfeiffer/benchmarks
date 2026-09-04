@@ -22,10 +22,20 @@ Tier 1, independent benchmarkers and technical analysis (strongly preferred):
 - Interconnects (`interconnects.ai`, Nathan Lambert): technical training/analysis deep dives
 - METR (`metr.org/blog`): independent capability evals
 
-Tier 2, vendor primary sources, include when they carry real benchmark tables:
+Tier 2, vendor primary sources, only after critical vetting:
 
-- `anthropic.com/news`, `blog.google`, `thinkingmachines.ai`, `z.ai/blog` and similar
-- Established press with genuine technical depth (e.g. `theregister.com` for hardware)
+- Judge a vendor's own piece on its substance, not its logo. A launch post
+  with few facts and a cherry-picked benchmark selection is marketing, not
+  evidence — skip it even when it contains some tables. Precedent: the
+  blog.google Gemini 3.8 Flash launch post was vetted and dropped for
+  exactly this.
+- A vendor piece qualifies only when it carries full benchmark tables with
+  real methodology and numbers (e.g. `anthropic.com/news` launch posts with
+  eval suites, `thinkingmachines.ai`, `z.ai/blog`).
+- Established press with genuine technical depth (e.g. `theregister.com`
+  for hardware).
+- In every case, prefer thorough third-party analysis with technical
+  details and honest pros and cons over a vendor's own account.
 
 Avoid:
 
