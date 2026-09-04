@@ -18,6 +18,9 @@ context (run from anywhere in the repo):
 - `go run ./tools/benchtool aa-model <slug-or-url>` prints the model page's
   Intelligence Index score, provider, open-weights status, and release date
   (exits non-zero when no score is found — wrong slug or estimate-only).
+- `go run ./tools/benchtool aa-releases` prints every AA leaderboard
+  variant's release date as TSV (one fetch; includes deprecated models) for
+  filling or checking the `released` field across ai.json.
 - `go run ./tools/benchtool swe-list` prints the Senior SWE Bench
   leaderboard (no_cheating filter) as TSV: rank, model, harness, effort,
   tasteful, basic, steps, tokens, cost.
@@ -103,12 +106,17 @@ Add a model:
    open-weights status, and release date; confirm the variant matches the
    naming convention.
 2. Insert the row with
-   `go run ./tools/benchtool ai-add "<model>" <score> "<provider>" [--open-weight] [--color=#hex]`.
+   `go run ./tools/benchtool ai-add "<model>" <score> "<provider>" [--open-weight] [--color=#hex] --released=<YYYY-MM-DD>`.
    The tool keeps score-descending order, rejects duplicates, and applies
    the provider palette automatically (`--color` only for providers missing
-   from the palette).
-3. Add a per-model assertion in `app/src/models/__tests__/data.test.ts`
-   (score, provider, open_weight) following the existing test style.
+   from the palette). Every row must carry its verified release date
+   (a data invariant enforced by the test suite); use the date from step 1,
+   or `aa-releases` when filling dates in bulk.
+3. No test edits are needed for the new row: the acceptance suite
+   (`app/src/views/__tests__/acceptance.test.tsx`) renders the real data
+   through the UI and checks every JSON row appears in its listing, and
+   `data.test.ts` holds only cross-file invariants (unique names, score
+   order, color presence, release dates populated).
 4. If the model also has a SWE run (`benchtool swe-list`), add that row with
    `go run ./tools/benchtool swe-add "<model>" <harness> <effort> <tasteful> <basic> <steps> <tokens>`
    (contract above; the tool inserts tasteful-descending and formats rates
