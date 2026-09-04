@@ -46,6 +46,7 @@ flowchart TD
     Dashboard --> ChartA["IntelligenceBarChart<br/>(Artificial Analysis)"]
     Dashboard --> News["NewsSection<br/>(expanded + collapsible)"]
     Dashboard --> Pareto["ParetoFrontierSection<br/>(expanded + collapsible)"]
+    ParetoPNG["public/images/artificial-analysis-pareto-frontier.png"] -->|"copied unchanged by Vite; app-relative URL"| Pareto
     Dashboard --> Table["ModelTable<br/>(collapsible + sortable + selectable)"]
     Dashboard --> ChartB["IntelligenceBarChart<br/>(SWE tasteful solve rate)"]
     Dashboard --> ChartC["IntelligenceBarChart<br/>(SWE basic solve rate)"]
@@ -131,10 +132,14 @@ All views are pure (props in, callbacks out, no business logic):
   details table, expanded by default and user-collapsible, titled "Pareto
   frontier". Renders a static captured snapshot of Artificial Analysis'
   "Intelligence Index vs. Cost to Run" scatter chart (dotted Pareto line,
-  provider-colored dots) from `src/assets/artificial-analysis-pareto-frontier.png`
-  (a bundled, fingerprinted import so it is served from the same `/assets/`
-  path root as the JS bundle — a root-absolute `public/` URL can be swallowed
-  by SPA-fallback routing on multi-app hosts),
+  provider-colored dots) from `public/images/artificial-analysis-pareto-frontier.png`.
+  Vite copies it unchanged to `dist/images/`. The view uses the relative URL
+  `images/artificial-analysis-pareto-frontier.png`, matching AIEWF's public
+  image pattern. The deployed host injects `<base href="/benchmarks/">`, so
+  the browser requests `/benchmarks/images/artificial-analysis-pareto-frontier.png`;
+  local root development resolves it under `/images/`. Do not import the PNG
+  or add a leading slash: the previous bundled `/assets/...` URL bypassed the
+  app base and returned HTTP 404. The image is
   scaled responsively with descriptive alt text, plus a caption crediting and
   linking to Artificial Analysis with the capture date.
 - `HardwareChart` - grouped bar chart comparing 1-bit and 2-bit dynamic
@@ -222,6 +227,8 @@ journey
     Read Hand Picked News with visible dates and links: 4: User
     Toggle news date sort asc/desc: 3: User
     Collapse or expand Hand Picked News: 4: User
+    Load Pareto image from the app-relative public path: 4: System
+    View or collapse the Pareto frontier snapshot: 4: User
     Read details table with SWE columns: 5: User
     See release dates beside model names: 4: User
     Click a header, including SWE metrics: 5: User
@@ -280,3 +287,5 @@ journey
 Tests follow Red/Green TDD with concise table-driven cases for the domain
 (parse/INV-001, sorting, SWE metric merge) and high-value dashboard paths for
 rendering, sorting, filtering, placeholders, and credits.
+
+

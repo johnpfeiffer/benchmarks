@@ -1,10 +1,8 @@
 import ExpandMoreIcon from '@mui/icons-material/ExpandMore'
 import { Accordion, AccordionDetails, AccordionSummary, Box, Link, Typography } from '@mui/material'
-// Bundled asset (fingerprinted into dist/assets) rather than a public/ file:
-// the deployed host provably serves /assets/* (the JS bundle loads), while a
-// root-absolute /images/* URL can be swallowed by SPA-fallback routing on
-// multi-app hosts.
-import paretoFrontierUrl from '../assets/artificial-analysis-pareto-frontier.png'
+// Public asset, relative to the host-injected <base href="/benchmarks/">.
+// A leading slash would bypass that base and request the wrong app's root.
+const paretoFrontierUrl = 'images/artificial-analysis-pareto-frontier.png'
 
 /**
  * Collapsible static snapshot of Artificial Analysis' "Intelligence Index vs.
