@@ -35,17 +35,20 @@ function renderChart(barValues?: boolean) {
   }
 }
 
-describe('IntelligenceBarChart in-bar value labels', () => {
-  it('embeds the score inside each bar in white when barValues is on', () => {
+describe('IntelligenceBarChart value labels', () => {
+  it('shows scores above bars when barValues is on', () => {
     const props = renderChart(true)
     expect(screen.getByTestId('bar-chart')).toBeInTheDocument()
     expect(props.series[0].barLabel).toBe('value')
-    expect(props.sx?.['& .MuiBarChart-label']?.fill).toBe('#fff')
+    expect(props.series[0].barLabelPlacement).toBe('outside')
+    expect(props.sx?.['& .MuiBarChart-label']).toBeDefined()
   })
 
   it('leaves bar labels off by default (SWE charts stay unlabeled)', () => {
     const props = renderChart()
     expect(props.series[0].barLabel).toBeUndefined()
-    expect(props.sx).toBeUndefined()
+    expect(props.sx?.['& .MuiBarChart-label']).toBeUndefined()
+    // Grid styles are always present
+    expect(props.sx?.['& .MuiChartsGrid-line']).toBeDefined()
   })
 })

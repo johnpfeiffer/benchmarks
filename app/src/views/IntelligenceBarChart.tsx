@@ -1,4 +1,4 @@
-import { Box, Chip, Typography, useTheme } from '@mui/material'
+import { Box, Link, Typography, useTheme } from '@mui/material'
 import { BarChart } from '@mui/x-charts/BarChart'
 import type { ModelEntry } from '../models'
 
@@ -8,7 +8,7 @@ interface IntelligenceBarChartProps {
   title?: string
   scoreLabel: string
   fitWidth?: boolean
-  /** Embed each bar's value inside the bar in white (for dark/colored fills). */
+  /** Show each bar's score above the bar. */
   barValues?: boolean
   source?: {
     label: string
@@ -67,41 +67,44 @@ export function IntelligenceBarChart({
   const fallbackColor = theme.palette.grey[500]
   // Fit more bars on screen than the original 52px bands while keeping labels readable.
   const chartWidth = fitWidth ? '100%' : Math.max(920, entries.length * 36)
-  const chartHeight = fitWidth ? 380 : 420
+  const chartHeight = fitWidth ? 380 : 450
   const colorValues = entries.map((entry) => entry.model)
   // Prefer the explicit per-model color from ai.json; fall back to the
   // provider/model-family lookup for SWE-only entries that carry no color.
   const colors = entries.map((entry) => entry.color ?? benchmarkColor(entry, fallbackColor))
+  // #AIDEV: Cut empty space at the bottom by starting the y-axis near the lowest score
+  const minScore = entries.length > 0 ? Math.min(...entries.map((e) => e.score)) : 0
+  const yMin = Math.max(0, Math.floor((minScore - 5) / 5) * 5)
 
   return (
     <Box>
-      {title ? (
-        <Typography variant="h6" component="h3" sx={{ mb: 1 }}>
-          {title}
-        </Typography>
+      {title || source ? (
+        <Box sx={{ display: 'flex', alignItems: 'baseline', gap: 1, mb: 1 }}>
+          {title ? (
+            <Typography variant="h6" component="h3">
+              {title}
+            </Typography>
+          ) : null}
+          {source ? (
+            <Link
+              href={source.href}
+              target="_blank"
+              rel="noopener noreferrer"
+              variant="body2"
+              color="text.secondary"
+            >
+              Source
+            </Link>
+          ) : null}
+        </Box>
       ) : null}
       <Box
         sx={{
           width: '100%',
           position: 'relative',
-          border: '1px solid',
-          borderColor: 'divider',
           borderRadius: 1,
         }}
       >
-        {source ? (
-          <Chip
-            component="a"
-            clickable
-            href={source.href}
-            target="_blank"
-            rel="noopener noreferrer"
-            label={`Source: ${source.label}`}
-            size="small"
-            variant="outlined"
-            sx={{ position: 'absolute', zIndex: 1, top: 8, right: 8, bgcolor: 'background.paper' }}
-          />
-        ) : null}
         <Box
           sx={{
             overflowX: fitWidth ? 'hidden' : 'auto',
@@ -131,25 +134,31 @@ export function IntelligenceBarChart({
                   {
                     dataKey: 'score',
                     label: scoreLabel,
-                    // In-bar value labels; default placement is 'center'
-                    // (inside the bar), which suits white text on the
-                    // provider-colored bars.
-                    ...(barValues ? { barLabel: 'value' as const } : {}),
+                    ...(barValues
+                      ? { barLabel: 'value' as const, barLabelPlacement: 'outside' as const }
+                      : {}),
                   },
                 ]}
-                sx={
-                  barValues
-                    ? // MUI X v9 renders bar labels with the MuiBarChart-label
-                      // class; white bold text contrasts the colored bars.
-                      { '& .MuiBarChart-label': { fill: '#fff', fontWeight: 600 } }
-                    : undefined
-                }
+                sx={{
+                  ...(barValues
+                    ? {
+                        '& .MuiBarChart-label': {
+                          fill: theme.palette.text.secondary,
+                          fontSize: 10,
+                          fontWeight: 500,
+                        },
+                      }
+                    : {}),
+                  '& .MuiChartsGrid-line': {
+                    strokeDasharray: '4 4',
+                    strokeOpacity: 0.3,
+                  },
+                }}
                 xAxis={[
                   {
                     dataKey: 'model',
                     scaleType: 'band',
-                    label: 'Model',
-                    categoryGapRatio: fitWidth ? 0.78 : 0.55,
+                    categoryGapRatio: fitWidth ? 0.78 : 0.4,
                     colorMap: {
                       type: 'ordinal',
                       values: colorValues,
@@ -161,12 +170,13 @@ export function IntelligenceBarChart({
                     tickLabelMinGap: 0,
                     tickLabelPlacement: 'middle',
                     height: 110,
+                    disableTicks: true,
                   },
                 ]}
-                yAxis={[{ label: scoreLabel }]}
-                margin={{ left: 60, right: 24, top: source ? 48 : 24, bottom: 8 }}
+                yAxis={[{ label: scoreLabel, min: yMin, disableTicks: true }]}
+                margin={{ left: 60, right: 24, top: 40, bottom: 8 }}
                 grid={{ horizontal: true }}
-                borderRadius={2}
+                borderRadius={3}
                 hideLegend
               />
             </Box>

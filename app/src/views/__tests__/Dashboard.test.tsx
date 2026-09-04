@@ -165,13 +165,12 @@ describe('Dashboard', () => {
     expect(screen.queryByRole('heading', { name: 'Intelligence Score' })).not.toBeInTheDocument()
   })
 
-  it('shows a Source chip on the SWE Bench charts linking to Senior SWE Bench', () => {
+  it('shows a Source link on the SWE Bench charts linking to Senior SWE Bench', () => {
     renderDashboard()
-    const sweLinks = screen.getAllByRole('link', { name: /Source: Senior SWE Bench/i })
+    const sourceLinks = screen.getAllByRole('link', { name: /^Source$/i })
+    // Two SWE charts each have a Source link
+    const sweLinks = sourceLinks.filter((link) => link.getAttribute('href') === 'https://senior-swe-bench.snorkel.ai/')
     expect(sweLinks).toHaveLength(2)
-    sweLinks.forEach((link) => {
-      expect(link).toHaveAttribute('href', 'https://senior-swe-bench.snorkel.ai/')
-    })
   })
 
   it('shows Hand Picked News below the lead chart, expanded by default, with visible dates and collapse control', () => {

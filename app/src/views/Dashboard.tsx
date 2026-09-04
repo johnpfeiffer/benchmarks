@@ -78,14 +78,24 @@ export function Dashboard({
       </Box>
 
       <Box component="section" aria-labelledby="intelligence-title" sx={{ mb: 4 }}>
-        <Typography id="intelligence-title" variant="h5" component="h2" sx={{ mb: 1 }}>
-          Artificial Analysis Intelligence
-        </Typography>
+        <Box sx={{ display: 'flex', alignItems: 'baseline', gap: 1, mb: 1 }}>
+          <Typography id="intelligence-title" variant="h5" component="h2">
+            Artificial Analysis Intelligence
+          </Typography>
+          <Link
+            href={intelligenceSource.href}
+            target="_blank"
+            rel="noopener noreferrer"
+            variant="body2"
+            color="text.secondary"
+          >
+            Source
+          </Link>
+        </Box>
         <IntelligenceBarChart
           entries={intelligenceChartEntries}
           scoreLabel="Score"
           barValues
-          source={intelligenceSource}
         />
       </Box>
 
