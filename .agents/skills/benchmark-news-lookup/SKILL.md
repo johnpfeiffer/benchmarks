@@ -144,3 +144,6 @@ do not guess; omit the entry and flag it in the PR body.
 - `/KERNEL/` is immutable and human-authored; never edit it, and the kernel
   wins any conflict with derived files.
 - Keep business logic in `app/src/models/`; views stay dumb.
+- The Pareto frontier image's relative `images/...` URL is intentional and
+  works (the deployed host injects `<base href="/benchmarks/">`); do not
+  "fix" it — see `architecture.md`.
