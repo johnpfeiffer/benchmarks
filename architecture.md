@@ -77,7 +77,7 @@ rendered without a provider. The source site currently lists 18 runs;
 GPT-5.6 Luna, Inkling, Claude Sonnet 4.6) at their last published values.
 
 `data/ai.json` scores track the Artificial Analysis Intelligence Index
-(currently v4.1.1). Rows are authored sorted by score descending (ties keep
+(currently v4.2). Rows are authored sorted by score descending (ties keep
 file order; `benchtool ai-add` maintains this), and every row carries a
 verified `released` date sourced from the Artificial Analysis leaderboard
 (`benchtool aa-releases`).
