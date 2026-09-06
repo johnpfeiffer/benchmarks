@@ -1,8 +1,7 @@
 import { describe, it, expect } from 'vitest'
-import { parseModelEntries, parseNewsEntries, parseSweEntries, parseHardwareEntries, parseMachineEntries } from '../parse'
+import { parseModelEntries, parseNewsEntries, parseHardwareEntries, parseMachineEntries } from '../parse'
 import { mergeHardwareIntelligence, modelMatchKey } from '../merge'
 import rawIntelligenceData from '../../data/ai.json'
-import rawSweData from '../../data/swe.json'
 import rawNewsData from '../../data/news.json'
 import rawHardwareData from '../../data/hardware.json'
 import rawMachineData from '../../data/machines.json'
@@ -18,23 +17,9 @@ import rawMachineData from '../../data/machines.json'
  */
 describe('embedded data integrity', () => {
   const intelligence = parseModelEntries(rawIntelligenceData)
-  const swe = parseSweEntries(rawSweData)
   const news = parseNewsEntries(rawNewsData)
   const hardware = parseHardwareEntries(rawHardwareData)
   const machines = parseMachineEntries(rawMachineData)
-  const intelligenceKeys = new Set(intelligence.map((entry) => modelMatchKey(entry.model)))
-
-  it('every Senior SWE Bench model has a matching Artificial Analysis row', () => {
-    // Regression: SWE-only models (Claude Opus 4.7, GPT-5.4, Claude Sonnet 4.6)
-    // previously had no AI counterpart, so the "Open Weights Only" preset
-    // (which deselects non-open-weight AI models) never removed them from the
-    // SWE charts. Every SWE model must now match an AI row so the selection
-    // propagates fully.
-    const orphans = swe
-      .map((entry) => modelMatchKey(entry.model))
-      .filter((key) => !intelligenceKeys.has(key))
-    expect(orphans).toEqual([])
-  })
 
   it('model names are unique in ai.json', () => {
     const names = intelligence.map((entry) => entry.model)

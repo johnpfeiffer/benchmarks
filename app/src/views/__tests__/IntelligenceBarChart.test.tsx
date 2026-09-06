@@ -44,7 +44,7 @@ describe('IntelligenceBarChart value labels', () => {
     expect(props.sx?.['& .MuiBarChart-label']).toBeDefined()
   })
 
-  it('leaves bar labels off by default (SWE charts stay unlabeled)', () => {
+  it('leaves bar labels off by default', () => {
     const props = renderChart()
     expect(props.series[0].barLabel).toBeUndefined()
     expect(props.sx?.['& .MuiBarChart-label']).toBeUndefined()

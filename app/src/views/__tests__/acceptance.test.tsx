@@ -3,17 +3,13 @@ import { render, screen, within } from '@testing-library/react'
 import App from '../../App'
 import {
   parseModelEntries,
-  parseSweEntries,
   parseNewsEntries,
   parseHardwareEntries,
   parseGpuEntries,
   parseMachineEntries,
-  mergeSweMetrics,
   mergeHardwareIntelligence,
-  modelMatchKey,
 } from '../../models'
 import rawIntelligenceData from '../../data/ai.json'
-import rawSweData from '../../data/swe.json'
 import rawNewsData from '../../data/news.json'
 import rawHardwareData from '../../data/hardware.json'
 import rawGpuData from '../../data/gpu.json'
@@ -27,12 +23,10 @@ import rawMachineData from '../../data/machines.json'
  * tautology) but "does the user actually see every row of the data".
  */
 const intelligence = parseModelEntries(rawIntelligenceData)
-const swe = parseSweEntries(rawSweData)
 const news = parseNewsEntries(rawNewsData)
 const hardware = mergeHardwareIntelligence(parseHardwareEntries(rawHardwareData), intelligence)
 const gpu = parseGpuEntries(rawGpuData)
 const machines = parseMachineEntries(rawMachineData)
-const tableEntries = mergeSweMetrics(intelligence, swe)
 
 function modelRow(table: HTMLElement, model: string): HTMLElement {
   const toggle = within(table).getByRole('button', { name: model })
@@ -45,8 +39,8 @@ describe('acceptance: every JSON row appears in the UI', () => {
   it('lists every ai.json model in the Model Details table with provider, italic release date, and score', () => {
     render(<App />)
     const table = screen.getByRole('table', { name: 'Model Details' })
-    expect(within(table).getAllByRole('row')).toHaveLength(tableEntries.length + 1)
-    for (const entry of tableEntries) {
+    expect(within(table).getAllByRole('row')).toHaveLength(intelligence.length + 1)
+    for (const entry of intelligence) {
       const row = modelRow(table, entry.model)
       expect(row.textContent).toContain(entry.provider)
       expect(row.textContent).toContain(String(entry.score))
@@ -54,21 +48,6 @@ describe('acceptance: every JSON row appears in the UI', () => {
       const italic = row.querySelector('em')
       expect(italic).not.toBeNull()
       expect(italic?.textContent).toBe(entry.released ?? '*')
-    }
-  })
-
-  it('merges every swe.json row\'s metrics into its model\'s table row', () => {
-    render(<App />)
-    const table = screen.getByRole('table', { name: 'Model Details' })
-    const aiByKey = new Map(intelligence.map((entry) => [modelMatchKey(entry.model), entry]))
-    for (const s of swe) {
-      const ai = aiByKey.get(modelMatchKey(s.model))
-      if (!ai) throw new Error(`swe model ${s.model} has no ai.json row`)
-      const row = modelRow(table, ai.model)
-      expect(row.textContent).toContain(String(s.tasteful_solve_rate_pct))
-      expect(row.textContent).toContain(String(s.basic_solve_rate_pct))
-      expect(row.textContent).toContain(String(s.avg_steps))
-      expect(row.textContent).toContain(s.avg_tokens)
     }
   })
 

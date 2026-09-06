@@ -14,28 +14,9 @@ const entries: ModelEntry[] = [
     provider: 'Anthropic',
     open_weight: true,
     released: '2026-07-01',
-    tasteful_solve_rate_pct: 29.1,
-    basic_solve_rate_pct: 46.5,
-    avg_steps: 159,
-    avg_tokens: '290.2K',
   },
   { id: 'openai:beta', model: 'Beta', score: 50, provider: 'OpenAI', open_weight: false, released: null },
   { id: 'google:gamma', model: 'Gamma', score: 55, provider: 'Google', open_weight: false, released: '2026-03-15' },
-]
-
-const sweChartEntries: ModelEntry[] = [
-  {
-    id: 'anthropic:alpha:mini-swe-agent:max',
-    model: 'Alpha',
-    score: 29.1,
-    provider: 'Anthropic',
-    open_weight: true,
-    released: '2026-07-01',
-    tasteful_solve_rate_pct: 29.1,
-    basic_solve_rate_pct: 46.5,
-    avg_steps: 159,
-    avg_tokens: '290.2K',
-  },
 ]
 
 const hardwareEntries: HardwareEntry[] = [
@@ -86,10 +67,6 @@ function DashboardController({ initialSort = DEFAULT_SORT }: { initialSort?: Sor
     <Dashboard
       entries={sorted}
       intelligenceChartEntries={chartEntries}
-      tastefulSweChartEntries={sweChartEntries.filter((entry) => selectedIds.has(`anthropic:${entry.model.toLowerCase()}`))}
-      basicSweChartEntries={sweChartEntries
-        .filter((entry) => selectedIds.has(`anthropic:${entry.model.toLowerCase()}`))
-        .map((entry) => ({ ...entry, id: `${entry.id}:basic`, score: entry.basic_solve_rate_pct ?? entry.score }))}
       sort={sort}
       selectedIds={selectedIds}
       onSortChange={handleSortChange}
@@ -103,7 +80,6 @@ function DashboardController({ initialSort = DEFAULT_SORT }: { initialSort?: Sor
       ]}
       hardware={hardwareEntries}
       hardwareSource={{ label: 'HuggingFace', href: 'https://huggingface.co/unsloth' }}
-      sweSource={{ label: 'Senior SWE Bench', href: 'https://senior-swe-bench.snorkel.ai/' }}
       gpu={gpuEntries}
       gpuSources={[
         { label: 'NVIDIA Hopper Architecture', href: 'https://developer.nvidia.com/blog/nvidia-hopper-architecture-in-depth/' },
@@ -116,7 +92,6 @@ function DashboardController({ initialSort = DEFAULT_SORT }: { initialSort?: Sor
       ]}
       sources={[
         { label: 'Artificial Analysis', href: 'https://artificialanalysis.ai/articles/artificial-analysis-intelligence-index-v4-2' },
-        { label: 'Senior SWE Bench', href: 'https://senior-swe-bench.snorkel.ai/' },
       ]}
     />
   )
@@ -147,30 +122,21 @@ describe('Dashboard', () => {
       'href',
       'https://artificialanalysis.ai/articles/artificial-analysis-intelligence-index-v4-2',
     )
-    expect(screen.getAllByRole('link', { name: /Senior SWE Bench/i })[0]).toHaveAttribute(
-      'href',
-      'https://senior-swe-bench.snorkel.ai/',
-    )
     const githubLink = screen.getByRole('link', { name: /GitHub repository/i })
     expect(githubLink).toHaveAttribute('href', 'https://github.com/johnpfeiffer/benchmarks')
     expect(githubLink.querySelector('svg')).toBeInTheDocument()
   })
 
-  it('renders both benchmark sections', () => {
+  it('renders the intelligence benchmark section and no Senior SWE Bench section', () => {
     renderDashboard()
     expect(screen.getByRole('heading', { name: 'Artificial Analysis Intelligence' })).toBeInTheDocument()
-    expect(screen.getByRole('heading', { name: 'Senior SWE Bench' })).toBeInTheDocument()
-    expect(screen.getByRole('heading', { name: 'Tasteful Solve Rate' })).toBeInTheDocument()
-    expect(screen.getByRole('heading', { name: 'Basic Solve Rate' })).toBeInTheDocument()
+    // The Senior SWE Bench section (heading, solve-rate charts, source links)
+    // was removed with swe.json.
+    expect(screen.queryByRole('heading', { name: 'Senior SWE Bench' })).not.toBeInTheDocument()
+    expect(screen.queryByRole('heading', { name: 'Tasteful Solve Rate' })).not.toBeInTheDocument()
+    expect(screen.queryByRole('heading', { name: 'Basic Solve Rate' })).not.toBeInTheDocument()
     expect(screen.queryByRole('heading', { name: 'Intelligence Score' })).not.toBeInTheDocument()
-  })
-
-  it('shows a Source link on the SWE Bench charts linking to Senior SWE Bench', () => {
-    renderDashboard()
-    const sourceLinks = screen.getAllByRole('link', { name: /^Source$/i })
-    // Two SWE charts each have a Source link
-    const sweLinks = sourceLinks.filter((link) => link.getAttribute('href') === 'https://senior-swe-bench.snorkel.ai/')
-    expect(sweLinks).toHaveLength(2)
+    expect(screen.queryByRole('link', { name: /Senior SWE Bench/i })).not.toBeInTheDocument()
   })
 
   it('shows Hand Picked News below the lead chart, expanded by default, with visible dates and collapse control', () => {
@@ -254,14 +220,14 @@ describe('Dashboard', () => {
     expect(items[1].textContent).toContain('2026-07-20')
   })
 
-  it('renders the SWE metric columns in the existing table', () => {
+  it('renders the intelligence columns and no SWE metric columns in the table', () => {
     renderDashboard()
     const table = intelligenceTable()
     expect(within(table).getByRole('button', { name: /Intelligence/i })).toBeInTheDocument()
-    expect(within(table).getByRole('button', { name: /basic_solve_rate_pct/i })).toBeInTheDocument()
-    expect(within(table).getByRole('button', { name: /tasteful_solve_rate_pct/i })).toBeInTheDocument()
-    expect(within(table).getByRole('button', { name: /avg_steps/i })).toBeInTheDocument()
-    expect(within(table).getByRole('button', { name: /avg_tokens/i })).toBeInTheDocument()
+    expect(within(table).queryByRole('button', { name: /basic_solve_rate_pct/i })).not.toBeInTheDocument()
+    expect(within(table).queryByRole('button', { name: /tasteful_solve_rate_pct/i })).not.toBeInTheDocument()
+    expect(within(table).queryByRole('button', { name: /avg_steps/i })).not.toBeInTheDocument()
+    expect(within(table).queryByRole('button', { name: /avg_tokens/i })).not.toBeInTheDocument()
   })
 
   it('shows the release date in italics between Provider and Model Name, "*" when unknown', () => {
@@ -297,16 +263,6 @@ describe('Dashboard', () => {
     expect(screen.getByRole('button', { name: 'Alpha' })).toBeInTheDocument()
     expect(screen.getByRole('button', { name: 'Beta' })).toBeInTheDocument()
     expect(screen.getByRole('button', { name: 'Gamma' })).toBeInTheDocument()
-  })
-
-  it('shows SWE metric values and placeholders for missing values', () => {
-    renderDashboard()
-    const rows = within(intelligenceTable()).getAllByRole('row')
-    expect(rows[1].textContent).toContain('29.1')
-    expect(rows[1].textContent).toContain('46.5')
-    expect(rows[1].textContent).toContain('159')
-    expect(rows[1].textContent).toContain('290.2K')
-    expect(rows[rows.length - 1].textContent).toContain('*')
   })
 
   it('defaults to score descending (highest first)', () => {
@@ -349,7 +305,7 @@ describe('Dashboard', () => {
     fireEvent.click(screen.getByRole('button', { name: 'Alpha' }))
     fireEvent.click(screen.getByRole('button', { name: 'Beta' }))
     fireEvent.click(screen.getByRole('button', { name: 'Gamma' }))
-    expect(screen.getAllByText('No models selected')).toHaveLength(3)
+    expect(screen.getAllByText('No models selected')).toHaveLength(1)
   })
 
   it('renders the "Open Weights" toggle beside the Model Details title, off by default', () => {
@@ -384,14 +340,6 @@ describe('Dashboard', () => {
     expect(screen.getByRole('button', { name: 'Alpha' })).toHaveAttribute('aria-pressed', 'true')
     expect(screen.getByRole('button', { name: 'Beta' })).toHaveAttribute('aria-pressed', 'true')
     expect(screen.getByRole('button', { name: 'Gamma' })).toHaveAttribute('aria-pressed', 'true')
-  })
-
-  it('renders an "Open Weights" toggle beside the Senior SWE Bench title', () => {
-    renderDashboard()
-    const sweHeading = screen.getByRole('heading', { name: 'Senior SWE Bench' })
-    const sweSection = sweHeading.closest('section') as HTMLElement
-    const toggle = within(sweSection).getByRole('button', { name: 'Open Weights' })
-    expect(toggle).toHaveAttribute('aria-pressed', 'false')
   })
 
   it('renders the HuggingFace Estimated Hardware section with chart and table', () => {

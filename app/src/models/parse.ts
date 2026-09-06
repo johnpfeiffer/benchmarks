@@ -1,4 +1,4 @@
-import type { GpuEntry, HardwareEntry, MachineEntry, ModelEntry, NewsEntry, RawGpuEntry, RawHardwareEntry, RawMachineEntry, RawModelEntry, RawNewsEntry, RawSweEntry } from './types'
+import type { GpuEntry, HardwareEntry, MachineEntry, ModelEntry, NewsEntry, RawGpuEntry, RawHardwareEntry, RawMachineEntry, RawModelEntry, RawNewsEntry } from './types'
 
 /**
  * Error raised when raw data violates a kernel invariant.
@@ -88,71 +88,6 @@ function normalize(raw: RawModelEntry, index: number): ModelEntry {
   }
 }
 
-const SWE_PROVIDER_RULES: Array<{ pattern: RegExp; provider: string }> = [
-  { pattern: /^claude\b/i, provider: 'Anthropic' },
-  { pattern: /^gpt\b/i, provider: 'OpenAI' },
-  { pattern: /^grok\b/i, provider: 'xAI' },
-  { pattern: /^glm\b/i, provider: 'Z AI' },
-  { pattern: /^kimi\b/i, provider: 'Moonshot AI' },
-  { pattern: /^gemini\b/i, provider: 'Google' },
-  { pattern: /^minimax\b/i, provider: 'MiniMax' },
-  { pattern: /^inkling\b/i, provider: 'Thinking Machines' },
-]
-
-export function inferProviderFromModel(model: string): string | null {
-  return SWE_PROVIDER_RULES.find((rule) => rule.pattern.test(model))?.provider ?? null
-}
-
-/**
- * Model families whose weights are openly available. Used to infer
- * `open_weight` for sources (e.g. swe.json) that do not carry the field.
- * Matches the curated open-weight set in ai.json.
- */
-const OPEN_WEIGHT_PREFIXES = [
-  'kimi',
-  'minimax',
-  'deepseek',
-  'nemotron',
-  'qwen',
-  'glm',
-  'mistral',
-  'gemma',
-  'gpt-oss',
-  'inkling',
-]
-
-export function isOpenWeightModel(model: string): boolean {
-  const lower = model.trim().toLowerCase()
-  return OPEN_WEIGHT_PREFIXES.some((prefix) => lower.startsWith(prefix))
-}
-
-function normalizeSwe(raw: RawSweEntry, index: number): ModelEntry {
-  const model = assertModelName(raw?.model, index)
-  const provider = inferProviderFromModel(model)
-  if (!provider) {
-    throw new InvariantError(
-      `INV-001 violated at index ${index}: model "${model}" has no provider`,
-      index,
-      'INV-001',
-    )
-  }
-  const score = assertScore(raw?.tasteful_solve_rate_pct, index, model, 'tasteful_solve_rate_pct')
-
-  return {
-    id: makeId(provider, model, raw?.harness ?? '', raw?.effort ?? ''),
-    model,
-    score,
-    provider,
-    open_weight: isOpenWeightModel(model),
-    // swe.json carries no release dates; the table shows the ai.json row's.
-    released: null,
-    tasteful_solve_rate_pct: score,
-    basic_solve_rate_pct: assertScore(raw?.basic_solve_rate_pct, index, model, 'basic_solve_rate_pct'),
-    avg_steps: assertScore(raw?.avg_steps, index, model, 'avg_steps'),
-    avg_tokens: raw?.avg_tokens,
-  }
-}
-
 /**
  * Parse embedded JSON into validated `ModelEntry[]`.
  *
@@ -165,20 +100,6 @@ export function parseModelEntries(raw: readonly RawModelEntry[]): ModelEntry[] {
     throw new InvariantError('Expected an array of model entries', -1, 'SHAPE')
   }
   return raw.map((entry, index) => normalize(entry, index))
-}
-
-/**
- * Parse Senior SWE Bench rows into the shared benchmark entry shape.
- *
- * The source omits provider, so provider is derived from known model-family
- * prefixes at the same validation gate. Unknown families are rejected as
- * INV-001 violations rather than rendered without a provider.
- */
-export function parseSweEntries(raw: readonly RawSweEntry[]): ModelEntry[] {
-  if (!Array.isArray(raw)) {
-    throw new InvariantError('Expected an array of SWE benchmark entries', -1, 'SHAPE')
-  }
-  return raw.map((entry, index) => normalizeSwe(entry, index))
 }
 
 function normalizeNews(raw: RawNewsEntry, index: number): NewsEntry {

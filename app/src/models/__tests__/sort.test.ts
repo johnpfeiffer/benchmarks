@@ -10,10 +10,6 @@ const entries: ModelEntry[] = [
     provider: 'OpenAI',
     open_weight: false,
     released: '2026-05-01',
-    tasteful_solve_rate_pct: 10,
-    basic_solve_rate_pct: 20,
-    avg_steps: 100,
-    avg_tokens: '50.5K',
   },
   {
     id: 'anthropic:alpha',
@@ -22,10 +18,6 @@ const entries: ModelEntry[] = [
     provider: 'Anthropic',
     open_weight: false,
     released: '2026-07-01',
-    tasteful_solve_rate_pct: 20,
-    basic_solve_rate_pct: 30,
-    avg_steps: 200,
-    avg_tokens: '100.1K',
   },
   { id: 'openai:beta', model: 'Beta', score: 60, provider: 'OpenAI', open_weight: false, released: null },
 ]
@@ -54,10 +46,6 @@ describe('sortModels', () => {
     { name: 'model desc', sort: { field: 'model', direction: 'desc' }, key: (e) => e.model, expected: ['Gamma', 'Beta', 'Alpha'] },
     { name: 'score asc', sort: { field: 'score', direction: 'asc' }, key: (e) => String(e.score), expected: ['50', '60', '60'] },
     { name: 'score desc', sort: { field: 'score', direction: 'desc' }, key: (e) => String(e.score), expected: ['60', '60', '50'] },
-    { name: 'tasteful solve rate asc', sort: { field: 'tasteful_solve_rate_pct', direction: 'asc' }, key: (e) => e.model, expected: ['Gamma', 'Alpha', 'Beta'] },
-    { name: 'basic solve rate desc', sort: { field: 'basic_solve_rate_pct', direction: 'desc' }, key: (e) => e.model, expected: ['Alpha', 'Gamma', 'Beta'] },
-    { name: 'avg steps asc', sort: { field: 'avg_steps', direction: 'asc' }, key: (e) => e.model, expected: ['Gamma', 'Alpha', 'Beta'] },
-    { name: 'avg tokens desc', sort: { field: 'avg_tokens', direction: 'desc' }, key: (e) => e.model, expected: ['Alpha', 'Gamma', 'Beta'] },
   ]
 
   it.each(cases)('sorts by $name', ({ sort, key, expected }) => {

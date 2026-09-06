@@ -1,19 +1,13 @@
-import { Box, Link, Typography, useTheme } from '@mui/material'
+import { Box, Typography, useTheme } from '@mui/material'
 import { BarChart } from '@mui/x-charts/BarChart'
 import type { ModelEntry } from '../models'
 
 interface IntelligenceBarChartProps {
   /** Entries already sorted by the controller (default: score desc). */
   entries: readonly ModelEntry[]
-  title?: string
   scoreLabel: string
-  fitWidth?: boolean
   /** Show each bar's score above the bar. */
   barValues?: boolean
-  source?: {
-    label: string
-    href: string
-  }
 }
 
 const PROVIDER_COLORS = {
@@ -57,20 +51,17 @@ function benchmarkColor(entry: ModelEntry, fallback: string): string {
  */
 export function IntelligenceBarChart({
   entries,
-  title,
   scoreLabel,
-  fitWidth = false,
   barValues = false,
-  source,
 }: IntelligenceBarChartProps) {
   const theme = useTheme()
   const fallbackColor = theme.palette.grey[500]
   // Fit more bars on screen than the original 52px bands while keeping labels readable.
-  const chartWidth = fitWidth ? '100%' : Math.max(920, entries.length * 36)
-  const chartHeight = fitWidth ? 380 : 450
+  const chartWidth = Math.max(920, entries.length * 36)
+  const chartHeight = 450
   const colorValues = entries.map((entry) => entry.model)
   // Prefer the explicit per-model color from ai.json; fall back to the
-  // provider/model-family lookup for SWE-only entries that carry no color.
+  // provider/model-family lookup when a row carries no color.
   const colors = entries.map((entry) => entry.color ?? benchmarkColor(entry, fallbackColor))
   // #AIDEV: Cut empty space at the bottom by starting the y-axis near the lowest score
   const minScore = entries.length > 0 ? Math.min(...entries.map((e) => e.score)) : 0
@@ -78,26 +69,6 @@ export function IntelligenceBarChart({
 
   return (
     <Box>
-      {title || source ? (
-        <Box sx={{ display: 'flex', alignItems: 'baseline', gap: 1, mb: 1 }}>
-          {title ? (
-            <Typography variant="h6" component="h3">
-              {title}
-            </Typography>
-          ) : null}
-          {source ? (
-            <Link
-              href={source.href}
-              target="_blank"
-              rel="noopener noreferrer"
-              variant="body2"
-              color="text.secondary"
-            >
-              Source
-            </Link>
-          ) : null}
-        </Box>
-      ) : null}
       <Box
         sx={{
           width: '100%',
@@ -107,19 +78,15 @@ export function IntelligenceBarChart({
       >
         <Box
           sx={{
-            overflowX: fitWidth ? 'hidden' : 'auto',
-            ...(fitWidth
-              ? {}
-              : {
-                  // MUI X v9 hardcodes touch-action: pan-y on its layer
-                  // container (zoom support), which blocks horizontal touch
-                  // scrolling of this overflow container on mobile. The chart
-                  // has no zoom/pan interactions, so restore native panning.
-                  // The layer container only carries its emotion-labeled class
-                  // (css-*-MuiChartsLayerContainer-root), hence the substring
-                  // attribute selector.
-                  '& [class*="MuiChartsLayerContainer-root"]': { touchAction: 'pan-x pan-y' },
-                }),
+            overflowX: 'auto',
+            // MUI X v9 hardcodes touch-action: pan-y on its layer
+            // container (zoom support), which blocks horizontal touch
+            // scrolling of this overflow container on mobile. The chart
+            // has no zoom/pan interactions, so restore native panning.
+            // The layer container only carries its emotion-labeled class
+            // (css-*-MuiChartsLayerContainer-root), hence the substring
+            // attribute selector.
+            '& [class*="MuiChartsLayerContainer-root"]': { touchAction: 'pan-x pan-y' },
           }}
         >
           {entries.length === 0 ? (
@@ -158,7 +125,7 @@ export function IntelligenceBarChart({
                   {
                     dataKey: 'model',
                     scaleType: 'band',
-                    categoryGapRatio: fitWidth ? 0.78 : 0.4,
+                    categoryGapRatio: 0.4,
                     colorMap: {
                       type: 'ordinal',
                       values: colorValues,
