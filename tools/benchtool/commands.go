@@ -80,21 +80,3 @@ func cmdAAReleases() error {
 	}
 	return nil
 }
-
-const sweAgentsURL = "https://senior-swe-bench.snorkel.ai/agents?f_behavior=no_cheating"
-
-// cmdSweList prints the Senior SWE Bench leaderboard table as TSV so the
-// agent can diff it against swe.json without the page entering context.
-func cmdSweList() error {
-	_, body, err := fetch(sweAgentsURL)
-	if err != nil {
-		return err
-	}
-	rows := parseTable(body)
-	fmt.Printf("source: %s\n", sweAgentsURL)
-	fmt.Printf("%d table rows (incl. header)\n", len(rows))
-	for _, row := range rows {
-		fmt.Println(strings.Join(row, "\t"))
-	}
-	return nil
-}

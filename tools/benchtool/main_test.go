@@ -61,21 +61,6 @@ func TestExtractDateSignals(t *testing.T) {
 	}
 }
 
-func TestParseTable(t *testing.T) {
-	fixture := `<table>
-<tr><th>#</th><th>Model</th><th>Tasteful</th></tr>
-<tr><td class="sticky">1</td><td><a href="/runs?agent=melon">Claude Fable 5.1</a></td><td>34.7%</td></tr>
-<tr><td class="sticky">2</td><td><a href="/runs?agent=fable5">Claude Fable 5</a></td><td>34.7%</td></tr>
-</table>`
-	rows := parseTable(fixture)
-	if len(rows) != 3 {
-		t.Fatalf("rows = %d, want 3 (incl. header)", len(rows))
-	}
-	if rows[0][1] != "Model" || rows[1][1] != "Claude Fable 5.1" || rows[2][2] != "34.7%" {
-		t.Errorf("rows = %v", rows)
-	}
-}
-
 func TestValidateISODate(t *testing.T) {
 	for _, ok := range []string{"2026-09-01", "2026-02-28", "2024-02-29"} {
 		if err := validateISODate(ok); err != nil {
@@ -139,19 +124,6 @@ func TestExtractAAReleases(t *testing.T) {
 	}
 	if releases[1].Effort != "" || releases[1].Released != "2026-07-21" {
 		t.Errorf("releases[1] = %+v", releases[1])
-	}
-}
-
-func TestRenderSweRow(t *testing.T) {
-	got := renderSweRow(sweRow{Model: "Claude Fable 5.1", Harness: "Mini-SWE-Agent", Effort: "medium", Tasteful: 34.7, Basic: 57.9, Steps: 77, Tokens: "37.9K"})
-	want := `{"model": "Claude Fable 5.1", "harness": "Mini-SWE-Agent", "effort": "medium", "tasteful_solve_rate_pct": 34.7, "basic_solve_rate_pct": 57.9, "avg_steps": 77, "avg_tokens": "37.9K"}`
-	if got != want {
-		t.Errorf("renderSweRow =\n%s\nwant\n%s", got, want)
-	}
-	// Zero rates keep swe.json's one-decimal style ("0.0", not "0").
-	zero := renderSweRow(sweRow{Model: "X", Harness: "H", Effort: "max", Tasteful: 0, Basic: 0, Steps: 0, Tokens: "n/a"})
-	if !strings.Contains(zero, `"tasteful_solve_rate_pct": 0.0`) {
-		t.Errorf("zero rate formatting = %s", zero)
 	}
 }
 
@@ -278,28 +250,5 @@ func TestCmdAISetReleased(t *testing.T) {
 	}
 	if err := cmdAISetReleased("GPT-5.6 Sol (max)", "2026-13-40"); err == nil {
 		t.Error("invalid date accepted")
-	}
-}
-
-func TestCmdSweAdd(t *testing.T) {
-	data := chdirToTempRepo(t)
-	seed := []byte("[\n  {\"model\": \"Claude Fable 5\", \"harness\": \"Mini-SWE-Agent\", \"effort\": \"high\", \"tasteful_solve_rate_pct\": 34.7, \"basic_solve_rate_pct\": 53.7, \"avg_steps\": 119, \"avg_tokens\": \"58.4K\"},\n  {\"model\": \"Claude Opus 4.8\", \"harness\": \"Mini-SWE-Agent\", \"effort\": \"max\", \"tasteful_solve_rate_pct\": 30.5, \"basic_solve_rate_pct\": 44.2, \"avg_steps\": 138, \"avg_tokens\": \"134.2K\"}\n]\n")
-	if err := os.WriteFile(filepath.Join(data, "swe.json"), seed, 0o644); err != nil {
-		t.Fatal(err)
-	}
-	if err := cmdSweAdd([]string{"Claude Fable 5.1", "Mini-SWE-Agent", "medium", "34.7", "57.9", "77", "37.9K"}); err != nil {
-		t.Fatal(err)
-	}
-	out, _ := os.ReadFile(filepath.Join(data, "swe.json"))
-	lines := strings.Split(string(out), "\n")
-	// Ties keep file order: the new 34.7 row lands after the existing 34.7.
-	if !strings.Contains(lines[1], "Claude Fable 5\"") || !strings.Contains(lines[2], "Claude Fable 5.1") {
-		t.Errorf("tie order wrong:\n%s", out)
-	}
-	if !strings.Contains(lines[2], `"tasteful_solve_rate_pct": 34.7`) {
-		t.Errorf("rate formatting = %q", lines[2])
-	}
-	if err := cmdSweAdd([]string{"Claude Fable 5.1", "Mini-SWE-Agent", "medium", "34.7", "57.9", "77", "37.9K"}); err == nil {
-		t.Error("duplicate model accepted")
 	}
 }

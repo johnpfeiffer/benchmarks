@@ -9,11 +9,9 @@
 //	benchtool fetch-meta <url>                      title, canonical, and date metadata for a news candidate
 //	benchtool aa-model <slug-or-url>                score/provider/open-weight/release for an Artificial Analysis model page
 //	benchtool aa-releases                           every leaderboard variant's release date as TSV (one fetch)
-//	benchtool swe-list                              Senior SWE Bench leaderboard (no_cheating filter) as TSV
 //	benchtool news-add <url> <YYYY-MM-DD>           validate + dedupe + insert into news.json (newest first)
 //	benchtool ai-add <model> <score> <provider> [--open-weight] [--color=#hex] [--released=YYYY-MM-DD]
 //	benchtool ai-set-released <model> <YYYY-MM-DD|null>   set/clear the release date on an existing ai.json row
-//	benchtool swe-add <model> <harness> <effort> <tasteful> <basic> <steps> <tokens>
 //
 // The add commands rewrite files under app/src/data (located by walking up
 // from the working directory) and only guarantee file conventions; run
@@ -30,11 +28,9 @@ func usage() {
   benchtool fetch-meta <url>
   benchtool aa-model <slug-or-url>
   benchtool aa-releases
-  benchtool swe-list
   benchtool news-add <url> <YYYY-MM-DD>
   benchtool ai-add <model> <score> <provider> [--open-weight] [--color=#hex] [--released=YYYY-MM-DD]
-  benchtool ai-set-released <model> <YYYY-MM-DD|null>
-  benchtool swe-add <model> <harness> <effort> <tasteful> <basic> <steps> <tokens>`)
+  benchtool ai-set-released <model> <YYYY-MM-DD|null>`)
 	os.Exit(2)
 }
 
@@ -56,8 +52,6 @@ func main() {
 		err = cmdAAModel(os.Args[2])
 	case "aa-releases":
 		err = cmdAAReleases()
-	case "swe-list":
-		err = cmdSweList()
 	case "news-add":
 		if len(os.Args) != 4 {
 			usage()
@@ -70,11 +64,6 @@ func main() {
 			usage()
 		}
 		err = cmdAISetReleased(os.Args[2], os.Args[3])
-	case "swe-add":
-		if len(os.Args) != 9 {
-			usage()
-		}
-		err = cmdSweAdd(os.Args[2:])
 	default:
 		usage()
 	}

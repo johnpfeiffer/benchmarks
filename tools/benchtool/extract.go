@@ -201,30 +201,3 @@ func extractAAReleases(rawHTML string) []aaRelease {
 	}
 	return out
 }
-
-// --- Senior SWE Bench leaderboard table ---
-
-var (
-	reTR  = regexp.MustCompile(`(?is)<tr[^>]*>(.*?)</tr>`)
-	reCell = regexp.MustCompile(`(?is)<t[dh][^>]*>(.*?)</t[dh]>`)
-)
-
-// parseTable extracts every <tr> as a slice of cell texts (tags stripped,
-// whitespace collapsed). The SSR table on the agents page is the single
-// source of truth the skill mirrors into swe.json.
-func parseTable(htmlText string) [][]string {
-	var rows [][]string
-	for _, tr := range reTR.FindAllStringSubmatch(htmlText, -1) {
-		var cells []string
-		for _, td := range reCell.FindAllStringSubmatch(tr[1], -1) {
-			cell := reTag.ReplaceAllString(td[1], " ")
-			cell = htmlUnescape(cell)
-			cell = reWhitespace.ReplaceAllString(strings.TrimSpace(cell), " ")
-			cells = append(cells, cell)
-		}
-		if len(cells) > 0 {
-			rows = append(rows, cells)
-		}
-	}
-	return rows
-}
