@@ -260,7 +260,9 @@ journey
 
 ## Validation
 
-- `npm test` - Vitest, three layers:
+- `npm test` - `tsc -b` typecheck first, then Vitest, three layers (the
+  typecheck gate exists because a test-only type error once passed Vitest
+  and broke the deploy build):
   - **Unit tests with fixtures** (`models/__tests__/parse|sort|filter|merge|news.test.ts`):
     domain logic — INV-001 and structural guards (including release-date
     validation), sorting, merges, news parsing.
