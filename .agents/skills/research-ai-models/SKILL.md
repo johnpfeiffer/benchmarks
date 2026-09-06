@@ -1,29 +1,27 @@
 ---
 name: research-ai-models
-description: Research and update AI model benchmark data on the dashboard (app/src/data/ai.json Artificial Analysis intelligence scores, app/src/data/swe.json Senior SWE Bench runs). Use when asked to add a model, refresh scores for a new Artificial Analysis Intelligence Index version, sync the Senior SWE Bench leaderboard, verify a model's provider or open-weight status or color, or reconcile models that appear on one leaderboard but not the other.
+description: Research and update AI model benchmark data on the dashboard (app/src/data/ai.json Artificial Analysis intelligence scores). Use when asked to add a model, refresh scores for a new Artificial Analysis Intelligence Index version, or verify a model's provider, open-weight status, release date, or bar color.
 ---
 
 # Research AI Models
 
-Two datasets track AI models: `app/src/data/ai.json` (Artificial Analysis
-Intelligence Index scores) and `app/src/data/swe.json` (Senior SWE Bench
-runs). News coverage of models is a separate concern handled by the
-`benchmark-news-lookup` skill.
+The dashboard tracks AI models in `app/src/data/ai.json` (Artificial
+Analysis Intelligence Index scores). News coverage of models is a separate
+concern handled by the `benchmark-news-lookup` skill.
 
 ## Sources of truth
 
 Fetch these pages through the Go tool instead of pulling whole pages into
-context (run from anywhere in the repo):
+context. The tool is its own Go module: run it from `tools/benchtool/`
+(`go run . <command>`) — `go run ./tools/benchtool` from the repo root
+fails because the repo root has no go.mod.
 
-- `go run ./tools/benchtool aa-model <slug-or-url>` prints the model page's
+- `go run . aa-model <slug-or-url>` prints the model page's
   Intelligence Index score, provider, open-weights status, and release date
   (exits non-zero when no score is found — wrong slug or estimate-only).
-- `go run ./tools/benchtool aa-releases` prints every AA leaderboard
+- `go run . aa-releases` prints every AA leaderboard
   variant's release date as TSV (one fetch; includes deprecated models) for
   filling or checking the `released` field across ai.json.
-- `go run ./tools/benchtool swe-list` prints the Senior SWE Bench
-  leaderboard (no_cheating filter) as TSV: rank, model, harness, effort,
-  tasteful, basic, steps, tokens, cost.
 
 Artificial Analysis:
 
@@ -42,27 +40,16 @@ Artificial Analysis:
   article URL. The lead chart's source chip intentionally keeps linking to
   the AA homepage (`intelligenceSource`) — only the footer entry changes.
 
-Senior SWE Bench: https://senior-swe-bench.snorkel.ai/agents?f_behavior=no_cheating
-
-- The large-font number on a run card is the TASTEFUL solve rate; the
-  leaderboard table lists Tasteful then Basic. `tasteful_solve_rate_pct`
-  comes first in `swe.json`.
-- Also capture harness (currently always "Mini-SWE-Agent"), effort, avg
-  steps, and avg output tokens.
-- The site periodically drops older runs; rows only on our side are kept
-  unless the user says otherwise (precedent: Kimi K2.6, GPT-5.6 Luna,
-  Inkling, Claude Sonnet 4.6 retained at last published values, noted in
-  `architecture.md`).
-
 ## ai.json contract
 
-Row shape: `{ "model", "intelligence_score", "provider", "open_weight", "color" }`.
+Row shape: `{ "model", "intelligence_score", "provider", "open_weight",
+"color", "released" }`.
 
 - INV-001: every row requires a provider; the parser throws at load
   otherwise. Missing provider = add one, never omit.
-- `open_weight` defaults to false; set true only for families in
-  `parse.ts` `OPEN_WEIGHT_PREFIXES`: kimi, minimax, deepseek, nemotron,
-  qwen, glm, mistral, gemma, gpt-oss, inkling.
+- `open_weight` defaults to false; set true only for the curated
+  open-weight families: kimi, minimax, deepseek, nemotron, qwen, glm,
+  mistral, gemma, gpt-oss, inkling.
 - `color` is optional in the type but `ai.json` carries one per row.
   Provider palette (kernel `requirements-v1.md` is the authority;
   `IntelligenceBarChart` has the same fallback map): Anthropic `#cc785c`,
@@ -70,43 +57,24 @@ Row shape: `{ "model", "intelligence_score", "provider", "open_weight", "color" 
   DeepSeek `#2243e6`, Moonshot/Kimi `#00B4D8`, NVIDIA `#86b737`,
   Alibaba/Qwen `#F54F35`, Cerebras `#F15929`. Unknown providers fall back
   to the theme gray.
+- `released` is the model's release date (`YYYY-MM-DD`) or null; the data
+  invariant requires it populated for every row.
 - Naming: effort suffix in parentheses — `(max)`, `(xhigh)`, `(high)`;
   dated variants keep their date slug (`DeepSeek V4 Pro 0813 (max)`).
-  Names must differ across charts only by the parenthetical so
-  `modelMatchKey` can join them.
+  `hardware.json` joins `ai.json` rows via `modelMatchKey` (lowercases,
+  strips `(...)` suffixes and the word `preview`); a rename that breaks
+  the join fails `data.test.ts`.
 - Keep the file roughly sorted by `intelligence_score` descending.
-
-## swe.json contract
-
-Row shape: `{ "model", "harness", "effort", "tasteful_solve_rate_pct",
-"basic_solve_rate_pct", "avg_steps", "avg_tokens" }`.
-
-- No `rank` field (removed in PR #28); keep the file sorted by tasteful
-  solve rate descending.
-- Provider is NOT stored: `parse.ts` `SWE_PROVIDER_RULES` infers it from a
-  model-family prefix (Claude, GPT, Grok, GLM, Kimi, Gemini, MiniMax,
-  Inkling). A model from a new family makes parsing throw INV-001 — add a
-  rule there, in the same PR.
-- `open_weight` is inferred via `isOpenWeightModel` prefixes (same list as
-  above).
-- `effort` is not on `ModelEntry`; it is baked into the entry id
-  `provider:model:harness:effort`. When the site re-runs a model at a new
-  effort, the id changes — assert the change via the id in tests.
-- SWE↔AI matching: `modelMatchKey` lowercases, strips `(...)` suffixes and
-  the word `preview`. Every SWE model MUST have a matching `ai.json` row
-  (regression test in `data.test.ts`); SWE-only models are merged into the
-  main table as not-open-weight so the charts propagate deselection.
-  Adding a SWE run for a model with no AI row means adding that AI row too.
 
 ## Update procedures
 
 Add a model:
 
-1. Run `go run ./tools/benchtool aa-model <slug>` for the score, provider,
-   open-weights status, and release date; confirm the variant matches the
-   naming convention.
+1. Run `go run . aa-model <slug>` (from `tools/benchtool/`) for the score,
+   provider, open-weights status, and release date; confirm the variant
+   matches the naming convention.
 2. Insert the row with
-   `go run ./tools/benchtool ai-add "<model>" <score> "<provider>" [--open-weight] [--color=#hex] --released=<YYYY-MM-DD>`.
+   `go run . ai-add "<model>" <score> "<provider>" [--open-weight] [--color=#hex] --released=<YYYY-MM-DD>`.
    The tool keeps score-descending order, rejects duplicates, and applies
    the provider palette automatically (`--color` only for providers missing
    from the palette). Every row must carry its verified release date
@@ -117,38 +85,24 @@ Add a model:
    through the UI and checks every JSON row appears in its listing, and
    `data.test.ts` holds only cross-file invariants (unique names, score
    order, color presence, release dates populated).
-4. If the model also has a SWE run (`benchtool swe-list`), add that row with
-   `go run ./tools/benchtool swe-add "<model>" <harness> <effort> <tasteful> <basic> <steps> <tokens>`
-   (contract above; the tool inserts tasteful-descending and formats rates
-   with one decimal).
 
 Refresh scores for a new Intelligence Index version:
 
 1. Fetch the leaderboard (Status: All) and the version article.
 2. Build an old → new table of every changed score for the PR body.
 3. For leaderboard-missing models: check Status first, then ask the user
-   keep-vs-remove for each — never silently delete rows that SWE or news
-   still reference.
+   keep-vs-remove for each — never silently delete rows that
+   `hardware.json` or news still reference.
 4. Update the footer article URL in `App.tsx` (`sources[0]` only) and the
    version mention in `architecture.md`.
 
-Sync Senior SWE Bench:
-
-1. Fetch the agents page with the no_cheating filter.
-2. Update changed rows in place (tasteful first, basic second; watch for
-   effort changes that alter the id), append new runs, re-sort by tasteful.
-3. Decide dropped runs with the user; default is to keep at last values.
-4. Update the SWE assertions and entry count in `data.test.ts`.
-
 ## Validation and PR workflow
 
-- Red/Green TDD: update the `data.test.ts` assertions alongside the data
-  (per-model scores, SWE values and count, SWE↔AI matching).
-- From `app/`, run `npm test` and `npm run build`. No task is complete
-  with failing tests.
-- `architecture.md` documents data conventions (index version tracked,
-  retained SWE models); update it when conventions change — the kernel
-  requires double-checking it.
+- From `app/`, run `npm test` (typecheck + vitest) and `npm run build`.
+  No task is complete with failing tests.
+- `architecture.md` documents data conventions (index version tracked);
+  update it when conventions change — the kernel requires
+  double-checking it.
 - Branch off the latest `main`, commit with a short lowercase prefix
   matching repo history (`feat:`, `tweak:`, `fix:`, `data:`), push, and
   open the PR with `gh pr create --base main`. Include the
@@ -159,7 +113,7 @@ Sync Senior SWE Bench:
   `git -c credential.helper='!gh auth git-credential' push`), and set a
   repo-local `user.name`/`user.email` if git has no identity.
 - The PR body lists sources used and an old → new table for every changed
-  score or solve rate, plus anything deliberately left unchanged.
+  score, plus anything deliberately left unchanged.
 
 ## Repo guardrails
 
