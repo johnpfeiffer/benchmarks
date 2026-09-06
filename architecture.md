@@ -77,7 +77,7 @@ rendered without a provider. The source site currently lists 18 runs;
 GPT-5.6 Luna, Inkling, Claude Sonnet 4.6) at their last published values.
 
 `data/ai.json` scores track the Artificial Analysis Intelligence Index
-(currently v4.1.1). Rows are authored sorted by score descending (ties keep
+(currently v4.2). Rows are authored sorted by score descending (ties keep
 file order; `benchtool ai-add` maintains this), and every row carries a
 verified `released` date sourced from the Artificial Analysis leaderboard
 (`benchtool aa-releases`).
@@ -90,14 +90,14 @@ All views are pure (props in, callbacks out, no business logic):
   the left by default), horizontally scrollable so labels stay readable,
   colored by the explicit `color` field each `ai.json` row carries, falling
   back to a provider/model-family lookup for SWE-only entries, with diagonal
-  x-axis labels. The lead chart embeds each bar's score inside the bar in
-  white bold text (MUI X `barLabel`, `barValues` prop) and embeds its
-  Artificial Analysis source credit as
-  a chip (linking to the AA homepage) in the upper-right of the chart frame and
-  uses only a small margin
-  below the x-axis allocation so the "Model" title sits close to the frame. The
+  x-axis labels. The lead chart shows each bar's score above the bar in small
+  secondary-colored text (MUI X `barLabel: 'value'` with
+  `barLabelPlacement: 'outside'`, gated by the `barValues` prop), credits the
+  source with a plain "Source" link beside the title (linking to the AA
+  homepage), and starts the y-axis near the lowest score to cut empty space
+  (`yMin`). The
   lower SWE comparison charts use fit-to-width mode with skinnier bars (and no
-  in-bar labels) to avoid
+  bar labels) to avoid
   horizontal chart scrollbars.
 - `ModelTable` - collapsible (Accordion, expanded by default) sortable table;
   headers `Provider`, `Released`, `Model Name`, `Intelligence`,

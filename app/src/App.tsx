@@ -127,7 +127,7 @@ function DashboardPage() {
   )
 
   const sources: DataSourceCredit[] = [
-    { label: 'Artificial Analysis', href: 'https://artificialanalysis.ai/articles/artificial-analysis-intelligence-index-v4-1-1' },
+    { label: 'Artificial Analysis', href: 'https://artificialanalysis.ai/articles/artificial-analysis-intelligence-index-v4-2' },
     { label: 'Senior SWE Bench', href: 'https://senior-swe-bench.snorkel.ai/' },
     { label: 'HuggingFace and Unsloth', href: 'https://huggingface.co/unsloth' },
     { label: 'Wikipedia Hopper (microarchitecture)', href: 'https://en.wikipedia.org/wiki/Hopper_(microarchitecture)' },
@@ -144,7 +144,7 @@ function DashboardPage() {
     { label: 'Inferbase B200 SXM', href: 'https://inferbase.ai/gpu-catalog/gpu/nvidia-b200-sxm' },
   ]
   // The lead chart's source chip keeps linking to the AA homepage; only the
-  // footer credit (sources[0]) links to the Intelligence Index v4.1.1 article.
+  // footer credit (sources[0]) links to the Intelligence Index v4.2 article.
   const intelligenceSource: DataSourceCredit = { label: 'Artificial Analysis', href: 'https://artificialanalysis.ai/' }
   const sweSource = sources[1]
   const hardwareSource = sources[2]
