@@ -1,4 +1,4 @@
-import { Box, Button, Container, Link, Typography } from '@mui/material'
+import { Box, Container, Link, Typography } from '@mui/material'
 import type { GpuEntry, HardwareEntry, MachineEntry, ModelEntry, NewsEntry, SortField, SortState } from '../models'
 import { IntelligenceBarChart } from './IntelligenceBarChart'
 import { ModelTable } from './ModelTable'
@@ -18,8 +18,6 @@ export interface DataSourceCredit {
 interface DashboardProps {
   entries: readonly ModelEntry[]
   intelligenceChartEntries: readonly ModelEntry[]
-  tastefulSweChartEntries: readonly ModelEntry[]
-  basicSweChartEntries: readonly ModelEntry[]
   sort: SortState
   selectedIds: ReadonlySet<string>
   onSortChange: (field: SortField) => void
@@ -29,7 +27,6 @@ interface DashboardProps {
   news: readonly NewsEntry[]
   hardware: readonly HardwareEntry[]
   hardwareSource: DataSourceCredit
-  sweSource: DataSourceCredit
   gpu: readonly GpuEntry[]
   gpuSources: readonly DataSourceCredit[]
   machines: readonly MachineEntry[]
@@ -47,8 +44,6 @@ interface DashboardProps {
 export function Dashboard({
   entries,
   intelligenceChartEntries,
-  tastefulSweChartEntries,
-  basicSweChartEntries,
   sort,
   selectedIds,
   onSortChange,
@@ -58,7 +53,6 @@ export function Dashboard({
   news,
   hardware,
   hardwareSource,
-  sweSource,
   gpu,
   gpuSources,
   machines,
@@ -118,61 +112,6 @@ export function Dashboard({
           openWeightsOnly={openWeightsOnly}
           onToggleOpenWeights={onToggleOpenWeights}
         />
-      </Box>
-
-      <Box component="section" aria-labelledby="swe-title" sx={{ mb: 5 }}>
-        <Box sx={{ display: 'flex', alignItems: 'center', gap: 1, mb: 1 }}>
-          <Typography id="swe-title" variant="h5" component="h2">
-            Senior SWE Bench
-          </Typography>
-          <Button
-            size="small"
-            variant={openWeightsOnly ? 'contained' : 'outlined'}
-            color={openWeightsOnly ? 'primary' : 'inherit'}
-            aria-pressed={openWeightsOnly}
-            onClick={onToggleOpenWeights}
-            sx={{ textTransform: 'none' }}
-          >
-            Open Weights
-          </Button>
-        </Box>
-        <Box
-          sx={{
-            display: 'grid',
-            gridTemplateColumns: { xs: '1fr', lg: 'minmax(0, 1fr) minmax(0, 1fr)' },
-            gap: 2,
-            alignItems: 'start',
-          }}
-        >
-          <IntelligenceBarChart
-            entries={basicSweChartEntries}
-            title="Basic Solve Rate"
-            scoreLabel="basic_solve_rate_pct"
-            fitWidth
-            source={sweSource}
-          />
-          <IntelligenceBarChart
-            entries={tastefulSweChartEntries}
-            title="Tasteful Solve Rate"
-            scoreLabel="tasteful_solve_rate_pct"
-            fitWidth
-            source={sweSource}
-          />
-        </Box>
-        <Typography
-          variant="body2"
-          sx={{ mt: 2, fontStyle: 'italic', color: 'text.secondary' }}
-        >
-          mini-swe-agent is minimal - a better harness like terminus or pi will
-          perform better.{' '}
-          <Link
-            href="https://blog.john-pfeiffer.com/reproducing-a-coding-benchmark-with-harbor-and-terminal-bench-21/"
-            target="_blank"
-            rel="noopener noreferrer"
-          >
-            Source
-          </Link>
-        </Typography>
       </Box>
 
       <Box component="section" aria-labelledby="hardware-title" sx={{ mb: 5 }}>

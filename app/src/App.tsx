@@ -5,13 +5,10 @@ import { theme } from './theme'
 import {
   parseModelEntries,
   parseNewsEntries,
-  parseSweEntries,
   parseHardwareEntries,
   parseGpuEntries,
   parseMachineEntries,
-  mergeSweMetrics,
   mergeHardwareIntelligence,
-  modelMatchKey,
   sortModels,
   nextSortState,
   openWeightIds,
@@ -22,7 +19,6 @@ import {
 } from './models'
 import { Dashboard, type DataSourceCredit } from './views/Dashboard'
 import rawIntelligenceData from './data/ai.json'
-import rawSweData from './data/swe.json'
 import rawNewsData from './data/news.json'
 import rawHardwareData from './data/hardware.json'
 import rawGpuData from './data/gpu.json'
@@ -72,7 +68,6 @@ function DashboardPage() {
   // Parse + validate once. If the embedded data ever violates INV-001 this
   // throws loudly at module load rather than rendering partial state.
   const intelligenceEntries = useMemo(() => parseModelEntries(rawIntelligenceData), [])
-  const sweEntries = useMemo(() => parseSweEntries(rawSweData), [])
   const news = useMemo(() => parseNewsEntries(rawNewsData), [])
   const hardware = useMemo(
     () => mergeHardwareIntelligence(parseHardwareEntries(rawHardwareData), intelligenceEntries),
@@ -80,20 +75,16 @@ function DashboardPage() {
   )
   const gpu = useMemo(() => parseGpuEntries(rawGpuData), [])
   const machines = useMemo(() => parseMachineEntries(rawMachineData), [])
-  const tableEntries = useMemo(
-    () => mergeSweMetrics(intelligenceEntries, sweEntries),
-    [intelligenceEntries, sweEntries],
-  )
 
-  const table = useBenchmarkState(tableEntries)
+  const table = useBenchmarkState(intelligenceEntries)
   const [openWeightsOnly, setOpenWeightsOnly] = useState(false)
 
   // "Open Weights Only" is a selection preset: turning it on sets the selection
   // to exactly the open-weight models; turning it off re-selects every model.
   // Because the table grays deselected rows and every chart renders only the
   // selected models, the preset is reflected in the table and the charts.
-  const allIds = useMemo(() => new Set(tableEntries.map((entry) => entry.id)), [tableEntries])
-  const openIds = useMemo(() => openWeightIds(tableEntries), [tableEntries])
+  const allIds = useMemo(() => new Set(intelligenceEntries.map((entry) => entry.id)), [intelligenceEntries])
+  const openIds = useMemo(() => openWeightIds(intelligenceEntries), [intelligenceEntries])
 
   const handleToggleOpenWeights = () => {
     if (openWeightsOnly) {
@@ -105,30 +96,8 @@ function DashboardPage() {
     }
   }
 
-  const deselectedModelKeys = useMemo(
-    () => new Set(tableEntries.filter((entry) => !table.selectedIds.has(entry.id)).map((entry) => modelMatchKey(entry.model))),
-    [tableEntries, table.selectedIds],
-  )
-  const selectedSweEntries = useMemo(
-    () => sweEntries.filter((entry) => !deselectedModelKeys.has(modelMatchKey(entry.model))),
-    [sweEntries, deselectedModelKeys],
-  )
-  const tastefulSweChartEntries = useMemo(() => sortModels(selectedSweEntries, DEFAULT_SORT), [selectedSweEntries])
-  const basicSweChartEntries = useMemo(
-    () => sortModels(
-      selectedSweEntries.map((entry) => ({
-        ...entry,
-        id: `${entry.id}:basic`,
-        score: entry.basic_solve_rate_pct ?? entry.score,
-      })),
-      DEFAULT_SORT,
-    ),
-    [selectedSweEntries],
-  )
-
   const sources: DataSourceCredit[] = [
     { label: 'Artificial Analysis', href: 'https://artificialanalysis.ai/articles/artificial-analysis-intelligence-index-v4-2' },
-    { label: 'Senior SWE Bench', href: 'https://senior-swe-bench.snorkel.ai/' },
     { label: 'HuggingFace and Unsloth', href: 'https://huggingface.co/unsloth' },
     { label: 'Wikipedia Hopper (microarchitecture)', href: 'https://en.wikipedia.org/wiki/Hopper_(microarchitecture)' },
     { label: 'NVIDIA Hopper Architecture', href: 'https://developer.nvidia.com/blog/nvidia-hopper-architecture-in-depth/' },
@@ -146,10 +115,9 @@ function DashboardPage() {
   // The lead chart's source chip keeps linking to the AA homepage; only the
   // footer credit (sources[0]) links to the Intelligence Index v4.2 article.
   const intelligenceSource: DataSourceCredit = { label: 'Artificial Analysis', href: 'https://artificialanalysis.ai/' }
-  const sweSource = sources[1]
-  const hardwareSource = sources[2]
-  const gpuSources: DataSourceCredit[] = sources.slice(3)
-  const footerSources: DataSourceCredit[] = sources.slice(0, 3)
+  const hardwareSource = sources[1]
+  const gpuSources: DataSourceCredit[] = sources.slice(2)
+  const footerSources: DataSourceCredit[] = sources.slice(0, 2)
   const machineSources: DataSourceCredit[] = [
     { label: 'Daring Fireball: Mac configurations and pricing', href: 'https://daringfireball.net/2026/08/configurations_and_pricing_for_new_mac_minis_and_mac_studios' },
     { label: 'NVIDIA DGX Spark', href: 'https://www.nvidia.com/en-us/products/workstations/dgx-spark/' },
@@ -160,8 +128,6 @@ function DashboardPage() {
     <Dashboard
       entries={table.sorted}
       intelligenceChartEntries={table.chartEntries}
-      tastefulSweChartEntries={tastefulSweChartEntries}
-      basicSweChartEntries={basicSweChartEntries}
       sort={table.sort}
       selectedIds={table.selectedIds}
       onSortChange={table.handleSortChange}
@@ -171,7 +137,6 @@ function DashboardPage() {
       news={news}
       hardware={hardware}
       hardwareSource={hardwareSource}
-      sweSource={sweSource}
       gpu={gpu}
       gpuSources={gpuSources}
       machines={machines}

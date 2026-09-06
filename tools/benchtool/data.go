@@ -107,11 +107,11 @@ func cmdNewsAdd(rawURL, date string) error {
 // --- ai.json ---
 
 type aiRow struct {
-	Model      string  `json:"model"`
-	Score      int     `json:"intelligence_score"`
-	Provider   string  `json:"provider"`
-	OpenWeight bool    `json:"open_weight"`
-	Color      string  `json:"color"`
+	Model      string `json:"model"`
+	Score      int    `json:"intelligence_score"`
+	Provider   string `json:"provider"`
+	OpenWeight bool   `json:"open_weight"`
+	Color      string `json:"color"`
 	// Released is the model's release date (YYYY-MM-DD); nil renders null
 	// for models whose date is unknown or unverified.
 	Released *string `json:"released"`
@@ -239,76 +239,6 @@ func cmdAISetReleased(model, date string) error {
 		}
 	}
 	return fmt.Errorf("model %q not found in ai.json", model)
-}
-
-// --- swe.json ---
-
-type sweRow struct {
-	Model    string  `json:"model"`
-	Harness  string  `json:"harness"`
-	Effort   string  `json:"effort"`
-	Tasteful float64 `json:"tasteful_solve_rate_pct"`
-	Basic    float64 `json:"basic_solve_rate_pct"`
-	Steps    int     `json:"avg_steps"`
-	Tokens   string  `json:"avg_tokens"`
-}
-
-// sweRate formats rates the way swe.json carries them: always one decimal
-// ("34.7", "0.0").
-func sweRate(v float64) string {
-	return strconv.FormatFloat(v, 'f', 1, 64)
-}
-
-func renderSweRow(r sweRow) string {
-	return fmt.Sprintf(`{"model": %s, "harness": %s, "effort": %s, "tasteful_solve_rate_pct": %s, "basic_solve_rate_pct": %s, "avg_steps": %d, "avg_tokens": %s}`,
-		jsonString(r.Model), jsonString(r.Harness), jsonString(r.Effort), sweRate(r.Tasteful), sweRate(r.Basic), r.Steps, jsonString(r.Tokens))
-}
-
-func cmdSweAdd(args []string) error {
-	row := sweRow{Model: args[0], Harness: args[1], Effort: args[2], Tokens: args[6]}
-	var err error
-	if row.Tasteful, err = strconv.ParseFloat(args[3], 64); err != nil {
-		return fmt.Errorf("tasteful solve rate %q is not numeric", args[3])
-	}
-	if row.Basic, err = strconv.ParseFloat(args[4], 64); err != nil {
-		return fmt.Errorf("basic solve rate %q is not numeric", args[4])
-	}
-	// avg_steps is an integer on the site; avg_tokens is the string column.
-	if row.Steps, err = strconv.Atoi(args[5]); err != nil {
-		return fmt.Errorf("avg_steps %q is not an integer", args[5])
-	}
-	if strings.TrimSpace(row.Model) == "" {
-		return fmt.Errorf("model must be non-empty")
-	}
-
-	dir, err := dataDir()
-	if err != nil {
-		return err
-	}
-	path := filepath.Join(dir, "swe.json")
-	var rows []sweRow
-	if err := readJSON(path, &rows); err != nil {
-		return err
-	}
-	for _, r := range rows {
-		if r.Model == row.Model {
-			return fmt.Errorf("duplicate: %q already in swe.json", row.Model)
-		}
-	}
-	// Insert before the first lower tasteful rate so ties keep file order.
-	at := len(rows)
-	for i, r := range rows {
-		if r.Tasteful < row.Tasteful {
-			at = i
-			break
-		}
-	}
-	rows = append(rows[:at], append([]sweRow{row}, rows[at:]...)...)
-	if err := writeSingleLineJSON(path, renderSweRow, rows); err != nil {
-		return err
-	}
-	fmt.Printf("swe.json: inserted %q at position %d, now %d entries\n", row.Model, at+1, len(rows))
-	return nil
 }
 
 // writeSingleLineJSON rewrites a data file in the repo's one-object-per-line

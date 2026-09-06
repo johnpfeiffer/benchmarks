@@ -1,6 +1,6 @@
 import { describe, it, expect } from 'vitest'
-import { parseModelEntries, parseSweEntries, parseMachineEntries, inferProviderFromModel, isOpenWeightModel, InvariantError } from '../parse'
-import type { RawMachineEntry, RawModelEntry, RawSweEntry } from '../types'
+import { parseModelEntries, parseMachineEntries, InvariantError } from '../parse'
+import type { RawMachineEntry, RawModelEntry } from '../types'
 
 const valid: RawModelEntry[] = [
   { model: 'Alpha', intelligence_score: 60, provider: 'Anthropic', open_weight: true },
@@ -121,102 +121,6 @@ describe('parseModelEntries', () => {
     const input = [...valid]
     parseModelEntries(input)
     expect(input).toEqual(valid)
-  })
-})
-
-describe('parseSweEntries', () => {
-  const validSwe: RawSweEntry[] = [
-    {
-      model: 'Claude Fable 5',
-      harness: 'Mini-SWE-Agent',
-      effort: 'max',
-      tasteful_solve_rate_pct: 29.1,
-      basic_solve_rate_pct: 46.5,
-      avg_steps: 159,
-      avg_tokens: '290.2K',
-    },
-    {
-      model: 'GPT-5.6 Sol',
-      harness: 'Mini-SWE-Agent',
-      effort: 'xhigh',
-      tasteful_solve_rate_pct: 24.4,
-      basic_solve_rate_pct: 54.7,
-      avg_steps: 49,
-      avg_tokens: '31.1K',
-    },
-  ]
-
-  it('normalizes SWE rows using tasteful solve rate as score', () => {
-    const out = parseSweEntries(validSwe)
-    expect(out[0]).toMatchObject({
-      id: 'anthropic:claude-fable-5:mini-swe-agent:max',
-      model: 'Claude Fable 5',
-      score: 29.1,
-      provider: 'Anthropic',
-      tasteful_solve_rate_pct: 29.1,
-      basic_solve_rate_pct: 46.5,
-      avg_steps: 159,
-      avg_tokens: '290.2K',
-    })
-  })
-
-  it('derives providers from known model families', () => {
-    expect(inferProviderFromModel('Claude Opus 4.8')).toBe('Anthropic')
-    expect(inferProviderFromModel('GPT-5.6 Sol')).toBe('OpenAI')
-    expect(inferProviderFromModel('Grok 4.5')).toBe('xAI')
-    expect(inferProviderFromModel('GLM-5.2')).toBe('Z AI')
-    expect(inferProviderFromModel('Kimi K2.6')).toBe('Moonshot AI')
-    expect(inferProviderFromModel('Gemini 3.5 Flash')).toBe('Google')
-  })
-
-  it('rejects unknown SWE model families as INV-001 violations', () => {
-    const bad = [{ ...validSwe[0], model: 'Mystery Model' }]
-    expect(() => parseSweEntries(bad)).toThrow(InvariantError)
-    try {
-      parseSweEntries(bad)
-    } catch (e) {
-      expect((e as InvariantError).invariant).toBe('INV-001')
-    }
-  })
-
-  it('infers open_weight for SWE rows from the model family', () => {
-    const out = parseSweEntries([
-      { ...validSwe[0], model: 'Kimi K2.6' },
-      { ...validSwe[1], model: 'GLM-5.2' },
-      { ...validSwe[0], model: 'Claude Opus 4.8' },
-    ])
-    expect(out[0].open_weight).toBe(true)
-    expect(out[1].open_weight).toBe(true)
-    expect(out[2].open_weight).toBe(false)
-  })
-})
-
-describe('isOpenWeightModel', () => {
-  // Table-driven: each model family the user listed as open-weight.
-  const openWeightCases: Array<{ name: string; expected: boolean }> = [
-    { name: 'Kimi K2.6', expected: true },
-    { name: 'MiniMax-M3', expected: true },
-    { name: 'DeepSeek V4 Pro (max)', expected: true },
-    { name: 'Nemotron 3 Ultra', expected: true },
-    { name: 'Qwen3.6 27B', expected: true },
-    { name: 'GLM-5.2 (max)', expected: true },
-    { name: 'GLM-4.7', expected: true },
-    { name: 'Mistral Medium 3.5', expected: true },
-    { name: 'Gemma 4 31B', expected: true },
-    { name: 'gpt-oss-120b (high)', expected: true },
-    { name: 'Claude Fable 5 (with fallback)', expected: false },
-    { name: 'GPT-5.6 Sol (max)', expected: false },
-    { name: 'Grok 4.5 (high)', expected: false },
-    { name: 'Gemini 3.5 Flash', expected: false },
-  ]
-
-  it.each(openWeightCases)('$name -> open_weight $expected', ({ name, expected }) => {
-    expect(isOpenWeightModel(name)).toBe(expected)
-  })
-
-  it('is case-insensitive', () => {
-    expect(isOpenWeightModel('kimi k2.6')).toBe(true)
-    expect(isOpenWeightModel('QWEN3.5 397B')).toBe(true)
   })
 })
 

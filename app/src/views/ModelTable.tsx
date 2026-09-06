@@ -36,10 +36,6 @@ const COLUMNS: Array<{ label: string; field: SortField; accessor: (e: ModelEntry
   { label: 'Released', field: 'released', accessor: (e) => e.released ?? undefined },
   { label: 'Model Name', field: 'model', accessor: (e) => e.model },
   { label: 'Intelligence', field: 'score', accessor: (e) => e.score },
-  { label: 'basic_solve_rate_pct', field: 'basic_solve_rate_pct', accessor: (e) => e.basic_solve_rate_pct },
-  { label: 'tasteful_solve_rate_pct', field: 'tasteful_solve_rate_pct', accessor: (e) => e.tasteful_solve_rate_pct },
-  { label: 'avg_steps', field: 'avg_steps', accessor: (e) => e.avg_steps },
-  { label: 'avg_tokens', field: 'avg_tokens', accessor: (e) => e.avg_tokens },
 ]
 
 /**

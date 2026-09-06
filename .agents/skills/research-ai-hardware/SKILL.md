@@ -56,7 +56,7 @@ Row shape: `{ "model", "date", "memory", "memory_type",
   renders as the "Sources:" line under the GPU table. Add new links
   there and dedupe (a past PR existed just to dedupe these); the page
   footer intentionally keeps only the non-GPU sources (Artificial
-  Analysis, Senior SWE Bench, HuggingFace).
+  Analysis, HuggingFace).
 
 ## Validation and PR workflow
 

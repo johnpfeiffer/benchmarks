@@ -22,17 +22,6 @@ export interface RawModelEntry {
   released?: string | null
 }
 
-/** A single Senior SWE Bench row, as embedded in the JSON data. */
-export interface RawSweEntry {
-  model: string
-  harness: string
-  effort: string
-  tasteful_solve_rate_pct: number
-  basic_solve_rate_pct: number
-  avg_steps: number
-  avg_tokens: string
-}
-
 /** A news link as embedded in news.json. */
 export interface RawNewsEntry {
   url: string
@@ -141,12 +130,8 @@ export interface ModelEntry {
   open_weight: boolean
   /** Release date (YYYY-MM-DD), or null when unknown. Always present after parse. */
   released: string | null
-  /** Explicit bar color (hex). Set from ai.json; absent for SWE-only entries. */
+  /** Explicit bar color (hex). Set from ai.json. */
   color?: string
-  tasteful_solve_rate_pct?: number
-  basic_solve_rate_pct?: number
-  avg_steps?: number
-  avg_tokens?: string
 }
 
 /** Columns the dashboard table can sort by. */
@@ -155,10 +140,6 @@ export type SortField =
   | 'released'
   | 'model'
   | 'score'
-  | 'tasteful_solve_rate_pct'
-  | 'basic_solve_rate_pct'
-  | 'avg_steps'
-  | 'avg_tokens'
 
 /** Sort direction. */
 export type SortDirection = 'asc' | 'desc'

@@ -4,8 +4,8 @@ AI model benchmarks dashboard: visualizes, filters, and sorts embedded model
 benchmark datasets, a dated news feed, HuggingFace estimated hardware sizes
 for 1-bit and 2-bit dynamic quants, NVIDIA GPU specifications, and
 unified-memory local-AI machines (Mac, DGX Spark, Strix Halo). It
-currently renders Artificial Analysis scores and Senior SWE Bench
-tasteful/basic solve rates. Models can be toggled in/out of the charts
+currently renders Artificial Analysis scores. Models can be toggled
+in/out of the chart
 individually, or restricted to open-weight models via the "Open Weights"
 preset. Derived from the immutable
 [`/KERNEL/`](./KERNEL/); if anything here conflicts with the kernel, the kernel
@@ -20,11 +20,10 @@ wins.
 - **Go** (`tools/benchtool/`) for the benchmark-lookup CLI used by the
   `.agents/skills/` workflows: fetches source pages and prints just the
   fields the agent needs (AA model score/provider/open-weights/release,
-  every leaderboard variant's release date via `aa-releases`, SWE
-  leaderboard as TSV, news-page date signals) so whole pages stay out of
+  every leaderboard variant's release date via `aa-releases`, news-page
+  date signals) so whole pages stay out of
   context, and inserts rows into the data JSON with the repo's formatting,
-  ordering, and dedupe conventions (`news-add`, `ai-add`, `ai-set-released`,
-  `swe-add`)
+  ordering, and dedupe conventions (`news-add`, `ai-add`, `ai-set-released`)
 
 ## Layering (DDD / MVC)
 
@@ -34,14 +33,12 @@ the views. The `App` component is the controller (owns state and data flow).
 ```mermaid
 flowchart TD
     AIJSON["data/ai.json<br/>(embedded)"] --> App["App.tsx<br/>(controller)"]
-    SWEJSON["data/swe.json<br/>(embedded)"] --> App
     NEWSJSON["data/news.json<br/>(embedded)"] --> App
     HWJSON["data/hardware.json<br/>(embedded)"] --> App
     GPUJSON["data/gpu.json<br/>(embedded)"] --> App
     MACHINEJSON["data/machines.json<br/>(embedded)"] --> App
     App -->|parse + validate| Models["models/<br/>parse, sort, types"]
     Models -->|INV-001 gate| Validated["ModelEntry[] per source"]
-    Models --> Merge["mergeSweMetrics<br/>(SWE columns on AI rows)"]
     App -->|sorted table rows + selected ids| Dashboard["views/Dashboard"]
     Dashboard --> ChartA["IntelligenceBarChart<br/>(Artificial Analysis)"]
     Dashboard --> News["NewsSection<br/>(expanded + collapsible)"]
@@ -53,8 +50,6 @@ flowchart TD
     ParetoMath["models/pareto<br/>(frontier and target predicates)"] --> InteractivePareto
     ParetoPNG["public/images/artificial-analysis-pareto-frontier.png"] -->|"copied unchanged by Vite; app-relative URL"| Pareto
     Dashboard --> Table["ModelTable<br/>(collapsible + sortable + selectable)"]
-    Dashboard --> ChartB["IntelligenceBarChart<br/>(SWE tasteful solve rate)"]
-    Dashboard --> ChartC["IntelligenceBarChart<br/>(SWE basic solve rate)"]
     Dashboard --> HWChart["HardwareChart<br/>(1-bit + 2-bit quant sizes)"]
     Dashboard --> HWTable["HardwareTable<br/>(sortable hardware details)"]
     Dashboard --> GPUTable["GpuTable<br/>(collapsible + sortable GPU specs)"]
@@ -68,18 +63,11 @@ flowchart TD
 | File | Responsibility |
 | --- | --- |
 | `types.ts` | `ModelEntry`, `NewsEntry`, `HardwareEntry`, `GpuEntry`, `MachineEntry`, their raw JSON shapes, and benchmark sort types; `ModelEntry.open_weight` is always present after parse; `ModelEntry.color` is the explicit bar color carried from `ai.json`; `ModelEntry.released` is the release date (`YYYY-MM-DD` or null) |
-| `parse.ts` | `parseModelEntries`, `parseSweEntries`, `parseNewsEntries`, `parseHardwareEntries`, `parseGpuEntries`, `parseMachineEntries`, provider/open-weight inference, and `InvariantError`; upholds **INV-001** (every model has a provider) and structural guards at the single gate. News URLs and ISO dates are validated, copied, and sorted newest first before reaching the view; model release dates share the same strict calendar-date guard (`MODEL-RELEASED`). Hardware entries are validated (provider, model, total_params, url required; 1-bit and 2-bit quant sizes nullable). GPU entries are validated (model, date required; memory, memory_type, memory_bandwidth_gbs, fp16_tflops nullable). Machine entries are validated (machine, chip, vram_gb, url required; memory_bandwidth_gbs, price_usd nullable). SWE provider rules cover Claude, GPT, Grok, GLM, Kimi, Gemini, MiniMax, and Inkling |
-| `merge.ts` | `mergeSweMetrics`, `modelMatchKey`; adds optional SWE table columns to matching Artificial Analysis rows. `modelMatchKey` ignores parenthetical effort suffixes and "preview" |
+| `parse.ts` | `parseModelEntries`, `parseNewsEntries`, `parseHardwareEntries`, `parseGpuEntries`, `parseMachineEntries`, and `InvariantError`; upholds **INV-001** (every model has a provider) and structural guards at the single gate. News URLs and ISO dates are validated, copied, and sorted newest first before reaching the view; model release dates share the same strict calendar-date guard (`MODEL-RELEASED`). Hardware entries are validated (provider, model, total_params, url required; 1-bit and 2-bit quant sizes nullable). GPU entries are validated (model, date required; memory, memory_type, memory_bandwidth_gbs, fp16_tflops nullable). Machine entries are validated (machine, chip, vram_gb, url required; memory_bandwidth_gbs, price_usd nullable) |
+| `merge.ts` | `mergeHardwareIntelligence`, `modelMatchKey`; attaches each hardware row's intelligence score via a normalized model-name match with a unique-prefix fallback. `modelMatchKey` ignores parenthetical effort suffixes and "preview" |
 | `sort.ts` | `sortModels`, `nextSortState`, `DEFAULT_SORT` (score desc) |
 | `filter.ts` | `openWeightIds`; the id set used by the "Open Weights" preset |
 | `index.ts` | Public re-exports |
-
-`data/swe.json` does not include provider fields, so `parseSweEntries` derives
-provider from known model-family prefixes (Claude, GPT, Grok, GLM, Kimi,
-Gemini). Unknown families fail as **INV-001** violations instead of being
-rendered without a provider. The source site currently lists 18 runs;
-`swe.json` additionally retains four models no longer listed (Kimi K2.6,
-GPT-5.6 Luna, Inkling, Claude Sonnet 4.6) at their last published values.
 
 `data/ai.json` scores track the Artificial Analysis Intelligence Index
 (currently v4.2). Rows are authored sorted by score descending (ties keep
@@ -94,33 +82,28 @@ All views are pure (props in, callbacks out, no business logic):
 - `IntelligenceBarChart` - vertical bars sorted by the controller (highest on
   the left by default), horizontally scrollable so labels stay readable,
   colored by the explicit `color` field each `ai.json` row carries, falling
-  back to a provider/model-family lookup for SWE-only entries, with diagonal
-  x-axis labels. The lead chart shows each bar's score above the bar in small
+  back to a provider/model-family lookup when a row carries no color, with
+  diagonal
+  x-axis labels. The chart shows each bar's score above the bar in small
   secondary-colored text (MUI X `barLabel: 'value'` with
-  `barLabelPlacement: 'outside'`, gated by the `barValues` prop), credits the
-  source with a plain "Source" link beside the title (linking to the AA
-  homepage), and starts the y-axis near the lowest score to cut empty space
-  (`yMin`). The
-  lower SWE comparison charts use fit-to-width mode with skinnier bars (and no
-  bar labels) to avoid
-  horizontal chart scrollbars.
+  `barLabelPlacement: 'outside'`, gated by the `barValues` prop) and starts
+  the y-axis near the lowest score to cut empty space (`yMin`). The section
+  heading carries a plain "Source" link beside it (to the AA homepage).
 - `ModelTable` - collapsible (Accordion, expanded by default) sortable table;
-  headers `Provider`, `Released`, `Model Name`, `Intelligence`,
-  `basic_solve_rate_pct`,
-  `tasteful_solve_rate_pct`, `avg_steps`, and `avg_tokens`; click headers to
+  headers `Provider`, `Released`, `Model Name`, and `Intelligence`;
+  click headers to
   toggle asc/desc. The release date renders in italics between provider and
   model name, `*` when unknown; ISO dates sort chronologically and unknown
   dates sort last in both directions. The table scrolls horizontally on narrow
-  viewports. Missing
-  SWE values render as `*`. Model names are buttons; clicking toggles matching
-  model inclusion across all charts while the row remains visible when
+  viewports. Model names are buttons; clicking toggles the
+  model's inclusion in the chart while the row remains visible when
   deselected, with a gray background and faded text. An "Open Weights" toggle
   sits immediately to the right of the title in the accordion summary;
   clicking it does not toggle the accordion. Turning it on sets the selection
   to the open-weight models, turning it off re-selects every model.
 - `Footer` - credits the non-GPU data sources,
-  [Artificial Analysis](https://artificialanalysis.ai/articles/artificial-analysis-intelligence-index-v4-1-1),
-  [Senior SWE Bench](https://senior-swe-bench.snorkel.ai/), and
+  [Artificial Analysis](https://artificialanalysis.ai/articles/artificial-analysis-intelligence-index-v4-2)
+  and
   [HuggingFace](https://huggingface.co/unsloth), and links to the
   [GitHub repository](https://github.com/johnpfeiffer/benchmarks) with an inline
   GitHub SVG mark. GPU-specific source links are rendered uniquely below the
@@ -173,8 +156,8 @@ All views are pure (props in, callbacks out, no business logic):
   `UD-IQ2_XXS (GB)`, `UD-IQ2_M (GB)`; click headers to toggle asc/desc. Model
   names link to their HuggingFace model pages. Missing quants render as `*`.
   The `Intelligence` column is attached by the controller
-  (`mergeHardwareIntelligence`) via the same normalized model-name match as
-  the SWE merge, with a unique-prefix fallback for size-suffixed rows (e.g.
+  (`mergeHardwareIntelligence`) via the normalized `modelMatchKey`
+  model-name match, with a unique-prefix fallback for size-suffixed rows (e.g.
   "Nemotron 3 Ultra 550B"); models without an `ai.json` row render `*`.
   Default sort is total params descending (largest first). Sort is local
   `useState`/`useMemo` in the component. Total params are parsed to billions
@@ -194,9 +177,7 @@ All views are pure (props in, callbacks out, no business logic):
   Machine source links (Daring Fireball, NVIDIA, Framework) are rendered as
   plain links below the table.
 - `Dashboard` - layout composing the intelligence chart, collapsible enriched
-  details table, responsive side-by-side SWE comparison charts (Basic Solve
-  Rate on the left, Tasteful on the right, each with a Senior SWE Bench source
-  chip), an "Open Weights" toggle beside the SWE title, HuggingFace estimated
+  details table, HuggingFace estimated
   hardware chart and table ("Open Weight Hosting Sizes"), collapsible GPU
   specifications table with source links below, then a Local Hardware section
   ("Local AI Machines") with source links below, then footer. News sits
@@ -206,23 +187,14 @@ All views are pure (props in, callbacks out, no business logic):
 
 Parses embedded JSON once (`useMemo`), including validated newest-first news,
 HuggingFace hardware entries, GPU specification entries, and local machine
-entries, merges SWE metrics into the main
-Artificial Analysis table rows, holds the table `SortState` and selected model
+entries, holds the table `SortState` and selected model
 IDs for the intelligence chart, computes sorted/chart-visible entries, and
-forwards header clicks through `nextSortState`. Deselected table model names are
-converted to match keys and filtered out of the Artificial Analysis chart plus
-both SWE charts when corresponding SWE rows exist. The main table now includes
-the three SWE-only models (Claude Opus 4.7, GPT-5.4 (xhigh), Claude Sonnet 4.6)
-as not-open-weight rows, so every SWE model has an Artificial Analysis
-counterpart and the "Open Weights" preset propagates fully to the SWE
-charts. The SWE data covers 22 models from senior-swe-bench.snorkel.ai. The
+forwards header clicks through `nextSortState`. Deselected models are
+filtered out of the chart while their rows stay visible in the table. The
+"Open Weights"
 preset is a selection: on ->
 `replaceSelection(openWeightIds(...))`; off -> `replaceSelection(allIds)`, so the
-table graying/fading and every chart follow the selection. The SWE charts are
-rendered below the table from `swe.json` rows sorted by score descending:
-Basic Solve Rate on the left, Tasteful Solve Rate on the right, each with a
-source chip linking to Senior SWE Bench. An "Open Weights" toggle beside the
-SWE title mirrors the one in the Model Details table. Mounted at the router
+table graying/fading and the chart follow the selection. Mounted at the router
 index route (react-router retained).
 
 ## Invariants
@@ -251,16 +223,12 @@ journey
     Adjust cost and intelligence targets: 5: User
     Inspect model points and the calculated frontier: 5: User
     Paste a new snapshot or expand the historical image: 4: User
-    Read details table with SWE columns: 5: User
+    Read details table: 5: User
     See release dates beside model names: 4: User
-    Click a header, including SWE metrics: 5: User
+    Click a header to sort: 5: User
     Toggle asc/desc: 5: User
-    Click model button to remove from all matching charts: 5: User
+    Click model button to remove from the chart: 5: User
     Toggle "Open Weights" to restrict selection to open models: 5: User
-  section Explore SWE
-    See tasteful/basic charts side by side on desktop: 5: User
-    See charts reflow vertically on mobile: 5: User
-    Compare tasteful and basic solve rates: 5: User
   section Explore Hardware
     See 1-bit and 2-bit quant size chart: 4: User
     Sort hardware table by column: 4: User
@@ -289,8 +257,8 @@ journey
     domain logic — INV-001 and structural guards (including release-date
     validation), sorting, merges, news parsing.
   - **Data-integrity invariants** (`models/__tests__/data.test.ts`): only
-    properties the parser and UI cannot see — cross-file relationships (every
-    SWE model has an AI row; hardware↔AI name matching re-derived
+    properties the parser and UI cannot see — cross-file relationships
+    (hardware↔AI name matching re-derived
     independently), ordering and uniqueness conventions (ai.json score-desc,
     unique names, unique news URLs, machines VRAM-desc), and value-shape
     invariants (integer 0-100 scores, hex colors, populated past release
@@ -299,7 +267,7 @@ journey
     `Dashboard.test.tsx` + `IntelligenceBarChart.test.tsx`): the acceptance
     suite renders the real app with the real embedded JSON and asserts every
     row of every data file appears in its UI listing (models table incl.
-    italic release dates and merged SWE metrics, news feed, hardware, GPU,
+    italic release dates, news feed, hardware, GPU,
     local machines). Dashboard behavior tests (sort interactions, selection,
     toggles, collapse, credits) use small fixtures. The chart label test
     mocks `<BarChart>` and asserts props, because jsdom has no layout engine
@@ -313,5 +281,5 @@ journey
   HTML, temp-repo data writes; no network).
 
 Tests follow Red/Green TDD with concise table-driven cases for the domain
-(parse/INV-001, sorting, SWE metric merge) and high-value dashboard paths for
-rendering, sorting, filtering, placeholders, and credits.
+(parse/INV-001, sorting, hardware score merge) and high-value dashboard paths
+for rendering, sorting, filtering, placeholders, and credits.
