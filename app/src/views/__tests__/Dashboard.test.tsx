@@ -224,7 +224,7 @@ describe('Dashboard', () => {
     )
 
     // Accordion starts expanded and collapses on click
-    const header = within(paretoSection).getByRole('button', { name: /Pareto frontier/i })
+    const header = within(paretoSection).getByRole('button', { name: 'Pareto frontier' })
     expect(header).toHaveAttribute('aria-expanded', 'true')
     fireEvent.click(header)
     expect(header).toHaveAttribute('aria-expanded', 'false')

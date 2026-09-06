@@ -46,6 +46,11 @@ flowchart TD
     Dashboard --> ChartA["IntelligenceBarChart<br/>(Artificial Analysis)"]
     Dashboard --> News["NewsSection<br/>(expanded + collapsible)"]
     Dashboard --> Pareto["ParetoFrontierSection<br/>(expanded + collapsible)"]
+    ParetoJSON["public/data/pareto.json"] -->|"fetch at runtime"| ParetoController["controllers/useParetoDataset"]
+    ParetoController -->|"parseParetoDataset; INV-001"| ParetoData["Validated snapshot"]
+    ParetoData --> Pareto
+    Pareto --> InteractivePareto["ParetoChart<br/>(log cost, linear intelligence)"]
+    ParetoMath["models/pareto<br/>(frontier and target predicates)"] --> InteractivePareto
     ParetoPNG["public/images/artificial-analysis-pareto-frontier.png"] -->|"copied unchanged by Vite; app-relative URL"| Pareto
     Dashboard --> Table["ModelTable<br/>(collapsible + sortable + selectable)"]
     Dashboard --> ChartB["IntelligenceBarChart<br/>(SWE tasteful solve rate)"]
@@ -130,7 +135,22 @@ All views are pure (props in, callbacks out, no business logic):
   state.
 - `ParetoFrontierSection` - outlined accordion between the news and the model
   details table, expanded by default and user-collapsible, titled "Pareto
-  frontier". Renders a static captured snapshot of Artificial Analysis'
+  frontier". Loads `public/data/pareto.json` at runtime through
+  `controllers/useParetoDataset`. Ships explicitly labeled fictional sample
+  data until a real snapshot is supplied. `models/pareto.ts` validates provider
+  (INV-001), unique model variants, positive finite cost, intelligence 0–100,
+  snapshot date, benchmark version, and explicit sample status.
+  `ParetoChart` renders an SVG scatter plot with logarithmic USD cost, linear
+  intelligence, provider colors, optional labels, and hover/focus/tap details.
+  The green area uses strict `cost < X && intelligence > Y` thresholds. The
+  dotted frontier uses all points, independent of thresholds: another point
+  must have no higher cost and no lower intelligence, with at least one strict
+  improvement, to dominate a point. Identical tradeoffs remain on the frontier.
+  Pasted JSON is validated before replacing the current preview; invalid data
+  leaves the previous chart intact. Imports last until refresh. Reload restores
+  the published public JSON. The data is intentionally independent of `ai.json`
+  to avoid mixing index versions or effort variants. See [data format](docs/pareto-data.md).
+  A collapsed reference panel retains the static captured snapshot of Artificial Analysis'
   "Intelligence Index vs. Cost to Run" scatter chart (dotted Pareto line,
   provider-colored dots) from `public/images/artificial-analysis-pareto-frontier.png`.
   Vite copies it unchanged to `dist/images/`. The view uses the relative URL
@@ -227,8 +247,10 @@ journey
     Read Hand Picked News with visible dates and links: 4: User
     Toggle news date sort asc/desc: 3: User
     Collapse or expand Hand Picked News: 4: User
-    Load Pareto image from the app-relative public path: 4: System
-    View or collapse the Pareto frontier snapshot: 4: User
+    Load validated Pareto snapshot from public JSON: 4: System
+    Adjust cost and intelligence targets: 5: User
+    Inspect model points and the calculated frontier: 5: User
+    Paste a new snapshot or expand the historical image: 4: User
     Read details table with SWE columns: 5: User
     See release dates beside model names: 4: User
     Click a header, including SWE metrics: 5: User
@@ -281,11 +303,13 @@ journey
     mocks `<BarChart>` and asserts props, because jsdom has no layout engine
     and MUI X draws nothing there.
 - `npm run build` - `tsc -b` typecheck + Vite production build.
+- Pareto tests (`models/__tests__/pareto.test.ts` and
+  `views/__tests__/ParetoChart.test.tsx`) cover snapshot validation, dominance
+  and ties, strict target boundaries, keyboard details, runtime loading,
+  temporary JSON imports, and the historical-image fallback on load failure.
 - `go test ./tools/...` - benchtool extraction/insertion unit tests (fixture
   HTML, temp-repo data writes; no network).
 
 Tests follow Red/Green TDD with concise table-driven cases for the domain
 (parse/INV-001, sorting, SWE metric merge) and high-value dashboard paths for
 rendering, sorting, filtering, placeholders, and credits.
-
-

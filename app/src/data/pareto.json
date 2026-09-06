@@ -1,0 +1,17 @@
+{
+  "benchmark_version": "Illustrative sample — not benchmark measurements",
+  "date": "2026-09-06",
+  "sample": true,
+  "models": [
+    { "model": "Example Mini", "provider": "Example Labs A", "intelligence": 34, "cost_usd": 180, "color": "#34A853" },
+    { "model": "Example Flash", "provider": "Example Labs B", "intelligence": 46, "cost_usd": 240, "color": "#1c7ff8" },
+    { "model": "Example Open", "provider": "Example Labs C", "intelligence": 41, "cost_usd": 380, "color": "#cc785c" },
+    { "model": "Example Balanced", "provider": "Example Labs A", "intelligence": 48, "cost_usd": 700, "color": "#34A853" },
+    { "model": "Example Reasoner (low)", "provider": "Example Labs D", "intelligence": 51, "cost_usd": 900, "color": "#242424" },
+    { "model": "Example Fast", "provider": "Example Labs B", "intelligence": 47, "cost_usd": 1100, "color": "#1c7ff8" },
+    { "model": "Example Reasoner (high)", "provider": "Example Labs D", "intelligence": 54, "cost_usd": 2100, "color": "#242424" },
+    { "model": "Example Large", "provider": "Example Labs C", "intelligence": 52, "cost_usd": 3400, "color": "#cc785c" },
+    { "model": "Example Reasoner (max)", "provider": "Example Labs D", "intelligence": 56, "cost_usd": 4500, "color": "#242424" },
+    { "model": "Example Flagship", "provider": "Example Labs C", "intelligence": 58, "cost_usd": 10500, "color": "#cc785c" }
+  ]
+}
