@@ -30,7 +30,7 @@ function renderChart(barValues?: boolean) {
     </ThemeProvider>,
   )
   return lastBarChartProps.current as {
-    series: Array<{ barLabel?: string }>
+    series: Array<{ barLabel?: string; barLabelPlacement?: string }>
     sx?: Record<string, { fill?: string }>
   }
 }
