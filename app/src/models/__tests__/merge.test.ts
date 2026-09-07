@@ -19,10 +19,9 @@ describe('mergeHardwareIntelligence', () => {
     model,
     provider: 'X',
     total_params: '1B',
-    iq1_s_gb: null,
     iq1_m_gb: null,
-    iq2_xxs_gb: null,
-    iq2_m_gb: null,
+    q2_k_xl_gb: null,
+    q4_k_xl_gb: null,
     url: 'https://huggingface.co/unsloth/x',
   })
 

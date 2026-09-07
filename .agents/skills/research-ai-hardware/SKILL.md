@@ -1,6 +1,6 @@
 ---
 name: research-ai-hardware
-description: Research and update AI hardware data on the dashboard (app/src/data/hardware.json open-weight model quant sizes, app/src/data/gpu.json GPU specs). Use when asked to add or refresh a model's Unsloth GGUF 1-bit or 2-bit quant sizes, add a GPU, fix GPU specs such as memory, bandwidth, or dense FP16 TFLOPS, or vet and dedupe hardware data sources.
+description: Research and update AI hardware data on the dashboard (app/src/data/hardware.json open-weight model quant sizes, app/src/data/gpu.json GPU specs). Use when asked to add or refresh a model's Unsloth GGUF dynamic quant sizes (UD-IQ1_M, UD-Q2_K_XL, UD-Q4_K_XL), add a GPU, fix GPU specs such as memory, bandwidth, or dense FP16 TFLOPS, or vet and dedupe hardware data sources.
 ---
 
 # Research AI Hardware
@@ -12,16 +12,18 @@ table).
 
 ## hardware.json — Unsloth GGUF quant sizes
 
-Row shape: `{ "model", "provider", "total_params", "iq1_s_gb",
-"iq1_m_gb", "iq2_xxs_gb", "iq2_m_gb", "url" }`.
+Row shape: `{ "model", "provider", "total_params", "iq1_m_gb",
+"q2_k_xl_gb", "q4_k_xl_gb", "url" }`.
 
 - Source of truth: the Unsloth GGUF repos on Hugging Face,
   `https://huggingface.co/unsloth/<Model>-GGUF` (the org root
   `https://huggingface.co/unsloth` is the section's credited source).
-- The four quant columns are the GGUF file sizes in GB for Unsloth's
-  dynamic quants: `UD-IQ1_S`, `UD-IQ1_M`, `UD-IQ2_XXS`, `UD-IQ2_M`. Read
-  them from the repo's file list; the UI calls them "estimated sizes".
-  Use SI GB with 1–2 decimals, matching existing rows (74.8, 594, 8.53).
+- The three quant columns are the GGUF file sizes in GB for Unsloth's
+  dynamic quants: `UD-IQ1_M`, `UD-Q2_K_XL`, `UD-Q4_K_XL`. Read
+  them from the repo's file list (per-quant directories or flat
+  `<model>-<quant>.gguf` files; sum the shards); the UI calls them
+  "estimated sizes".
+  Use SI GB with 1–2 decimals, matching existing rows (78.8, 861, 9.83).
 - `null` means that quant is not published for the model — legitimate and
   common; never invent a size.
 - `total_params` is a human string (`"264B"`, `"2.8T"`); `provider` and
@@ -60,9 +62,10 @@ Row shape: `{ "model", "date", "memory", "memory_type",
 
 ## Validation and PR workflow
 
-- `data.test.ts` anchors both datasets: `hardware` has 6 rows, `gpu` has
-  14, plus per-row spot values. Update the assertions and counts in the
-  same commit as the data (Red/Green TDD).
+- `data.test.ts` holds the cross-file invariants (hardware↔AI name
+  matching, ordering, uniqueness); `acceptance.test.tsx` asserts every
+  data row renders in its UI listing. Update both in the same commit as
+  the data (Red/Green TDD).
 - From `app/`, run `npm test` and `npm run build`. No task is complete
   with failing tests.
 - Update `architecture.md` only if structure or behavior changed;

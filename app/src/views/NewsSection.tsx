@@ -1,6 +1,6 @@
 import { useMemo, useState } from 'react'
 import ExpandMoreIcon from '@mui/icons-material/ExpandMore'
-import { Accordion, AccordionDetails, AccordionSummary, Box, Link, SvgIcon, TableSortLabel, Typography } from '@mui/material'
+import { Box, ButtonBase, Collapse, Link, SvgIcon, TableSortLabel, Typography } from '@mui/material'
 import type { NewsEntry } from '../models'
 
 interface NewsSectionProps {
@@ -29,14 +29,46 @@ function TomatoIcon(props: { fontSize?: 'small' | 'medium' | 'large' }) {
 
 type NewsSortDirection = 'asc' | 'desc'
 
+/** One dated news link row, shared by the preview and the expanded list. */
+function NewsRow({ entry, last }: { entry: NewsEntry; last: boolean }) {
+  return (
+    <Box
+      component="li"
+      sx={{ display: 'flex', gap: 1.5, mb: last ? 0 : 0.75 }}
+    >
+      <Typography
+        variant="body2"
+        sx={{ color: 'text.disabled', flexShrink: 0, minWidth: '5.5em' }}
+      >
+        {entry.date}
+      </Typography>
+      <Link
+        href={entry.url}
+        title={entry.date}
+        target="_blank"
+        rel="noopener noreferrer"
+        sx={{ overflowWrap: 'anywhere' }}
+      >
+        {entry.url}
+      </Link>
+    </Box>
+  )
+}
+
 /**
- * Collapsible list of benchmark news links, expanded on first render.
+ * Collapsible list of benchmark news links, collapsed on first render.
  *
- * Each row shows the publication date in an unobtrusive light-gray left column
- * and the URL as a link. The date column header is a subtle TableSortLabel that
- * toggles between descending (default, newest first) and ascending.
+ * The top 3 entries of the current sort stay visible below the header;
+ * clicking the header expands the section to reveal the remaining entries.
+ * (MUI Accordion would swallow every child after the summary into the
+ * collapsed region, so the disclosure is built from ButtonBase + Collapse to
+ * keep the preview outside it.) Each row shows the publication date in an
+ * unobtrusive light-gray left column and the URL as a link. The date column
+ * header is a subtle TableSortLabel that toggles between descending (default,
+ * newest first) and ascending.
  */
 export function NewsSection({ entries }: NewsSectionProps) {
+  const [expanded, setExpanded] = useState(false)
   const [sortDirection, setSortDirection] = useState<NewsSortDirection>('desc')
 
   const sortedEntries = useMemo(() => {
@@ -44,65 +76,77 @@ export function NewsSection({ entries }: NewsSectionProps) {
     return sortDirection === 'asc' ? ascending : ascending.reverse()
   }, [entries, sortDirection])
 
+  const previewEntries = sortedEntries.slice(0, 3)
+  const restEntries = sortedEntries.slice(3)
+
+  const handleToggle = () => setExpanded((current) => !current)
   const handleSortToggle = () => {
     setSortDirection((current) => (current === 'desc' ? 'asc' : 'desc'))
   }
 
   return (
     <Box component="section" aria-labelledby="news-title">
-      <Accordion defaultExpanded disableGutters variant="outlined">
-        <AccordionSummary expandIcon={<ExpandMoreIcon />} aria-controls="news-content" id="news-header">
-          <Box sx={{ display: 'flex', alignItems: 'center', gap: 0.75 }}>
+      <Box sx={{ border: '1px solid', borderColor: 'divider', borderRadius: 1 }}>
+        <Typography variant="h6" component="h3" id="news-title" sx={{ m: 0 }}>
+          <ButtonBase
+            onClick={handleToggle}
+            aria-expanded={expanded}
+            aria-controls="news-content"
+            sx={{
+              display: 'flex',
+              alignItems: 'center',
+              gap: 0.75,
+              width: '100%',
+              px: 2,
+              py: 1,
+              justifyContent: 'flex-start',
+              fontWeight: 'inherit',
+              fontSize: 'inherit',
+            }}
+          >
             <TomatoIcon fontSize="small" />
-            <Typography id="news-title" variant="h6" component="span">
+            <Box component="span" sx={{ flexGrow: 1, textAlign: 'left' }}>
               Hand Picked News
-            </Typography>
-          </Box>
-        </AccordionSummary>
-        <AccordionDetails id="news-content" sx={{ pt: 0 }}>
-          <Box sx={{ mb: 1, pl: 0 }}>
-            <TableSortLabel
-              active
-              direction={sortDirection}
-              onClick={handleSortToggle}
-              aria-label="Sort news by date"
+            </Box>
+            <ExpandMoreIcon
               sx={{
-                '& .MuiTableSortLabel-icon': { opacity: 0.4 },
-                '&:hover .MuiTableSortLabel-icon': { opacity: 0.7 },
+                transform: expanded ? 'rotate(180deg)' : 'rotate(0deg)',
+                transition: 'transform 150ms',
               }}
-            >
-              <Typography variant="caption" color="text.disabled">
-                Date
-              </Typography>
-            </TableSortLabel>
-          </Box>
-          <Box component="ul" sx={{ m: 0, p: 0, listStyle: 'none' }}>
-            {sortedEntries.map((entry) => (
-              <Box
-                component="li"
-                key={`${entry.date}:${entry.url}`}
-                sx={{ display: 'flex', gap: 1.5, mb: 0.75, '&:last-child': { mb: 0 } }}
+            />
+          </ButtonBase>
+        </Typography>
+        <Box component="ul" sx={{ m: 0, px: 2, pb: 1, pt: 0, listStyle: 'none' }}>
+          {previewEntries.map((entry, index) => (
+            <NewsRow key={`${entry.date}:${entry.url}`} entry={entry} last={index === previewEntries.length - 1} />
+          ))}
+        </Box>
+        <Collapse in={expanded} timeout="auto">
+          <Box id="news-content" sx={{ px: 2, pb: 1.5 }}>
+            <Box sx={{ mb: 1, pl: 0 }}>
+              <TableSortLabel
+                active
+                direction={sortDirection}
+                onClick={handleSortToggle}
+                aria-label="Sort news by date"
+                sx={{
+                  '& .MuiTableSortLabel-icon': { opacity: 0.4 },
+                  '&:hover .MuiTableSortLabel-icon': { opacity: 0.7 },
+                }}
               >
-                <Typography
-                  variant="body2"
-                  sx={{ color: 'text.disabled', flexShrink: 0, minWidth: '5.5em' }}
-                >
-                  {entry.date}
+                <Typography variant="caption" color="text.disabled">
+                  Date
                 </Typography>
-                <Link
-                  href={entry.url}
-                  title={entry.date}
-                  target="_blank"
-                  rel="noopener noreferrer"
-                  sx={{ overflowWrap: 'anywhere' }}
-                >
-                  {entry.url}
-                </Link>
-              </Box>
-            ))}
+              </TableSortLabel>
+            </Box>
+            <Box component="ul" sx={{ m: 0, p: 0, listStyle: 'none' }}>
+              {restEntries.map((entry, index) => (
+                <NewsRow key={`${entry.date}:${entry.url}`} entry={entry} last={index === restEntries.length - 1} />
+              ))}
+            </Box>
           </Box>
-        </AccordionDetails>
-      </Accordion>
+        </Collapse>
+      </Box>
     </Box>
   )
 }

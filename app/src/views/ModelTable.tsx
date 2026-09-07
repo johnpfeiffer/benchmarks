@@ -39,7 +39,9 @@ const COLUMNS: Array<{ label: string; field: SortField; accessor: (e: ModelEntry
 ]
 
 /**
- * Sortable, collapsible table of model benchmarks.
+ * Sortable, collapsible table of model benchmarks, collapsed by default (the
+ * chart above already summarizes the ranking; per DESIGN.md progressive
+ * disclosure).
  *
  * Pure presentation: renders the given (already-sorted) rows and emits header
  * clicks. All sort logic lives in the controller / models layer. The "Open
@@ -49,7 +51,7 @@ const COLUMNS: Array<{ label: string; field: SortField; accessor: (e: ModelEntry
 export function ModelTable({ entries, sort, onSortChange, selectedIds, onToggleEntry, title, openWeightsOnly, onToggleOpenWeights }: ModelTableProps) {
   return (
     <Box>
-      <Accordion defaultExpanded disableGutters variant="outlined">
+      <Accordion disableGutters variant="outlined">
         <AccordionSummary expandIcon={<ExpandMoreIcon />} aria-controls="details-content" id="details-header">
           <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
             <Typography variant="h6" component="span">

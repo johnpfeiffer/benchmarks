@@ -13,11 +13,11 @@ import {
 } from '@mui/material'
 import type { HardwareEntry } from '../models'
 
-type SortField = 'model' | 'provider' | 'intelligence_score' | 'total_params' | 'iq1_s_gb' | 'iq1_m_gb' | 'iq2_xxs_gb' | 'iq2_m_gb'
+type SortField = 'model' | 'provider' | 'intelligence_score' | 'total_params' | 'iq1_m_gb' | 'q2_k_xl_gb' | 'q4_k_xl_gb'
 type SortDirection = 'asc' | 'desc'
 interface SortState { field: SortField; direction: SortDirection }
 
-const DEFAULT_SORT: SortState = { field: 'total_params', direction: 'desc' }
+const DEFAULT_SORT: SortState = { field: 'intelligence_score', direction: 'desc' }
 
 /** Parse a param string like "264B" or "2.8T" into billions for numeric sorting. */
 function paramsInBillions(value: string): number {
@@ -37,10 +37,9 @@ function fieldValue(entry: HardwareEntry, field: SortField): string | number | n
     case 'provider': return entry.provider
     case 'intelligence_score': return entry.intelligence_score ?? null
     case 'total_params': return paramsInBillions(entry.total_params)
-    case 'iq1_s_gb': return entry.iq1_s_gb
     case 'iq1_m_gb': return entry.iq1_m_gb
-    case 'iq2_xxs_gb': return entry.iq2_xxs_gb
-    case 'iq2_m_gb': return entry.iq2_m_gb
+    case 'q2_k_xl_gb': return entry.q2_k_xl_gb
+    case 'q4_k_xl_gb': return entry.q4_k_xl_gb
   }
 }
 
@@ -70,10 +69,9 @@ const COLUMNS: Array<{ label: string; field: SortField }> = [
   { label: 'Provider', field: 'provider' },
   { label: 'Intelligence', field: 'intelligence_score' },
   { label: 'Total Params', field: 'total_params' },
-  { label: 'UD-IQ1_S (GB)', field: 'iq1_s_gb' },
   { label: 'UD-IQ1_M (GB)', field: 'iq1_m_gb' },
-  { label: 'UD-IQ2_XXS (GB)', field: 'iq2_xxs_gb' },
-  { label: 'UD-IQ2_M (GB)', field: 'iq2_m_gb' },
+  { label: 'UD-Q2_K_XL (GB)', field: 'q2_k_xl_gb' },
+  { label: 'UD-Q4_K_XL (GB)', field: 'q4_k_xl_gb' },
 ]
 
 interface HardwareTableProps {
@@ -81,7 +79,7 @@ interface HardwareTableProps {
   title: string
 }
 
-/** Sortable table of HuggingFace estimated hardware sizes for 1-bit dynamic quants. */
+/** Sortable table of Unsloth GGUF estimated hardware sizes for dynamic quants, ordered by intelligence by default. */
 export function HardwareTable({ entries, title }: HardwareTableProps) {
   const [sort, setSort] = useState<SortState>(DEFAULT_SORT)
 
@@ -131,10 +129,9 @@ export function HardwareTable({ entries, title }: HardwareTableProps) {
                 <TableCell>{entry.provider}</TableCell>
                 <TableCell>{entry.intelligence_score ?? '*'}</TableCell>
                 <TableCell>{entry.total_params}</TableCell>
-                <TableCell>{entry.iq1_s_gb ?? '*'}</TableCell>
                 <TableCell>{entry.iq1_m_gb ?? '*'}</TableCell>
-                <TableCell>{entry.iq2_xxs_gb ?? '*'}</TableCell>
-                <TableCell>{entry.iq2_m_gb ?? '*'}</TableCell>
+                <TableCell>{entry.q2_k_xl_gb ?? '*'}</TableCell>
+                <TableCell>{entry.q4_k_xl_gb ?? '*'}</TableCell>
               </TableRow>
             ))}
           </TableBody>
