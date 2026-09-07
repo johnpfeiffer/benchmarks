@@ -41,14 +41,12 @@ export interface RawHardwareEntry {
   provider: string
   /** Total parameter count as a human-readable string, e.g. "264B" or "2.8T". */
   total_params: string
-  /** UD-IQ1_S quant size in GB, or null when the quant is not published. */
-  iq1_s_gb: number | null
   /** UD-IQ1_M quant size in GB, or null when the quant is not published. */
   iq1_m_gb: number | null
-  /** UD-IQ2_XXS quant size in GB, or null when the quant is not published. */
-  iq2_xxs_gb: number | null
-  /** UD-IQ2_M quant size in GB, or null when the quant is not published. */
-  iq2_m_gb: number | null
+  /** UD-Q2_K_XL quant size in GB, or null when the quant is not published. */
+  q2_k_xl_gb: number | null
+  /** UD-Q4_K_XL quant size in GB, or null when the quant is not published. */
+  q4_k_xl_gb: number | null
   /** HuggingFace model page URL. */
   url: string
 }
@@ -58,10 +56,9 @@ export interface HardwareEntry {
   model: string
   provider: string
   total_params: string
-  iq1_s_gb: number | null
   iq1_m_gb: number | null
-  iq2_xxs_gb: number | null
-  iq2_m_gb: number | null
+  q2_k_xl_gb: number | null
+  q4_k_xl_gb: number | null
   url: string
   /**
    * Artificial Analysis intelligence score, attached by the controller via

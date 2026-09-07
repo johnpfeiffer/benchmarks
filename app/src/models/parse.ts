@@ -138,16 +138,15 @@ function normalizeHardware(raw: RawHardwareEntry, index: number): HardwareEntry 
   if (typeof total_params !== 'string' || total_params.trim() === '') {
     throw new InvariantError(`Hardware entry at index ${index} has no total_params`, index, 'HARDWARE-PARAMS')
   }
-  const iq1_s_gb = typeof raw?.iq1_s_gb === 'number' ? raw.iq1_s_gb : null
   const iq1_m_gb = typeof raw?.iq1_m_gb === 'number' ? raw.iq1_m_gb : null
-  const iq2_xxs_gb = typeof raw?.iq2_xxs_gb === 'number' ? raw.iq2_xxs_gb : null
-  const iq2_m_gb = typeof raw?.iq2_m_gb === 'number' ? raw.iq2_m_gb : null
+  const q2_k_xl_gb = typeof raw?.q2_k_xl_gb === 'number' ? raw.q2_k_xl_gb : null
+  const q4_k_xl_gb = typeof raw?.q4_k_xl_gb === 'number' ? raw.q4_k_xl_gb : null
   const url = raw?.url
   if (typeof url !== 'string' || url.trim() === '') {
     throw new InvariantError(`Hardware entry at index ${index} has no url`, index, 'HARDWARE-URL')
   }
 
-  return { model, provider, total_params, iq1_s_gb, iq1_m_gb, iq2_xxs_gb, iq2_m_gb, url }
+  return { model, provider, total_params, iq1_m_gb, q2_k_xl_gb, q4_k_xl_gb, url }
 }
 
 /** Validate embedded HuggingFace hardware entries. */

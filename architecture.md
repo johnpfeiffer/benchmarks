@@ -2,7 +2,7 @@
 
 AI model benchmarks dashboard: visualizes, filters, and sorts embedded model
 benchmark datasets, a dated news feed, HuggingFace estimated hardware sizes
-for 1-bit and 2-bit dynamic quants, NVIDIA GPU specifications, and
+for dynamic quants (UD-IQ1_M, UD-Q2_K_XL, UD-Q4_K_XL), NVIDIA GPU specifications, and
 unified-memory local-AI machines (Mac, DGX Spark, Strix Halo). It
 currently renders Artificial Analysis scores. Models can be toggled
 in/out of the chart
@@ -41,7 +41,7 @@ flowchart TD
     Models -->|INV-001 gate| Validated["ModelEntry[] per source"]
     App -->|sorted table rows + selected ids| Dashboard["views/Dashboard"]
     Dashboard --> ChartA["IntelligenceBarChart<br/>(Artificial Analysis)"]
-    Dashboard --> News["NewsSection<br/>(expanded + collapsible)"]
+    Dashboard --> News["NewsSection<br/>(collapsed; top-3 preview always visible)"]
     Dashboard --> Pareto["ParetoFrontierSection<br/>(expanded + collapsible)"]
     ParetoJSON["public/data/pareto.json"] -->|"fetch at runtime"| ParetoController["controllers/useParetoDataset"]
     ParetoController -->|"parseParetoDataset; INV-001"| ParetoData["Validated snapshot"]
@@ -49,8 +49,8 @@ flowchart TD
     Pareto --> InteractivePareto["ParetoChart<br/>(log cost, linear intelligence)"]
     ParetoMath["models/pareto<br/>(frontier and target predicates)"] --> InteractivePareto
     ParetoPNG["public/images/artificial-analysis-pareto-frontier.png"] -->|"copied unchanged by Vite; app-relative URL"| Pareto
-    Dashboard --> Table["ModelTable<br/>(collapsible + sortable + selectable)"]
-    Dashboard --> HWChart["HardwareChart<br/>(1-bit + 2-bit quant sizes)"]
+    Dashboard --> Table["ModelTable<br/>(collapsed by default; sortable + selectable)"]
+    Dashboard --> HWChart["HardwareChart<br/>(dynamic quant sizes)"]
     Dashboard --> HWTable["HardwareTable<br/>(sortable hardware details)"]
     Dashboard --> GPUTable["GpuTable<br/>(collapsible + sortable GPU specs)"]
     Dashboard --> LocalHW["LocalHardwareTable<br/>(sortable local machines)"]
@@ -63,7 +63,7 @@ flowchart TD
 | File | Responsibility |
 | --- | --- |
 | `types.ts` | `ModelEntry`, `NewsEntry`, `HardwareEntry`, `GpuEntry`, `MachineEntry`, their raw JSON shapes, and benchmark sort types; `ModelEntry.open_weight` is always present after parse; `ModelEntry.color` is the explicit bar color carried from `ai.json`; `ModelEntry.released` is the release date (`YYYY-MM-DD` or null) |
-| `parse.ts` | `parseModelEntries`, `parseNewsEntries`, `parseHardwareEntries`, `parseGpuEntries`, `parseMachineEntries`, and `InvariantError`; upholds **INV-001** (every model has a provider) and structural guards at the single gate. News URLs and ISO dates are validated, copied, and sorted newest first before reaching the view; model release dates share the same strict calendar-date guard (`MODEL-RELEASED`). Hardware entries are validated (provider, model, total_params, url required; 1-bit and 2-bit quant sizes nullable). GPU entries are validated (model, date required; memory, memory_type, memory_bandwidth_gbs, fp16_tflops nullable). Machine entries are validated (machine, chip, vram_gb, url required; memory_bandwidth_gbs, price_usd nullable) |
+| `parse.ts` | `parseModelEntries`, `parseNewsEntries`, `parseHardwareEntries`, `parseGpuEntries`, `parseMachineEntries`, and `InvariantError`; upholds **INV-001** (every model has a provider) and structural guards at the single gate. News URLs and ISO dates are validated, copied, and sorted newest first before reaching the view; model release dates share the same strict calendar-date guard (`MODEL-RELEASED`). Hardware entries are validated (provider, model, total_params, url required; quant sizes nullable). GPU entries are validated (model, date required; memory, memory_type, memory_bandwidth_gbs, fp16_tflops nullable). Machine entries are validated (machine, chip, vram_gb, url required; memory_bandwidth_gbs, price_usd nullable) |
 | `merge.ts` | `mergeHardwareIntelligence`, `modelMatchKey`; attaches each hardware row's intelligence score via a normalized model-name match with a unique-prefix fallback. `modelMatchKey` ignores parenthetical effort suffixes and "preview" |
 | `sort.ts` | `sortModels`, `nextSortState`, `DEFAULT_SORT` (score desc) |
 | `filter.ts` | `openWeightIds`; the id set used by the "Open Weights" preset |
@@ -89,7 +89,7 @@ All views are pure (props in, callbacks out, no business logic):
   `barLabelPlacement: 'outside'`, gated by the `barValues` prop) and starts
   the y-axis near the lowest score to cut empty space (`yMin`). The section
   heading carries a plain "Source" link beside it (to the AA homepage).
-- `ModelTable` - collapsible (Accordion, expanded by default) sortable table;
+- `ModelTable` - collapsible (Accordion, collapsed by default) sortable table;
   headers `Provider`, `Released`, `Model Name`, and `Intelligence`;
   click headers to
   toggle asc/desc. The release date renders in italics between provider and
@@ -108,9 +108,14 @@ All views are pure (props in, callbacks out, no business logic):
   [GitHub repository](https://github.com/johnpfeiffer/benchmarks) with an inline
   GitHub SVG mark. GPU-specific source links are rendered uniquely below the
   GPU specifications table rather than duplicated here.
-- `NewsSection` - outlined accordion immediately below the lead chart, expanded
-  by default and user-collapsible, titled "Hand Picked News" with a small
-  fresh-tomato SVG mark. Each row shows the ISO publication date in an
+- `NewsSection` - outlined collapsible panel immediately below the lead chart,
+  collapsed by default and user-expandable, titled "Hand Picked News" with a
+  small fresh-tomato SVG mark. The top 3 links of the current sort stay
+  visible below the header; clicking the header expands the panel to reveal
+  the remaining entries. (MUI Accordion moves every child after the summary
+  into the collapsed region, so the disclosure is built from ButtonBase +
+  Collapse to keep the preview outside it.) Each row shows the ISO
+  publication date in an
   unobtrusive light-gray left column alongside the URL link (which also carries
   the date as a hover title). A subtle `TableSortLabel` on the date header
   toggles between descending (default, newest first) and ascending; the sort is
@@ -145,21 +150,23 @@ All views are pure (props in, callbacks out, no business logic):
   app base and returned HTTP 404. The image is
   scaled responsively with descriptive alt text, plus a caption crediting and
   linking to Artificial Analysis with the capture date.
-- `HardwareChart` - grouped bar chart comparing 1-bit and 2-bit dynamic
-  quant (UD-IQ1_S, UD-IQ1_M, UD-IQ2_XXS, UD-IQ2_M) estimated hardware sizes
+- `HardwareChart` - grouped bar chart comparing dynamic
+  quant (UD-IQ1_M, UD-Q2_K_XL, UD-Q4_K_XL) estimated hardware sizes
   across models, sourced from Unsloth GGUF releases on HuggingFace. Entries
   are sorted by total params descending (largest first, left to right).
   Models without a given quant appear on the x-axis but their bars are
   omitted. Includes a source chip linking to HuggingFace.
-- `HardwareTable` - sortable table of hardware details; headers `Model`,
-  `Provider`, `Intelligence`, `Total Params`, `UD-IQ1_S (GB)`, `UD-IQ1_M (GB)`,
-  `UD-IQ2_XXS (GB)`, `UD-IQ2_M (GB)`; click headers to toggle asc/desc. Model
+- `HardwareTable` - sortable table of hardware details titled "Unsloth Open
+  Weight Hosting Sizes"; headers `Model`,
+  `Provider`, `Intelligence`, `Total Params`, `UD-IQ1_M (GB)`,
+  `UD-Q2_K_XL (GB)`, `UD-Q4_K_XL (GB)`; click headers to toggle asc/desc. Model
   names link to their HuggingFace model pages. Missing quants render as `*`.
   The `Intelligence` column is attached by the controller
   (`mergeHardwareIntelligence`) via the normalized `modelMatchKey`
   model-name match, with a unique-prefix fallback for size-suffixed rows (e.g.
   "Nemotron 3 Ultra 550B"); models without an `ai.json` row render `*`.
-  Default sort is total params descending (largest first). Sort is local
+  Default sort is intelligence descending (highest first; unscored rows last
+  in both directions). Sort is local
   `useState`/`useMemo` in the component. Total params are parsed to billions
   for numeric sorting (e.g. "2.8T" -> 2800).
 - `GpuTable` - collapsible (Accordion, expanded by default) sortable table of
@@ -176,12 +183,13 @@ All views are pure (props in, callbacks out, no business logic):
   (largest first). Sort is local `useState`/`useMemo` in the component.
   Machine source links (Daring Fireball, NVIDIA, Framework) are rendered as
   plain links below the table.
-- `Dashboard` - layout composing the intelligence chart, collapsible enriched
-  details table, HuggingFace estimated
-  hardware chart and table ("Open Weight Hosting Sizes"), collapsible GPU
+- `Dashboard` - layout composing the intelligence chart, the collapsed-by-default
+  enriched details table, HuggingFace estimated
+  hardware chart and table ("Unsloth Open Weight Hosting Sizes"), collapsible GPU
   specifications table with source links below, then a Local Hardware section
   ("Local AI Machines") with source links below, then footer. News sits
-  between the lead intelligence chart and model details.
+  between the lead intelligence chart and model details, collapsed by default
+  with its top 3 links visible.
 
 ### Controller (`App.tsx`)
 
@@ -216,22 +224,22 @@ journey
     Read scores inside the chart bars: 4: User
     Open Artificial Analysis from source chip: 4: User
     Scroll chart horizontally for labels: 4: User
-    Read Hand Picked News with visible dates and links: 4: User
+    See the top 3 Hand Picked News links: 4: User
+    Expand Hand Picked News for the full dated list: 4: User
     Toggle news date sort asc/desc: 3: User
-    Collapse or expand Hand Picked News: 4: User
     Load validated Pareto snapshot from public JSON: 4: System
     Adjust cost and intelligence targets: 5: User
     Inspect model points and the calculated frontier: 5: User
     Paste a new snapshot or expand the historical image: 4: User
-    Read details table: 5: User
+    Expand and read the details table: 5: User
     See release dates beside model names: 4: User
     Click a header to sort: 5: User
     Toggle asc/desc: 5: User
     Click model button to remove from the chart: 5: User
     Toggle "Open Weights" to restrict selection to open models: 5: User
   section Explore Hardware
-    See 1-bit and 2-bit quant size chart: 4: User
-    Sort hardware table by column: 4: User
+    See dynamic quant size chart (1/2/4-bit): 4: User
+    Sort hardware table (smartest first by default): 4: User
     See missing quants as placeholder: 3: User
     Click model name to open HuggingFace page: 4: User
   section Explore GPU Specs

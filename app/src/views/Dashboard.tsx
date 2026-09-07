@@ -66,8 +66,8 @@ export function Dashboard({
         <Typography variant="h4" component="h1">
           AI Model Benchmarks
         </Typography>
-        <Typography variant="body2" color="text.secondary">
-          Model benchmark scores across providers, sorted highest to lowest by default.
+        <Typography variant="body2" color="text.secondary" sx={{ fontStyle: 'italic' }}>
+          Best effort in on a moving target - your own use cases and evals may differ
         </Typography>
       </Box>
 
@@ -119,11 +119,11 @@ export function Dashboard({
           HuggingFace Estimated Hardware
         </Typography>
         <Typography variant="body2" color="text.secondary" sx={{ mb: 2 }}>
-          1-bit dynamic quant (UD-IQ1) estimated sizes from Unsloth GGUF releases.
+          Dynamic quant (UD-IQ1_M, UD-Q2_K_XL, UD-Q4_K_XL) estimated sizes from Unsloth GGUF releases.
         </Typography>
         <HardwareChart entries={hardware} source={hardwareSource} />
         <Box sx={{ mt: 3 }}>
-          <HardwareTable entries={hardware} title="Open Weight Hosting Sizes" />
+          <HardwareTable entries={hardware} title="Unsloth Open Weight Hosting Sizes" />
         </Box>
       </Box>
 

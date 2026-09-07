@@ -1,5 +1,5 @@
 import { describe, it, expect } from 'vitest'
-import { render, screen, fireEvent, within } from '@testing-library/react'
+import { render, screen, fireEvent, waitFor, within } from '@testing-library/react'
 import { useState } from 'react'
 import { ThemeProvider, CssBaseline } from '@mui/material'
 import { theme } from '../../theme'
@@ -20,9 +20,9 @@ const entries: ModelEntry[] = [
 ]
 
 const hardwareEntries: HardwareEntry[] = [
-  { model: 'Inkling', provider: 'Thinking Machines', total_params: '264B', iq1_s_gb: 74.8, iq1_m_gb: 78.8, iq2_xxs_gb: 82.3, iq2_m_gb: 82.4, url: 'https://huggingface.co/unsloth/Inkling-Small-GGUF', intelligence_score: 42 },
-  { model: 'Kimi K3', provider: 'Moonshot AI', total_params: '2.8T', iq1_s_gb: 594, iq1_m_gb: 649, iq2_xxs_gb: 711, iq2_m_gb: null, url: 'https://huggingface.co/unsloth/Kimi-K3-GGUF', intelligence_score: 60 },
-  { model: 'Gemma 4 31B', provider: 'Google', total_params: '31B', iq1_s_gb: null, iq1_m_gb: null, iq2_xxs_gb: 8.53, iq2_m_gb: 10.8, url: 'https://huggingface.co/unsloth/gemma-4-31B-it-GGUF', intelligence_score: null },
+  { model: 'Inkling', provider: 'Thinking Machines', total_params: '264B', iq1_m_gb: 78.8, q2_k_xl_gb: 87.9, q4_k_xl_gb: 163, url: 'https://huggingface.co/unsloth/Inkling-Small-GGUF', intelligence_score: 42 },
+  { model: 'Kimi K3', provider: 'Moonshot AI', total_params: '2.8T', iq1_m_gb: 649, q2_k_xl_gb: 861, q4_k_xl_gb: 1510, url: 'https://huggingface.co/unsloth/Kimi-K3-GGUF', intelligence_score: 60 },
+  { model: 'Gemma 4 31B', provider: 'Google', total_params: '31B', iq1_m_gb: null, q2_k_xl_gb: 11.8, q4_k_xl_gb: 18.8, url: 'https://huggingface.co/unsloth/gemma-4-31B-it-GGUF', intelligence_score: null },
 ]
 
 const gpuEntries: GpuEntry[] = [
@@ -76,7 +76,10 @@ function DashboardController({ initialSort = DEFAULT_SORT }: { initialSort?: Sor
       intelligenceSource={{ label: 'Artificial Analysis', href: 'https://artificialanalysis.ai/' }}
       news={[
         { url: 'https://example.com/newest', date: '2026-07-26' },
+        { url: 'https://example.com/second', date: '2026-07-24' },
+        { url: 'https://example.com/third', date: '2026-07-22' },
         { url: 'https://example.com/older', date: '2026-07-20' },
+        { url: 'https://example.com/oldest', date: '2026-07-15' },
       ]}
       hardware={hardwareEntries}
       hardwareSource={{ label: 'HuggingFace', href: 'https://huggingface.co/unsloth' }}
@@ -110,6 +113,16 @@ function intelligenceTable() {
   return screen.getByRole('table', { name: 'Model Details' })
 }
 
+/** Model Details starts collapsed; open it via the accordion summary. */
+function expandModelDetails() {
+  fireEvent.click(screen.getByRole('button', { name: /Model Details/i }))
+}
+
+/** Hand Picked News starts collapsed; open it via the accordion summary. */
+function expandNews() {
+  fireEvent.click(screen.getByRole('button', { name: /Hand Picked News/i }))
+}
+
 describe('Dashboard', () => {
   it('renders the heading and the data-source credit', () => {
     renderDashboard()
@@ -127,6 +140,14 @@ describe('Dashboard', () => {
     expect(githubLink.querySelector('svg')).toBeInTheDocument()
   })
 
+  it('shows the italic moving-target disclaimer under the title instead of the old sort description', () => {
+    renderDashboard()
+    const tagline = screen.getByText(/Best effort in on a moving target/i)
+    expect(tagline).toHaveStyle('font-style: italic')
+    expect(tagline.textContent).toContain('your own use cases and evals may differ')
+    expect(screen.queryByText(/sorted highest to lowest by default/i)).not.toBeInTheDocument()
+  })
+
   it('renders the intelligence benchmark section and no Senior SWE Bench section', () => {
     renderDashboard()
     expect(screen.getByRole('heading', { name: 'Artificial Analysis Intelligence' })).toBeInTheDocument()
@@ -139,7 +160,7 @@ describe('Dashboard', () => {
     expect(screen.queryByRole('link', { name: /Senior SWE Bench/i })).not.toBeInTheDocument()
   })
 
-  it('shows Hand Picked News below the lead chart, expanded by default, with visible dates and collapse control', () => {
+  it('shows Hand Picked News collapsed by default with the top 3 links visible, expanding to reveal the rest', async () => {
     renderDashboard()
     const newsHeading = screen.getByRole('heading', { name: 'Hand Picked News' })
     const newsSection = newsHeading.closest('section')
@@ -149,23 +170,38 @@ describe('Dashboard', () => {
     const header = within(newsSection as HTMLElement).getByRole('button', { name: /Hand Picked News/i })
     expect(header.querySelector('svg')).toBeInTheDocument()
 
-    // Each row shows the date as visible text alongside the URL link
-    const listItems = within(newsSection as HTMLElement).getAllByRole('listitem')
-    expect(listItems).toHaveLength(2)
+    // Collapsed by default: only the top 3 (newest) links are listed
+    expect(header).toHaveAttribute('aria-expanded', 'false')
+    let listItems = within(newsSection as HTMLElement).getAllByRole('listitem')
+    expect(listItems).toHaveLength(3)
     expect(listItems[0].textContent).toContain('2026-07-26')
     expect(listItems[0].textContent).toContain('https://example.com/newest')
-    expect(listItems[1].textContent).toContain('2026-07-20')
-    expect(listItems[1].textContent).toContain('https://example.com/older')
+    expect(listItems[1].textContent).toContain('2026-07-24')
+    expect(listItems[1].textContent).toContain('https://example.com/second')
+    expect(listItems[2].textContent).toContain('2026-07-22')
+    expect(listItems[2].textContent).toContain('https://example.com/third')
 
     // Links still carry the date as a title tooltip
     const links = within(newsSection as HTMLElement).getAllByRole('link')
     expect(links[0]).toHaveAttribute('title', '2026-07-26')
-    expect(links[1]).toHaveAttribute('title', '2026-07-20')
+    expect(links[1]).toHaveAttribute('title', '2026-07-24')
 
-    // Accordion starts expanded and collapses on click
+    // Expanding reveals the remaining entries after the preview
+    fireEvent.click(header)
     expect(header).toHaveAttribute('aria-expanded', 'true')
+    listItems = within(newsSection as HTMLElement).getAllByRole('listitem')
+    expect(listItems).toHaveLength(5)
+    expect(listItems[3].textContent).toContain('2026-07-20')
+    expect(listItems[3].textContent).toContain('https://example.com/older')
+    expect(listItems[4].textContent).toContain('2026-07-15')
+    expect(listItems[4].textContent).toContain('https://example.com/oldest')
+
+    // Collapsing returns to the top-3 preview (after the collapse transition)
     fireEvent.click(header)
     expect(header).toHaveAttribute('aria-expanded', 'false')
+    await waitFor(() => {
+      expect(within(newsSection as HTMLElement).getAllByRole('listitem')).toHaveLength(3)
+    })
   })
 
   it('shows the Pareto frontier image between news and model details, expanded by default', () => {
@@ -176,6 +212,7 @@ describe('Dashboard', () => {
 
     // Sits between Hand Picked News and Model Details in document order
     const newsHeading = screen.getByRole('heading', { name: 'Hand Picked News' })
+    expandModelDetails()
     const detailsTable = screen.getByRole('table', { name: 'Model Details' })
     expect(newsHeading.compareDocumentPosition(paretoHeading) & Node.DOCUMENT_POSITION_FOLLOWING).toBeTruthy()
     expect(paretoHeading.compareDocumentPosition(detailsTable) & Node.DOCUMENT_POSITION_FOLLOWING).toBeTruthy()
@@ -198,6 +235,7 @@ describe('Dashboard', () => {
 
   it('sorts news by date desc by default and toggles to asc when the sort label is clicked', () => {
     renderDashboard()
+    expandNews()
     const newsHeading = screen.getByRole('heading', { name: 'Hand Picked News' })
     const newsSection = newsHeading.closest('section') as HTMLElement
     const sortLabel = within(newsSection).getByRole('button', { name: /sort news by date/i })
@@ -205,23 +243,35 @@ describe('Dashboard', () => {
     // Default: newest first (desc)
     let items = within(newsSection).getAllByRole('listitem')
     expect(items[0].textContent).toContain('2026-07-26')
-    expect(items[1].textContent).toContain('2026-07-20')
+    expect(items[items.length - 1].textContent).toContain('2026-07-15')
 
     // Click to toggle to ascending (oldest first)
     fireEvent.click(sortLabel)
     items = within(newsSection).getAllByRole('listitem')
-    expect(items[0].textContent).toContain('2026-07-20')
-    expect(items[1].textContent).toContain('2026-07-26')
+    expect(items[0].textContent).toContain('2026-07-15')
+    expect(items[items.length - 1].textContent).toContain('2026-07-26')
 
     // Click again to toggle back to descending
     fireEvent.click(sortLabel)
     items = within(newsSection).getAllByRole('listitem')
     expect(items[0].textContent).toContain('2026-07-26')
-    expect(items[1].textContent).toContain('2026-07-20')
+    expect(items[items.length - 1].textContent).toContain('2026-07-15')
+  })
+
+  it('starts with Model Details collapsed and expands it on click', () => {
+    renderDashboard()
+    const summary = screen.getByRole('button', { name: /Model Details/i })
+    expect(summary).toHaveAttribute('aria-expanded', 'false')
+    // The table stays out of the accessibility tree while collapsed
+    expect(screen.queryByRole('table', { name: 'Model Details' })).not.toBeInTheDocument()
+    fireEvent.click(summary)
+    expect(summary).toHaveAttribute('aria-expanded', 'true')
+    expect(screen.getByRole('table', { name: 'Model Details' })).toBeInTheDocument()
   })
 
   it('renders the intelligence columns and no SWE metric columns in the table', () => {
     renderDashboard()
+    expandModelDetails()
     const table = intelligenceTable()
     expect(within(table).getByRole('button', { name: /Intelligence/i })).toBeInTheDocument()
     expect(within(table).queryByRole('button', { name: /basic_solve_rate_pct/i })).not.toBeInTheDocument()
@@ -232,6 +282,7 @@ describe('Dashboard', () => {
 
   it('shows the release date in italics between Provider and Model Name, "*" when unknown', () => {
     renderDashboard()
+    expandModelDetails()
     const table = intelligenceTable()
     const headers = within(table).getAllByRole('columnheader')
     // Column order: Provider, Released, Model Name, ...
@@ -250,6 +301,7 @@ describe('Dashboard', () => {
 
   it('sorts by release date when the Released header is clicked', () => {
     renderDashboard()
+    expandModelDetails()
     fireEvent.click(within(intelligenceTable()).getByRole('button', { name: /Released/i }))
     const rows = within(intelligenceTable()).getAllByRole('row')
     // Ascending: Gamma (2026-03-15) before Alpha (2026-07-01); unknown (Beta) last.
@@ -260,6 +312,7 @@ describe('Dashboard', () => {
 
   it('shows all rows in the table', () => {
     renderDashboard()
+    expandModelDetails()
     expect(screen.getByRole('button', { name: 'Alpha' })).toBeInTheDocument()
     expect(screen.getByRole('button', { name: 'Beta' })).toBeInTheDocument()
     expect(screen.getByRole('button', { name: 'Gamma' })).toBeInTheDocument()
@@ -267,6 +320,7 @@ describe('Dashboard', () => {
 
   it('defaults to score descending (highest first)', () => {
     renderDashboard()
+    expandModelDetails()
     const rows = within(intelligenceTable()).getAllByRole('row')
     // Row 0 is the header; first data row should be the 60-score model.
     expect(rows[1].textContent).toContain('Alpha')
@@ -275,6 +329,7 @@ describe('Dashboard', () => {
 
   it('sorts by Provider ascending when the Provider header is clicked', () => {
     renderDashboard()
+    expandModelDetails()
     fireEvent.click(within(intelligenceTable()).getByRole('button', { name: /Provider/i }))
     const rows = within(intelligenceTable()).getAllByRole('row')
     // Ascending provider order: Anthropic, Google, OpenAI.
@@ -284,6 +339,7 @@ describe('Dashboard', () => {
 
   it('toggles Provider to descending on a second click', () => {
     renderDashboard()
+    expandModelDetails()
     const header = within(intelligenceTable()).getByRole('button', { name: /Provider/i })
     fireEvent.click(header) // asc
     fireEvent.click(header) // desc
@@ -294,6 +350,7 @@ describe('Dashboard', () => {
 
   it('toggles model selection from the model-name button', () => {
     renderDashboard()
+    expandModelDetails()
     const alpha = screen.getByRole('button', { name: 'Alpha' })
     expect(alpha).toHaveAttribute('aria-pressed', 'true')
     fireEvent.click(alpha)
@@ -302,6 +359,7 @@ describe('Dashboard', () => {
 
   it('shows an empty chart state after every model is deselected', () => {
     renderDashboard()
+    expandModelDetails()
     fireEvent.click(screen.getByRole('button', { name: 'Alpha' }))
     fireEvent.click(screen.getByRole('button', { name: 'Beta' }))
     fireEvent.click(screen.getByRole('button', { name: 'Gamma' }))
@@ -310,6 +368,7 @@ describe('Dashboard', () => {
 
   it('renders the "Open Weights" toggle beside the Model Details title, off by default', () => {
     renderDashboard()
+    expandModelDetails()
     const table = intelligenceTable()
     const section = table.closest('section') as HTMLElement
     const toggle = within(section).getByRole('button', { name: 'Open Weights' })
@@ -318,6 +377,7 @@ describe('Dashboard', () => {
 
   it('sets selection to open-weight models when "Open Weights" is toggled on', () => {
     renderDashboard()
+    expandModelDetails()
     const table = intelligenceTable()
     const section = table.closest('section') as HTMLElement
     const toggle = within(section).getByRole('button', { name: 'Open Weights' })
@@ -331,6 +391,7 @@ describe('Dashboard', () => {
 
   it('re-selects every model when "Open Weights" is toggled back off', () => {
     renderDashboard()
+    expandModelDetails()
     const table = intelligenceTable()
     const section = table.closest('section') as HTMLElement
     const toggle = within(section).getByRole('button', { name: 'Open Weights' })
@@ -350,27 +411,30 @@ describe('Dashboard', () => {
       'href',
       'https://huggingface.co/unsloth',
     )
-    // Hardware table is present with expected columns
-    const hwTable = screen.getByRole('table', { name: 'Open Weight Hosting Sizes' })
+    // Hardware table is present with the current quant columns (UD-IQ1_S,
+    // UD-IQ2_XXS and UD-IQ2_M were dropped in favor of UD-Q2_K_XL/UD-Q4_K_XL)
+    const hwTable = screen.getByRole('table', { name: 'Unsloth Open Weight Hosting Sizes' })
     expect(within(hwTable).getByRole('button', { name: /Model/i })).toBeInTheDocument()
     expect(within(hwTable).getByRole('button', { name: /Intelligence/i })).toBeInTheDocument()
     expect(within(hwTable).getByRole('button', { name: /Total Params/i })).toBeInTheDocument()
-    expect(within(hwTable).getByRole('button', { name: /UD-IQ1_S/i })).toBeInTheDocument()
     expect(within(hwTable).getByRole('button', { name: /UD-IQ1_M/i })).toBeInTheDocument()
-    expect(within(hwTable).getByRole('button', { name: /UD-IQ2_XXS/i })).toBeInTheDocument()
-    expect(within(hwTable).getByRole('button', { name: /UD-IQ2_M/i })).toBeInTheDocument()
+    expect(within(hwTable).getByRole('button', { name: /UD-Q2_K_XL/i })).toBeInTheDocument()
+    expect(within(hwTable).getByRole('button', { name: /UD-Q4_K_XL/i })).toBeInTheDocument()
+    expect(within(hwTable).queryByRole('button', { name: /UD-IQ1_S/i })).not.toBeInTheDocument()
+    expect(within(hwTable).queryByRole('button', { name: /UD-IQ2_XXS/i })).not.toBeInTheDocument()
+    expect(within(hwTable).queryByRole('button', { name: /UD-IQ2_M/i })).not.toBeInTheDocument()
   })
 
-  it('shows hardware quant sizes and placeholders for missing 1-bit and 2-bit quants', () => {
+  it('shows hardware quant sizes and placeholders for missing quants', () => {
     renderDashboard()
-    const hwTable = screen.getByRole('table', { name: 'Open Weight Hosting Sizes' })
+    const hwTable = screen.getByRole('table', { name: 'Unsloth Open Weight Hosting Sizes' })
     const rows = within(hwTable).getAllByRole('row')
     // At least one row has a numeric value and one has a placeholder
     const allText = rows.map((r) => r.textContent).join(' ')
-    expect(allText).toContain('74.8')
-    expect(allText).toContain('594')
-    expect(allText).toContain('82.3')
-    expect(allText).toContain('8.53')
+    expect(allText).toContain('78.8')
+    expect(allText).toContain('861')
+    expect(allText).toContain('1510')
+    expect(allText).toContain('11.8')
     expect(allText).toContain('*')
     // Intelligence column: joined score renders, null renders as '*'
     const inklingRow = rows.find((r) => r.textContent?.includes('Inkling'))
@@ -381,19 +445,21 @@ describe('Dashboard', () => {
 
   it('links model names to their HuggingFace URLs', () => {
     renderDashboard()
-    const hwTable = screen.getByRole('table', { name: 'Open Weight Hosting Sizes' })
+    const hwTable = screen.getByRole('table', { name: 'Unsloth Open Weight Hosting Sizes' })
     const inklingLink = within(hwTable).getByRole('link', { name: 'Inkling' })
     expect(inklingLink).toHaveAttribute('href', 'https://huggingface.co/unsloth/Inkling-Small-GGUF')
     const gemmaLink = within(hwTable).getByRole('link', { name: 'Gemma 4 31B' })
     expect(gemmaLink).toHaveAttribute('href', 'https://huggingface.co/unsloth/gemma-4-31B-it-GGUF')
   })
 
-  it('sorts the hardware table by Total Params descending by default', () => {
+  it('sorts the hardware table by Intelligence descending by default', () => {
     renderDashboard()
-    const hwTable = screen.getByRole('table', { name: 'Open Weight Hosting Sizes' })
+    const hwTable = screen.getByRole('table', { name: 'Unsloth Open Weight Hosting Sizes' })
     const rows = within(hwTable).getAllByRole('row')
-    // Default sort: total_params desc -> Kimi K3 (2.8T) first, Gemma 4 31B (31B) last
+    // Default sort: intelligence desc -> Kimi K3 (60) first, Inkling (42) next,
+    // and the unscored Gemma 4 31B last regardless of direction.
     expect(rows[1].textContent).toContain('Kimi K3')
+    expect(rows[2].textContent).toContain('Inkling')
     expect(rows[rows.length - 1].textContent).toContain('Gemma 4 31B')
   })
 

@@ -34,7 +34,6 @@
   {"model": "Nemotron 3 Ultra", "intelligence_score": 30, "provider": "NVIDIA", "open_weight": true, "color": "#86b737", "released": "2026-06-04"},
   {"model": "Qwen3.6 27B", "intelligence_score": 29, "provider": "Alibaba", "open_weight": true, "color": "#ff7018", "released": "2026-04-22"},
   {"model": "Qwen3.5 397B A17B", "intelligence_score": 26, "provider": "Alibaba", "open_weight": true, "color": "#F54F35", "released": "2026-02-16"},
-  {"model": "Qwen3.6 35B A3B (FP8)", "intelligence_score": 26, "provider": "DeepInfra", "open_weight": true, "color": "#F54F35", "released": "2026-04-16"},
   {"model": "Mistral Medium 3.5", "intelligence_score": 23, "provider": "Mistral", "open_weight": true, "color": "#FF7000", "released": "2026-04-29"},
   {"model": "Claude 4.5 Haiku", "intelligence_score": 22, "provider": "Anthropic", "open_weight": false, "color": "#cc785c", "released": "2025-10-15"},
   {"model": "Gemma 4 31B", "intelligence_score": 22, "provider": "Google", "open_weight": true, "color": "#34A853", "released": "2026-04-02"},

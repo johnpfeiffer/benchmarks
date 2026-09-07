@@ -1,5 +1,5 @@
 import { describe, it, expect } from 'vitest'
-import { render, screen, within } from '@testing-library/react'
+import { render, screen, fireEvent, within } from '@testing-library/react'
 import App from '../../App'
 import {
   parseModelEntries,
@@ -35,9 +35,16 @@ function modelRow(table: HTMLElement, model: string): HTMLElement {
   return row
 }
 
+/** Expand a collapsed-by-default accordion section via its summary button. */
+function expandSection(summaryName: RegExp) {
+  fireEvent.click(screen.getByRole('button', { name: summaryName }))
+}
+
 describe('acceptance: every JSON row appears in the UI', () => {
   it('lists every ai.json model in the Model Details table with provider, italic release date, and score', () => {
     render(<App />)
+    // Model Details starts collapsed; open it to reveal the table.
+    expandSection(/Model Details/)
     const table = screen.getByRole('table', { name: 'Model Details' })
     expect(within(table).getAllByRole('row')).toHaveLength(intelligence.length + 1)
     for (const entry of intelligence) {
@@ -53,6 +60,9 @@ describe('acceptance: every JSON row appears in the UI', () => {
 
   it('lists every news.json entry in Hand Picked News as a dated link', () => {
     render(<App />)
+    // Hand Picked News starts collapsed with a top-3 preview; open it so the
+    // remaining entries join the list.
+    expandSection(/Hand Picked News/)
     const section = screen.getByRole('heading', { name: 'Hand Picked News' }).closest('section') as HTMLElement
     expect(within(section).getAllByRole('listitem')).toHaveLength(news.length)
     for (const entry of news) {
@@ -64,7 +74,7 @@ describe('acceptance: every JSON row appears in the UI', () => {
 
   it('lists every hardware.json row in the hosting-sizes table with its source link', () => {
     render(<App />)
-    const table = screen.getByRole('table', { name: 'Open Weight Hosting Sizes' })
+    const table = screen.getByRole('table', { name: 'Unsloth Open Weight Hosting Sizes' })
     expect(within(table).getAllByRole('row')).toHaveLength(hardware.length + 1)
     for (const h of hardware) {
       const link = within(table).getByRole('link', { name: h.model })
@@ -72,7 +82,7 @@ describe('acceptance: every JSON row appears in the UI', () => {
       const row = link.closest('tr') as HTMLElement
       expect(row.textContent).toContain(h.provider)
       expect(row.textContent).toContain(h.total_params)
-      for (const quant of [h.iq1_s_gb, h.iq1_m_gb, h.iq2_xxs_gb, h.iq2_m_gb]) {
+      for (const quant of [h.iq1_m_gb, h.q2_k_xl_gb, h.q4_k_xl_gb]) {
         if (quant !== null) expect(row.textContent).toContain(String(quant))
       }
       expect(row.textContent).toContain(
