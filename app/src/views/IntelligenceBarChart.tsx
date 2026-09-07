@@ -83,10 +83,12 @@ export function IntelligenceBarChart({
             // container (zoom support), which blocks horizontal touch
             // scrolling of this overflow container on mobile. The chart
             // has no zoom/pan interactions, so restore native panning.
-            // The layer container only carries its emotion-labeled class
-            // (css-*-MuiChartsLayerContainer-root), hence the substring
-            // attribute selector.
-            '& [class*="MuiChartsLayerContainer-root"]': { touchAction: 'pan-x pan-y' },
+            // Key the override on MuiChartsSurface-root: the layer
+            // container always carries that utility class, while its
+            // emotion-labeled class (css-*-MuiChartsLayerContainer-root)
+            // exists only in non-production builds. A selector keyed on
+            // the label silently stops matching in the deployed bundle.
+            '& .MuiChartsSurface-root': { touchAction: 'pan-x pan-y' },
           }}
         >
           {entries.length === 0 ? (

@@ -52,3 +52,33 @@ describe('IntelligenceBarChart value labels', () => {
     expect(props.sx?.['& .MuiChartsGrid-line']).toBeDefined()
   })
 })
+
+describe('IntelligenceBarChart mobile touch scrolling', () => {
+  function injectedCss(): string {
+    const parts: string[] = []
+    for (const style of Array.from(document.querySelectorAll('style'))) {
+      parts.push(style.textContent ?? '')
+      const sheet = style.sheet as CSSStyleSheet | null
+      if (sheet) {
+        try {
+          parts.push(Array.from(sheet.cssRules).map((rule) => rule.cssText).join('\n'))
+        } catch {
+          // unreadable sheet; textContent already captured
+        }
+      }
+    }
+    return parts.join('\n')
+  }
+
+  it('keys the touch-action override to the stable MuiChartsSurface-root class', () => {
+    // Regression: MUI X sets touch-action: pan-y on its chart layer
+    // container, which blocks horizontal touch scrolling of the chart's
+    // overflow container. The container's only stable class is
+    // MuiChartsSurface-root; the emotion label suffix
+    // (css-*-MuiChartsLayerContainer-root) is dropped from production
+    // builds, so an attribute selector keyed on it silently stops matching
+    // and mobile horizontal scrolling breaks.
+    renderChart()
+    expect(injectedCss()).toMatch(/\.MuiChartsSurface-root[^{}]*\{[^{}]*touch-action:\s*pan-x pan-y/)
+  })
+})

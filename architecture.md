@@ -89,6 +89,12 @@ All views are pure (props in, callbacks out, no business logic):
   `barLabelPlacement: 'outside'`, gated by the `barValues` prop) and starts
   the y-axis near the lowest score to cut empty space (`yMin`). The section
   heading carries a plain "Source" link beside it (to the AA homepage).
+  MUI X sets `touch-action: pan-y` on its chart layer container (zoom
+  support), which would block horizontal touch scrolling of the chart's
+  overflow container; the scroller overrides it via the container's stable
+  `MuiChartsSurface-root` utility class (the emotion-labeled class exists
+  only in non-production builds, so keying on it breaks mobile scrolling in
+  the deployed bundle).
 - `ModelTable` - collapsible (Accordion, collapsed by default) sortable table;
   headers `Provider`, `Released`, `Model Name`, and `Intelligence`;
   click headers to
