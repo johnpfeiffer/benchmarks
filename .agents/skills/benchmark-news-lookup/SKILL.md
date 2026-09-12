@@ -32,8 +32,11 @@ Tier 2, vendor primary sources, only after critical vetting:
 - A vendor piece qualifies only when it carries full benchmark tables with
   real methodology and numbers (e.g. `anthropic.com/news` launch posts with
   eval suites, `thinkingmachines.ai`, `z.ai/blog`).
-- Established press with genuine technical depth (e.g. `theregister.com`
-  for hardware).
+- Established press with genuine technical depth (e.g. `theregister.com`,
+  whose model coverage links the vendor's technical report and walks
+  through the architectural innovations — its DeepSeek V4.1 Flash piece
+  explains the CED architecture and N-gram memory module off the linked
+  report, not just the launch claims).
 - In every case, prefer thorough third-party analysis with technical
   details and honest pros and cons over a vendor's own account.
 
