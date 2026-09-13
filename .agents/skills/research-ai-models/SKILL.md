@@ -41,9 +41,11 @@ Artificial Analysis:
     (e.g. "with fallback" maps to the `(max)` suffix).
 - Index version articles (e.g. `.../articles/artificial-analysis-intelligence-index-v4-1-1`)
   announce each score revision. When scores are refreshed for a new index
-  version, update the footer credit (`sources[0]` in `App.tsx`) to the new
-  article URL. The lead chart's source chip intentionally keeps linking to
-  the AA homepage (`intelligenceSource`) — only the footer entry changes.
+  version, update the footer credit (`sources[0]` in `App.tsx`): both the
+  article URL and the version number in its label
+  (`Artificial Analysis Intelligence Index vX.Y`). The lead chart's source
+  chip intentionally keeps linking to the AA homepage (`intelligenceSource`)
+  — only the footer entry changes.
 
 ## ai.json contract
 

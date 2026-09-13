@@ -120,8 +120,9 @@ All views are pure (props in, callbacks out, no business logic):
   clicking it does not toggle the accordion. Turning it on sets the selection
   to the open-weight models, turning it off re-selects every model.
 - `Footer` - credits the non-GPU data sources,
-  [Artificial Analysis](https://artificialanalysis.ai/articles/artificial-analysis-intelligence-index-v4-3)
-  and
+  [Artificial Analysis Intelligence Index v4.3](https://artificialanalysis.ai/articles/artificial-analysis-intelligence-index-v4-3)
+  (the label names the index version the scores cite; bump both the label and
+  the article URL on a version refresh) and
   [HuggingFace](https://huggingface.co/unsloth), and links to the
   [GitHub repository](https://github.com/johnpfeiffer/benchmarks) with an inline
   GitHub SVG mark. GPU-specific source links are rendered uniquely below the

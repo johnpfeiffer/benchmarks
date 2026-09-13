@@ -122,4 +122,11 @@ describe('acceptance: every JSON row appears in the UI', () => {
       }
     }
   })
+
+  it('credits the Artificial Analysis Intelligence Index with its version number in the footer', () => {
+    render(<App />)
+    const footer = screen.getByRole('contentinfo')
+    const credit = within(footer).getByRole('link', { name: 'Artificial Analysis Intelligence Index v4.3' })
+    expect(credit).toHaveAttribute('href', 'https://artificialanalysis.ai/articles/artificial-analysis-intelligence-index-v4-3')
+  })
 })
