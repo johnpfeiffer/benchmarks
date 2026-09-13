@@ -94,7 +94,7 @@ function DashboardController({ initialSort = DEFAULT_SORT }: { initialSort?: Sor
         { label: 'Daring Fireball: Mac configurations and pricing', href: 'https://daringfireball.net/2026/08/configurations_and_pricing_for_new_mac_minis_and_mac_studios' },
       ]}
       sources={[
-        { label: 'Artificial Analysis', href: 'https://artificialanalysis.ai/articles/artificial-analysis-intelligence-index-v4-2' },
+        { label: 'Artificial Analysis', href: 'https://artificialanalysis.ai/articles/artificial-analysis-intelligence-index-v4-3' },
       ]}
     />
   )
@@ -129,11 +129,11 @@ describe('Dashboard', () => {
     expect(screen.getByRole('heading', { name: /AI Model Benchmarks/i })).toBeInTheDocument()
     const artificialAnalysisLinks = screen.getAllByRole('link', { name: /Artificial Analysis/i })
     // The chart chip links to the AA homepage; the footer credit links to the
-    // Intelligence Index v4.2 article.
+    // Intelligence Index v4.3 article.
     expect(artificialAnalysisLinks[0]).toHaveAttribute('href', 'https://artificialanalysis.ai/')
     expect(artificialAnalysisLinks[artificialAnalysisLinks.length - 1]).toHaveAttribute(
       'href',
-      'https://artificialanalysis.ai/articles/artificial-analysis-intelligence-index-v4-2',
+      'https://artificialanalysis.ai/articles/artificial-analysis-intelligence-index-v4-3',
     )
     const githubLink = screen.getByRole('link', { name: /GitHub repository/i })
     expect(githubLink).toHaveAttribute('href', 'https://github.com/johnpfeiffer/benchmarks')
