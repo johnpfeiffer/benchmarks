@@ -102,19 +102,25 @@ func extractDateSignals(rawHTML, finalURL string) dateSignals {
 // --- Artificial Analysis model page ---
 
 type aaModel struct {
-	Title      string
-	Score      string
-	Provider   string
-	OpenSource string // "Yes" / "No" / "" when not found
-	Released   string
-	URL        string
+	Title              string
+	Score              string
+	Provider           string
+	OpenSource         string // "Yes" / "No" / "" when not found
+	Released           string
+	IndexVersion       string
+	TotalCostUSD       string // normalized decimal without currency symbol or thousands separators
+	TotalCostSource    string
+	TotalCostPrecision string
+	URL                string
 }
 
 var (
-	reAAScore    = regexp.MustCompile(`scores (?:an estimated )?(\d+) on the Artificial Analysis Intelligence Index`)
-	reAAProvider = regexp.MustCompile(`was created by ([^\n.]+)`)
-	reAAReleased = regexp.MustCompile(`was released on ([^\n.]+)`)
-	reAAOpen     = regexp.MustCompile(`open source\?\s*\n\s*(Yes|No)`)
+	reAAScore        = regexp.MustCompile(`scores (?:an estimated )?(\d+) on the Artificial Analysis Intelligence Index`)
+	reAAProvider     = regexp.MustCompile(`was created by ([^\n.]+)`)
+	reAAReleased     = regexp.MustCompile(`was released on ([^\n.]+)`)
+	reAAOpen         = regexp.MustCompile(`open source\?\s*\n\s*(Yes|No)`)
+	reAAIndexVersion = regexp.MustCompile(`Artificial Analysis Intelligence Index (v\d+(?:\.\d+)*)`)
+	reAATotalCost    = regexp.MustCompile(`(?s)In total,\s+it cost\s+\$([0-9][0-9,]*(?:\.[0-9]+)?)\s+to evaluate\b.*?\bon the Intelligence Index\.`)
 )
 
 func extractAAModel(rawHTML, finalURL string) aaModel {
@@ -131,6 +137,17 @@ func extractAAModel(rawHTML, finalURL string) aaModel {
 	}
 	if s := reAAOpen.FindStringSubmatch(text); s != nil {
 		m.OpenSource = s[1]
+	}
+	if s := reAAIndexVersion.FindStringSubmatch(text); s != nil {
+		m.IndexVersion = s[1]
+	}
+	if s := reAATotalCost.FindStringSubmatch(text); s != nil {
+		m.TotalCostUSD = strings.ReplaceAll(s[1], ",", "")
+		m.TotalCostSource = "comparison_summary"
+		m.TotalCostPrecision = "rounded_or_whole"
+		if strings.Contains(s[1], ".") {
+			m.TotalCostPrecision = "precise"
+		}
 	}
 	return m
 }

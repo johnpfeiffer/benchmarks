@@ -1,6 +1,6 @@
 ---
 name: research-ai-models
-description: Research and update AI model benchmark data on the dashboard (app/src/data/ai.json Artificial Analysis intelligence scores). Use when asked to add a model, refresh scores for a new Artificial Analysis Intelligence Index version, or verify a model's provider, open-weight status, release date, or bar color.
+description: Research and update AI model benchmark data on the dashboard (app/src/data/ai.json Artificial Analysis intelligence scores). Use when asked to add a model, refresh scores for a new Artificial Analysis Intelligence Index version, verify a model's provider, open-weight status, release date, or bar color, or extract total Intelligence Index evaluation costs for a Pareto chart.
 ---
 
 # Research AI Models
@@ -11,14 +11,19 @@ concern handled by the `benchmark-news-lookup` skill.
 
 ## Sources of truth
 
-Fetch these pages through the Go tool instead of pulling whole pages into
-context. The tool is its own Go module: run it from `tools/benchtool/`
+For score, release-date, and total-cost research, fetch model pages through the
+Go tool instead of pulling whole pages into context. For total evaluation
+costs, also follow the interpretation rules in the extraction section below.
+The tool is its own Go module: run it from `tools/benchtool/`
 (`go run . <command>`) — `go run ./tools/benchtool` from the repo root
 fails because the repo root has no go.mod.
 
-- `go run . aa-model <slug-or-url>` prints the model page's
-  Intelligence Index score, provider, open-weights status, and release date
-  (exits non-zero when no score is found — wrong slug or estimate-only).
+- `go run . aa-model <slug-or-url> [--json]` prints the model page's
+  Intelligence Index score, provider, open-weights status, release date,
+  index version, precise total evaluation cost, and cost provenance/precision.
+  JSON mode emits numbers and booleans with their native types for easier
+  Pareto snapshot authoring. The command exits non-zero when no score is found
+  (wrong slug or estimate-only); unavailable cost fields are missing/null.
 - `go run . aa-releases` prints every AA leaderboard
   variant's release date as TSV (one fetch; includes deprecated models) for
   filling or checking the `released` field across ai.json.
@@ -95,6 +100,64 @@ Refresh scores for a new Intelligence Index version:
    `hardware.json` or news still reference.
 4. Update the footer article URL in `App.tsx` (`sources[0]` only) and the
    version mention in `architecture.md`.
+
+## Extract total Intelligence Index evaluation costs
+
+The target metric is **Cost to Run Artificial Analysis Intelligence Index**:
+USD to run all evaluations in the index. It is not input/output pricing per
+million tokens, a blended token price, or the weighted **Cost per Intelligence
+Index task**. Do not derive the total by multiplying the latter by a task
+count; that metric uses evaluation weights.
+
+1. Run `go run . aa-model <slug-or-url> --json` from `tools/benchtool/`.
+   It extracts the requested model's own precise Comparison Summary total and
+   index version without scraping the comparison chart. Open the requested AA
+   `/models/<slug>` page when the command reports a missing field. Its charts contain
+   other models too: the page slug is not the identity of every plotted point.
+   Confirm the exact model, reasoning/effort variant, and provider (INV-001).
+2. For a single model, prefer its own page's **Comparison Summary**: it can
+   expose a precise total in the sentence describing the cost to evaluate the
+   model on the Intelligence Index, even when chart values are absent from
+   text extraction. Read only the relevant summary and index-version text.
+3. For chart inspection, go to **Cost**, then **Intelligence Index Total Cost**
+   for the stacked bar chart, or **Intelligence Index vs. Total Cost** for the
+   Pareto chart. Confirm the title/axis says total cost, not cost per task.
+   Use the table toggle if available, otherwise hover the exact bar or point
+   in a rendered browser. Check model selections and Model Comparison versus
+   API Provider Benchmarks; endpoint-specific runs must retain that identity.
+4. Prefer a precise displayed total (summary, table, Pareto tooltip, or an
+   authorized export) over rounded bar labels. Preserve USD decimals; do not
+   estimate from bar height or the logarithmic x-axis. If only a rounded
+   value is available, label it rounded rather than inventing cents. If a
+   download requires paid access, use public displayed values or ask for the
+   user's export; do not bypass the gate.
+5. Capture source URL, retrieval date, index version, exact variant/provider,
+   intelligence score, total USD cost, and whether the value is rounded.
+   Pair scores and costs from the same index version/snapshot; never silently
+   combine current costs with older `ai.json` scores. If the version or total
+   is unavailable, report that gap rather than assume it.
+
+Verified examples on 2026-09-13 (page text identified index v4.3; these are
+dated examples, not constants to reuse without checking):
+
+- [GLM-5.3-Flash](https://artificialanalysis.ai/models/glm-5-3-flash):
+  Z AI, intelligence 42, total **$280.28**. The user-supplied screenshots
+  show $280.28 in the Pareto tooltip and **$280** in the bar tooltip.
+- [Gemini 3.5 Flash-Lite](https://artificialanalysis.ai/models/gemini-3-5-flash-lite):
+  Google, intelligence 23, total **$266.94**, displayed as $267 in the
+  supplied bar-chart screenshot. Its $0.12 cost per task is a different metric.
+
+The GLM screenshot's component labels (Output $15, Reasoning $76, Cache Write
+$22, Cache Read $164, Non-Cache Input $4) sum to $281 because the components
+are independently rounded. Keep the authoritative $280.28 total; do not
+replace it with the sum of rounded components. Capture component costs only
+when requested and preserve their original labels and precision.
+
+For a requested data update, inspect the current Pareto data schema before
+writing: `ai.json` has no total-cost field in its documented contract. Keep
+provenance in the supported dataset metadata or accompanying research notes.
+A skill-only request does not authorize changing benchmark data or replacing
+sample data. No parser change is implied by this extraction workflow.
 
 ## Validation and PR workflow
 

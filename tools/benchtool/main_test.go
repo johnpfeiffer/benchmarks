@@ -1,6 +1,8 @@
 package main
 
 import (
+	"bytes"
+	"encoding/json"
 	"os"
 	"path/filepath"
 	"strings"
@@ -13,6 +15,8 @@ const aaFixture = `<html><head><title>Claude Fable 5.1 (max with fallback) - Int
 <h1>Claude Fable 5.1 (Adaptive Reasoning, Max Effort, Default Fallback)</h1>
 <h3>How intelligent is Claude Fable 5.1?</h3>
 <p>Claude Fable 5.1 scores 66 on the Artificial Analysis Intelligence Index.</p>
+<p>Artificial Analysis Intelligence Index v4.3 incorporates 10 evaluations.</p>
+<p>In total, it cost $13,129.07 to evaluate Claude Fable 5.1 on the Intelligence Index.</p>
 <h3>Who created it?</h3><p>Claude Fable 5.1 was created by Anthropic.</p>
 <h3>When?</h3><p>Claude Fable 5.1 was released on September 1, 2026.</p>
 <h3>Is Claude Fable 5.1 open source?</h3>
@@ -33,8 +37,56 @@ func TestExtractAAModel(t *testing.T) {
 	if m.OpenSource != "No" {
 		t.Errorf("open source = %q, want No", m.OpenSource)
 	}
+	if m.IndexVersion != "v4.3" {
+		t.Errorf("index version = %q, want v4.3", m.IndexVersion)
+	}
+	if m.TotalCostUSD != "13129.07" || m.TotalCostSource != "comparison_summary" || m.TotalCostPrecision != "precise" {
+		t.Errorf("total cost fields = %q, %q, %q", m.TotalCostUSD, m.TotalCostSource, m.TotalCostPrecision)
+	}
 	if !strings.Contains(m.Title, "Claude Fable 5.1 (max with fallback)") {
 		t.Errorf("title = %q", m.Title)
+	}
+}
+
+func TestExtractAAModelTotalCost(t *testing.T) {
+	tests := []struct {
+		name, summary, cost, precision string
+	}{
+		{"precise", "In total, it cost $280.28 to evaluate GLM-5.3-Flash on the Intelligence Index.", "280.28", "precise"},
+		{"rounded or whole", "In total, it cost $280 to evaluate GLM-5.3-Flash on the Intelligence Index.", "280", "rounded_or_whole"},
+		{"missing", "No total cost is published.", "", ""},
+	}
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			m := extractAAModel("<html><body>"+tt.summary+"</body></html>", "https://artificialanalysis.ai/models/glm-5-3-flash")
+			if m.TotalCostUSD != tt.cost || m.TotalCostPrecision != tt.precision {
+				t.Errorf("cost/precision = %q/%q, want %q/%q", m.TotalCostUSD, m.TotalCostPrecision, tt.cost, tt.precision)
+			}
+			if tt.cost == "" && m.TotalCostSource != "" {
+				t.Errorf("missing cost source = %q, want empty", m.TotalCostSource)
+			}
+		})
+	}
+}
+
+func TestWriteAAModelJSON(t *testing.T) {
+	m := extractAAModel(aaFixture, "https://artificialanalysis.ai/models/claude-fable-5-1")
+	var out bytes.Buffer
+	if err := writeAAModel(&out, m, true); err != nil {
+		t.Fatal(err)
+	}
+	var got struct {
+		IntelligenceIndex int     `json:"intelligence_index"`
+		OpenWeights       bool    `json:"open_weights"`
+		TotalCostUSD      float64 `json:"total_cost_usd"`
+		BenchmarkVersion  string  `json:"benchmark_version"`
+		TotalCostSource   string  `json:"total_cost_source"`
+	}
+	if err := json.Unmarshal(out.Bytes(), &got); err != nil {
+		t.Fatalf("invalid JSON: %v\n%s", err, out.String())
+	}
+	if got.IntelligenceIndex != 66 || got.OpenWeights || got.TotalCostUSD != 13129.07 || got.BenchmarkVersion != "v4.3" || got.TotalCostSource != "comparison_summary" {
+		t.Errorf("JSON output = %+v", got)
 	}
 }
 

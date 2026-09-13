@@ -20,6 +20,7 @@ wins.
 - **Go** (`tools/benchtool/`) for the benchmark-lookup CLI used by the
   `.agents/skills/` workflows: fetches source pages and prints just the
   fields the agent needs (AA model score/provider/open-weights/release,
+  index version, precise total evaluation cost and its provenance/precision,
   every leaderboard variant's release date via `aa-releases`, news-page
   date signals) so whole pages stay out of
   context, and inserts rows into the data JSON with the repo's formatting,
@@ -44,6 +45,8 @@ flowchart TD
     Dashboard --> News["NewsSection<br/>(collapsed; top-3 preview always visible)"]
     Dashboard --> Pareto["ParetoFrontierSection<br/>(expanded + collapsible)"]
     ParetoJSON["public/data/pareto.json"] -->|"fetch at runtime"| ParetoController["controllers/useParetoDataset"]
+    AA["Artificial Analysis<br/>/models page"] -->|"one model per request"| Benchtool["benchtool aa-model<br/>text or JSON"]
+    Benchtool -->|"review + assemble same-version snapshot"| ParetoJSON
     ParetoController -->|"parseParetoDataset; INV-001"| ParetoData["Validated snapshot"]
     ParetoData --> Pareto
     Pareto --> InteractivePareto["ParetoChart<br/>(log cost, linear intelligence)"]
@@ -243,6 +246,10 @@ journey
     Toggle asc/desc: 5: User
     Click model button to remove from the chart: 5: User
     Toggle "Open Weights" to restrict selection to open models: 5: User
+  section Maintain Pareto snapshot
+    Extract each model's score, precise total cost, and index version: 5: Maintainer
+    Review cost provenance and precision: 5: Maintainer
+    Assemble one same-version JSON snapshot: 5: Maintainer
   section Explore Hardware
     See dynamic quant size chart (1/2/4-bit): 4: User
     Sort hardware table (smartest first by default): 4: User

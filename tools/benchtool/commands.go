@@ -1,7 +1,11 @@
 package main
 
 import (
+	"encoding/json"
 	"fmt"
+	"io"
+	"os"
+	"strconv"
 	"strings"
 )
 
@@ -31,9 +35,9 @@ func cmdFetchMeta(url string) error {
 	return nil
 }
 
-// cmdAAModel prints the fields ai.json needs from an Artificial Analysis
-// model page (slug like "claude-fable-5-1" or a full URL).
-func cmdAAModel(slugOrURL string) error {
+// cmdAAModel prints model metadata and Pareto inputs from an Artificial
+// Analysis model page (slug like "claude-fable-5-1" or a full URL).
+func cmdAAModel(slugOrURL string, jsonOutput bool) error {
 	url := slugOrURL
 	if !strings.HasPrefix(url, "http") {
 		url = "https://artificialanalysis.ai/models/" + slugOrURL
@@ -43,15 +47,79 @@ func cmdAAModel(slugOrURL string) error {
 		return err
 	}
 	m := extractAAModel(body, finalURL)
-	fmt.Println("url:", m.URL)
-	fmt.Println("title:", m.Title)
-	fmt.Println("intelligence_index:", orMissing(m.Score))
-	fmt.Println("provider:", orMissing(m.Provider))
-	fmt.Println("open_weights:", orMissing(m.OpenSource))
-	fmt.Println("released:", orMissing(m.Released))
+	if err := writeAAModel(os.Stdout, m, jsonOutput); err != nil {
+		return err
+	}
 	if m.Score == "" {
 		return fmt.Errorf("no Intelligence Index score found on %s (wrong slug? estimates are marked on the leaderboard)", finalURL)
 	}
+	return nil
+}
+
+type aaModelJSON struct {
+	URL                string   `json:"url"`
+	Title              string   `json:"title"`
+	IntelligenceIndex  *int     `json:"intelligence_index"`
+	Provider           string   `json:"provider"`
+	OpenWeights        *bool    `json:"open_weights"`
+	Released           string   `json:"released,omitempty"`
+	BenchmarkVersion   string   `json:"benchmark_version,omitempty"`
+	TotalCostUSD       *float64 `json:"total_cost_usd"`
+	TotalCostSource    string   `json:"total_cost_source,omitempty"`
+	TotalCostPrecision string   `json:"total_cost_precision,omitempty"`
+}
+
+func aaModelAsJSON(m aaModel) (aaModelJSON, error) {
+	out := aaModelJSON{
+		URL: m.URL, Title: m.Title, Provider: m.Provider, Released: m.Released,
+		BenchmarkVersion: m.IndexVersion, TotalCostSource: m.TotalCostSource,
+		TotalCostPrecision: m.TotalCostPrecision,
+	}
+	if m.Score != "" {
+		score, err := strconv.Atoi(m.Score)
+		if err != nil {
+			return out, fmt.Errorf("invalid extracted Intelligence Index %q: %w", m.Score, err)
+		}
+		out.IntelligenceIndex = &score
+	}
+	switch m.OpenSource {
+	case "Yes":
+		value := true
+		out.OpenWeights = &value
+	case "No":
+		value := false
+		out.OpenWeights = &value
+	}
+	if m.TotalCostUSD != "" {
+		cost, err := strconv.ParseFloat(m.TotalCostUSD, 64)
+		if err != nil {
+			return out, fmt.Errorf("invalid extracted total cost %q: %w", m.TotalCostUSD, err)
+		}
+		out.TotalCostUSD = &cost
+	}
+	return out, nil
+}
+
+func writeAAModel(w io.Writer, m aaModel, jsonOutput bool) error {
+	if jsonOutput {
+		out, err := aaModelAsJSON(m)
+		if err != nil {
+			return err
+		}
+		encoder := json.NewEncoder(w)
+		encoder.SetIndent("", "  ")
+		return encoder.Encode(out)
+	}
+	fmt.Fprintln(w, "url:", m.URL)
+	fmt.Fprintln(w, "title:", m.Title)
+	fmt.Fprintln(w, "intelligence_index:", orMissing(m.Score))
+	fmt.Fprintln(w, "provider:", orMissing(m.Provider))
+	fmt.Fprintln(w, "open_weights:", orMissing(m.OpenSource))
+	fmt.Fprintln(w, "released:", orMissing(m.Released))
+	fmt.Fprintln(w, "benchmark_version:", orMissing(m.IndexVersion))
+	fmt.Fprintln(w, "total_cost_usd:", orMissing(m.TotalCostUSD))
+	fmt.Fprintln(w, "total_cost_source:", orMissing(m.TotalCostSource))
+	fmt.Fprintln(w, "total_cost_precision:", orMissing(m.TotalCostPrecision))
 	return nil
 }
 

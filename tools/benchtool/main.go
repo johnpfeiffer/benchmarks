@@ -7,7 +7,7 @@
 // Usage:
 //
 //	benchtool fetch-meta <url>                      title, canonical, and date metadata for a news candidate
-//	benchtool aa-model <slug-or-url>                score/provider/open-weight/release for an Artificial Analysis model page
+//	benchtool aa-model <slug-or-url> [--json]       score/provider/release plus index version and precise total cost
 //	benchtool aa-releases                           every leaderboard variant's release date as TSV (one fetch)
 //	benchtool news-add <url> <YYYY-MM-DD>           validate + dedupe + insert into news.json (newest first)
 //	benchtool ai-add <model> <score> <provider> [--open-weight] [--color=#hex] [--released=YYYY-MM-DD]
@@ -26,7 +26,7 @@ import (
 func usage() {
 	fmt.Fprintln(os.Stderr, `usage:
   benchtool fetch-meta <url>
-  benchtool aa-model <slug-or-url>
+  benchtool aa-model <slug-or-url> [--json]
   benchtool aa-releases
   benchtool news-add <url> <YYYY-MM-DD>
   benchtool ai-add <model> <score> <provider> [--open-weight] [--color=#hex] [--released=YYYY-MM-DD]
@@ -46,10 +46,10 @@ func main() {
 		}
 		err = cmdFetchMeta(os.Args[2])
 	case "aa-model":
-		if len(os.Args) != 3 {
+		if len(os.Args) != 3 && (len(os.Args) != 4 || os.Args[3] != "--json") {
 			usage()
 		}
-		err = cmdAAModel(os.Args[2])
+		err = cmdAAModel(os.Args[2], len(os.Args) == 4)
 	case "aa-releases":
 		err = cmdAAReleases()
 	case "news-add":

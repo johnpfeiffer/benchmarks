@@ -3,6 +3,29 @@ Benchmarks of interesting things
 
 <https://feneky.com/benchmarks>
 
+## Developer setup
+
+Install and validate the dashboard from `app/`:
+
+```sh
+npm install
+npm test
+npm run build
+```
+
+The benchmark research CLI is a separate Go module:
+
+```sh
+cd tools/benchtool
+go test ./...
+go run . aa-model glm-5-3-flash
+go run . aa-model gemini-3-5-flash-lite --json
+```
+
+`aa-model` reports score, provider, open-weight status, release date, benchmark
+version, and the precise total USD cost from the model's Comparison Summary.
+The JSON form keeps score/cost numeric and open-weight status boolean; a missing
+published total is `null`. It does not scrape the multi-model comparison chart.
 
 
 # Pareto chart data
@@ -67,4 +90,3 @@ does not follow the main dashboard's model selection.
 
 The historical PNG remains available in the reference panel. Its date and
 scores can differ from the interactive snapshot.
-
