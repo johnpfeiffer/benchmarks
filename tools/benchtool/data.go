@@ -107,11 +107,16 @@ func cmdNewsAdd(rawURL, date string) error {
 // --- ai.json ---
 
 type aiRow struct {
-	Model      string `json:"model"`
-	Score      int    `json:"intelligence_score"`
-	Provider   string `json:"provider"`
-	OpenWeight bool   `json:"open_weight"`
-	Color      string `json:"color"`
+	Model string `json:"model"`
+	Score int    `json:"intelligence_score"`
+	// CostUSD is the precise total Artificial Analysis charges to run the
+	// Intelligence Index on this model (comparison summary), from the same
+	// index version as Score. Nil renders the field away entirely; a row
+	// either carries a verified positive cost or no cost key at all.
+	CostUSD    *float64 `json:"cost_usd,omitempty"`
+	Provider   string   `json:"provider"`
+	OpenWeight bool     `json:"open_weight"`
+	Color      string   `json:"color"`
 	// Released is the model's release date (YYYY-MM-DD); nil renders null
 	// for models whose date is unknown or unverified.
 	Released *string `json:"released"`
@@ -133,12 +138,30 @@ var providerColors = map[string]string{
 }
 
 func renderAIRow(r aiRow) string {
+	cost := ""
+	if r.CostUSD != nil {
+		cost = fmt.Sprintf(`, "cost_usd": %s`, strconv.FormatFloat(*r.CostUSD, 'f', -1, 64))
+	}
 	released := "null"
 	if r.Released != nil {
 		released = jsonString(*r.Released)
 	}
-	return fmt.Sprintf(`{"model": %s, "intelligence_score": %d, "provider": %s, "open_weight": %t, "color": %s, "released": %s}`,
-		jsonString(r.Model), r.Score, jsonString(r.Provider), r.OpenWeight, jsonString(r.Color), released)
+	return fmt.Sprintf(`{"model": %s, "intelligence_score": %d%s, "provider": %s, "open_weight": %t, "color": %s, "released": %s}`,
+		jsonString(r.Model), r.Score, cost, jsonString(r.Provider), r.OpenWeight, jsonString(r.Color), released)
+}
+
+// parseAICost validates a --cost=USD flag value: a positive finite dollar
+// amount. Zero is rejected because the Pareto chart's log cost axis (and the
+// app-side parser) require a positive cost.
+func parseAICost(flag string) (float64, error) {
+	cost, err := strconv.ParseFloat(strings.TrimPrefix(flag, "--cost="), 64)
+	if err != nil {
+		return 0, fmt.Errorf("cost %q is not a number", flag)
+	}
+	if cost <= 0 {
+		return 0, fmt.Errorf("cost must be a positive USD amount, got %v", cost)
+	}
+	return cost, nil
 }
 
 func cmdAIAdd(args []string) error {
@@ -156,12 +179,18 @@ func cmdAIAdd(args []string) error {
 				return err
 			}
 			row.Released = &date
+		case strings.HasPrefix(a, "--cost="):
+			cost, err := parseAICost(a)
+			if err != nil {
+				return err
+			}
+			row.CostUSD = &cost
 		default:
 			positional = append(positional, a)
 		}
 	}
 	if len(positional) != 3 {
-		return fmt.Errorf("ai-add expects <model> <score> <provider> [--open-weight] [--color=#hex] [--released=YYYY-MM-DD]")
+		return fmt.Errorf("ai-add expects <model> <score> <provider> [--open-weight] [--color=#hex] [--released=YYYY-MM-DD] [--cost=USD]")
 	}
 	row.Model, row.Provider = positional[0], positional[2]
 	score, err := strconv.Atoi(positional[1])

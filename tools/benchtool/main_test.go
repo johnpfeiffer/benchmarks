@@ -149,6 +149,37 @@ func TestRenderAIRow(t *testing.T) {
 	if !strings.HasSuffix(got, `"released": null}`) {
 		t.Errorf("nil released = %s", got)
 	}
+	// A measured total run cost renders between the score and the provider.
+	cost := 13128.86
+	got = renderAIRow(aiRow{Model: "Claude Fable 5.1 (max)", Score: 53, Provider: "Anthropic", OpenWeight: false, Color: "#cc785c", CostUSD: &cost, Released: &date})
+	want = `{"model": "Claude Fable 5.1 (max)", "intelligence_score": 53, "cost_usd": 13128.86, "provider": "Anthropic", "open_weight": false, "color": "#cc785c", "released": "2026-09-01"}`
+	if got != want {
+		t.Errorf("renderAIRow with cost =\n%s\nwant\n%s", got, want)
+	}
+}
+
+func TestAIRowCostRoundTrip(t *testing.T) {
+	// Rows carrying cost_usd must survive read + rewrite byte-identically, or
+	// ai-add/ai-set-released would silently strip measured costs.
+	line := `{"model": "GLM-5.3 Flash", "intelligence_score": 42, "cost_usd": 280.28, "provider": "Z AI", "open_weight": true, "color": "#1c7ff8", "released": "2026-08-26"}`
+	var row aiRow
+	if err := json.Unmarshal([]byte(line), &row); err != nil {
+		t.Fatal(err)
+	}
+	if got := renderAIRow(row); got != line {
+		t.Errorf("round trip =\n%s\nwant\n%s", got, line)
+	}
+}
+
+func TestAIAddCostFlag(t *testing.T) {
+	if _, err := parseAICost("--cost=280.28"); err != nil {
+		t.Errorf("valid cost rejected: %v", err)
+	}
+	for _, bad := range []string{"--cost=0", "--cost=-5", "--cost=abc", "--cost="} {
+		if _, err := parseAICost(bad); err == nil {
+			t.Errorf("parseAICost(%q) = nil, want error", bad)
+		}
+	}
 }
 
 func TestExtractAAReleases(t *testing.T) {

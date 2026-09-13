@@ -72,6 +72,14 @@ function normalize(raw: RawModelEntry, index: number): ModelEntry {
   }
   const model = assertModelName(raw?.model, index)
   const score = assertScore(raw?.intelligence_score, index, model, 'intelligence_score')
+  const cost = raw?.cost_usd
+  if (cost !== undefined && (typeof cost !== 'number' || !Number.isFinite(cost) || cost <= 0)) {
+    throw new InvariantError(
+      `Entry at index ${index} ("${model}") has an invalid cost_usd`,
+      index,
+      'MODEL-COST',
+    )
+  }
   const color = typeof raw?.color === 'string' && raw.color.trim() !== '' ? raw.color : undefined
   const released = raw?.released === undefined || raw?.released === null
     ? null
@@ -81,6 +89,7 @@ function normalize(raw: RawModelEntry, index: number): ModelEntry {
     id: makeId(provider, model),
     model,
     score,
+    ...(cost !== undefined ? { cost_usd: cost } : {}),
     provider,
     open_weight: Boolean(raw.open_weight),
     released,

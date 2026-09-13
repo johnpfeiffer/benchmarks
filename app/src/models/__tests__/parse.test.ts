@@ -54,6 +54,36 @@ describe('parseModelEntries', () => {
     }
   })
 
+  it('passes through a positive total benchmark run cost', () => {
+    const out = parseModelEntries([
+      { model: 'X', intelligence_score: 42, provider: 'P', cost_usd: 280.28 },
+    ])
+    expect(out[0].cost_usd).toBe(280.28)
+  })
+
+  it('omits cost_usd when the raw field is missing', () => {
+    const out = parseModelEntries(valid)
+    expect(out[0].cost_usd).toBeUndefined()
+  })
+
+  it.each([
+    { name: 'zero', cost_usd: 0 },
+    { name: 'negative', cost_usd: -1 },
+    { name: 'non-finite', cost_usd: Infinity },
+    { name: 'non-number', cost_usd: '280.28' },
+    { name: 'null', cost_usd: null },
+  ])('rejects an unusable cost: $name', ({ cost_usd }) => {
+    try {
+      parseModelEntries([
+        { model: 'X', intelligence_score: 1, provider: 'P', cost_usd: cost_usd as unknown as number },
+      ])
+      throw new Error('should have thrown')
+    } catch (e) {
+      expect(e).toBeInstanceOf(InvariantError)
+      expect((e as InvariantError).invariant).toBe('MODEL-COST')
+    }
+  })
+
   it('defaults open_weight to false when the raw field is missing', () => {
     const out = parseModelEntries(valid)
     expect(out[1].open_weight).toBe(false)

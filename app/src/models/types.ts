@@ -10,6 +10,14 @@
 export interface RawModelEntry {
   model: string
   intelligence_score: number
+  /**
+   * Total USD Artificial Analysis charges to run the Intelligence Index on
+   * this model, measured under the same index version as the score. Optional
+   * in raw data; must be a positive finite number when present (the Pareto
+   * chart's log cost axis cannot plot zero). Omit when AA publishes no
+   * precise total.
+   */
+  cost_usd?: number
   provider: string
   /** Whether the model's weights are openly available. Optional in raw data. */
   open_weight?: boolean
@@ -122,6 +130,8 @@ export interface ModelEntry {
   model: string
   /** Primary benchmark score, the "Score" column in the dashboard. */
   score: number
+  /** Total benchmark run cost (USD), same index version as the score. */
+  cost_usd?: number
   provider: string
   /** Whether the model's weights are openly available. Always present after parse. */
   open_weight: boolean
