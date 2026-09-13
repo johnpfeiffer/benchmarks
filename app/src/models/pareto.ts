@@ -1,3 +1,5 @@
+import type { ModelEntry } from './types'
+
 export interface ParetoPoint {
   /** Include the effort variant in the name, e.g. Model (high). */
   model: string
@@ -13,6 +15,34 @@ export interface ParetoDataset {
   date: string
   sample: boolean
   models: ParetoPoint[]
+}
+
+/**
+ * Metadata for the bundled default snapshot: the index version every ai.json
+ * score was refreshed under, and the date the per-model pages were read.
+ * Bump both whenever ai.json is re-snapshotted from Artificial Analysis.
+ */
+export const PARETO_SNAPSHOT_VERSION = 'Artificial Analysis Intelligence Index v4.3'
+export const PARETO_SNAPSHOT_DATE = '2026-09-13'
+
+/**
+ * Build the default snapshot from ai.json rows that carry a measured total
+ * benchmark cost. Every point pairs the score and cost read from the same
+ * model page under the same index version, so the snapshot stays
+ * single-version. Rows without a cost are skipped: the log cost axis needs a
+ * real positive cost and omitting a row beats inventing one.
+ */
+export function paretoSnapshotFromModels(entries: readonly ModelEntry[]): ParetoDataset {
+  const models = entries
+    .filter((entry) => typeof entry.cost_usd === 'number')
+    .map((entry) => ({
+      model: entry.model,
+      provider: entry.provider,
+      intelligence: entry.score,
+      cost_usd: entry.cost_usd as number,
+      ...(entry.color ? { color: entry.color } : {}),
+    }))
+  return { benchmark_version: PARETO_SNAPSHOT_VERSION, date: PARETO_SNAPSHOT_DATE, sample: false, models }
 }
 
 function record(value: unknown): Record<string, unknown> {

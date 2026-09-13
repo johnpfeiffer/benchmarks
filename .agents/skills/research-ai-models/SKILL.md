@@ -47,8 +47,8 @@ Artificial Analysis:
 
 ## ai.json contract
 
-Row shape: `{ "model", "intelligence_score", "provider", "open_weight",
-"color", "released" }`.
+Row shape: `{ "model", "intelligence_score", "cost_usd"?, "provider",
+"open_weight", "color", "released" }`.
 
 - INV-001: every row requires a provider; the parser throws at load
   otherwise. Missing provider = add one, never omit.
@@ -64,6 +64,13 @@ Row shape: `{ "model", "intelligence_score", "provider", "open_weight",
   to the theme gray.
 - `released` is the model's release date (`YYYY-MM-DD`) or null; the data
   invariant requires it populated for every row.
+- `cost_usd` is optional: the precise total USD Artificial Analysis charges
+  to run the Intelligence Index on the model, read from the same model page
+  under the same index version as the score. Omit the key when AA publishes
+  no precise total (or a $0 total, which the Pareto log axis cannot plot).
+  The parser rejects zero, negative, and non-numeric values (`MODEL-COST`).
+  Costed rows feed the Pareto chart's default snapshot
+  (`paretoSnapshotFromModels` in `app/src/models/pareto.ts`).
 - Naming: effort suffix in parentheses — `(max)`, `(xhigh)`, `(high)`;
   dated variants keep their date slug (`DeepSeek V4 Pro 0813 (max)`).
   `hardware.json` joins `ai.json` rows via `modelMatchKey` (lowercases,
@@ -79,12 +86,13 @@ Add a model:
    provider, open-weights status, and release date; confirm the variant
    matches the naming convention.
 2. Insert the row with
-   `go run . ai-add "<model>" <score> "<provider>" [--open-weight] [--color=#hex] --released=<YYYY-MM-DD>`.
+   `go run . ai-add "<model>" <score> "<provider>" [--open-weight] [--color=#hex] --released=<YYYY-MM-DD> [--cost=USD]`.
    The tool keeps score-descending order, rejects duplicates, and applies
    the provider palette automatically (`--color` only for providers missing
    from the palette). Every row must carry its verified release date
    (a data invariant enforced by the test suite); use the date from step 1,
-   or `aa-releases` when filling dates in bulk.
+   or `aa-releases` when filling dates in bulk. Pass `--cost=` with the
+   precise total from step 1 when the model page publishes one.
 3. No test edits are needed for the new row: the acceptance suite
    (`app/src/views/__tests__/acceptance.test.tsx`) renders the real data
    through the UI and checks every JSON row appears in its listing, and
@@ -153,11 +161,14 @@ are independently rounded. Keep the authoritative $280.28 total; do not
 replace it with the sum of rounded components. Capture component costs only
 when requested and preserve their original labels and precision.
 
-For a requested data update, inspect the current Pareto data schema before
-writing: `ai.json` has no total-cost field in its documented contract. Keep
-provenance in the supported dataset metadata or accompanying research notes.
-A skill-only request does not authorize changing benchmark data or replacing
-sample data. No parser change is implied by this extraction workflow.
+For a requested data update, record the verified total on the model's
+`ai.json` row as `cost_usd` (the contract above); the Pareto chart's default
+snapshot derives automatically from costed rows. When a refresh re-snapshots
+scores under a new index version, bump `PARETO_SNAPSHOT_VERSION` and
+`PARETO_SNAPSHOT_DATE` in `app/src/models/pareto.ts` to the new version and
+the retrieval date. Keep provenance (source URL, retrieval date, precision)
+in the PR body or accompanying research notes. A skill-only request does not
+authorize changing benchmark data.
 
 ## Validation and PR workflow
 

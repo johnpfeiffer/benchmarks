@@ -1,5 +1,6 @@
 import { describe, expect, it } from 'vitest'
-import { paretoFrontier, parseParetoDataset, meetsParetoTarget } from '../pareto'
+import { paretoFrontier, parseParetoDataset, meetsParetoTarget, paretoSnapshotFromModels, PARETO_SNAPSHOT_DATE, PARETO_SNAPSHOT_VERSION } from '../pareto'
+import type { ModelEntry } from '../types'
 
 const rows = [
   { model: 'Cheap', provider: 'A', intelligence: 40, cost_usd: 100 },
@@ -36,5 +37,26 @@ describe('Pareto comparison', () => {
     for (const change of [{ benchmark_version: '' }, { date: '2026-02-30' }, { sample: undefined }, { models: [] }, { models: [rows[0], rows[0]] }]) {
       expect(() => parseParetoDataset({ ...dataset, ...change })).toThrow()
     }
+  })
+})
+
+describe('paretoSnapshotFromModels', () => {
+  const entries: ModelEntry[] = [
+    { id: 'a:x', model: 'X', score: 50, provider: 'A', open_weight: true, released: null, cost_usd: 300, color: '#112233' },
+    { id: 'a:y', model: 'Y', score: 60, provider: 'A', open_weight: false, released: null },
+    { id: 'b:z', model: 'Z', score: 40, provider: 'B', open_weight: false, released: null, cost_usd: 100 },
+  ]
+
+  it('keeps only rows carrying a measured cost and maps the chart fields', () => {
+    const snapshot = paretoSnapshotFromModels(entries)
+    expect(snapshot.sample).toBe(false)
+    expect(snapshot.benchmark_version).toBe(PARETO_SNAPSHOT_VERSION)
+    expect(snapshot.date).toBe(PARETO_SNAPSHOT_DATE)
+    expect(snapshot.models.map((point) => point.model)).toEqual(['X', 'Z'])
+    expect(snapshot.models[0]).toEqual({ model: 'X', provider: 'A', intelligence: 50, cost_usd: 300, color: '#112233' })
+  })
+
+  it('produces a snapshot that satisfies the import contract', () => {
+    expect(() => parseParetoDataset(paretoSnapshotFromModels(entries))).not.toThrow()
   })
 })

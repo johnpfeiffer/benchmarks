@@ -1,6 +1,7 @@
 import { describe, it, expect } from 'vitest'
 import { parseModelEntries, parseNewsEntries, parseHardwareEntries, parseMachineEntries } from '../parse'
 import { mergeHardwareIntelligence, modelMatchKey } from '../merge'
+import { parseParetoDataset, paretoSnapshotFromModels } from '../pareto'
 import rawIntelligenceData from '../../data/ai.json'
 import rawNewsData from '../../data/news.json'
 import rawHardwareData from '../../data/hardware.json'
@@ -55,6 +56,15 @@ describe('embedded data integrity', () => {
       expect(entry.released).not.toBeNull()
       expect(entry.released as string <= today).toBe(true)
     }
+  })
+
+  it('derives a valid real Pareto default snapshot from the costed ai.json rows', () => {
+    // The chart's default data comes from ai.json; this pins the derivation
+    // so a data edit that empties or breaks the snapshot fails here.
+    const snapshot = paretoSnapshotFromModels(intelligence)
+    expect(snapshot.sample).toBe(false)
+    expect(snapshot.models.length).toBeGreaterThanOrEqual(20)
+    expect(() => parseParetoDataset(snapshot)).not.toThrow()
   })
 
   it('news URLs are unique', () => {

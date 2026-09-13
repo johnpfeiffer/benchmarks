@@ -28,20 +28,23 @@ it('updates targets without changing the frontier and exposes point details to k
 })
 
 describe('Pareto dataset loading', () => {
-  it('loads bundled JSON, labels sample data, and rejects invalid imports without losing the chart', async () => {
+  it('loads the ai.json-derived snapshot and rejects invalid imports without losing the chart', async () => {
     render(<ParetoFrontierSection />)
-    await screen.findByText(/Sample data — fictional models/)
-    expect(screen.getByText(/Illustrative sample — not benchmark measurements/)).toBeInTheDocument()
+    // The published default is real measured data: no sample banner.
+    await screen.findByText(/Artificial Analysis Intelligence Index v4\.3 · Snapshot/)
+    expect(screen.queryByText(/Sample data — fictional models/)).not.toBeInTheDocument()
+    expect(screen.getByRole('button', { name: /GLM-5\.3 Flash, Z AI, intelligence 42/ })).toBeInTheDocument()
     fireEvent.click(screen.getByText('Load chart data'))
     fireEvent.change(screen.getByLabelText('Chart JSON'), { target: { value: '{"models": []}' } })
     fireEvent.click(screen.getByRole('button', { name: 'Apply JSON' }))
     expect(screen.getByRole('alert')).toHaveTextContent('benchmark_version is required.')
-    expect(screen.getByRole('button', { name: /Example Mini, Example Labs A/ })).toBeInTheDocument()
-    fireEvent.change(screen.getByLabelText('Chart JSON'), { target: { value: JSON.stringify({ ...dataset, sample: false, benchmark_version: 'Imported version' }) } })
+    expect(screen.getByRole('button', { name: /GLM-5\.3 Flash, Z AI, intelligence 42/ })).toBeInTheDocument()
+    fireEvent.change(screen.getByLabelText('Chart JSON'), { target: { value: JSON.stringify({ ...dataset, benchmark_version: 'Imported version' }) } })
     fireEvent.click(screen.getByRole('button', { name: 'Apply JSON' }))
-    expect(screen.queryByText(/Sample data — fictional models/)).not.toBeInTheDocument()
+    expect(screen.getByText(/Sample data — fictional models/)).toBeInTheDocument()
     expect(screen.getByText(/Imported version · Snapshot/)).toBeInTheDocument()
     fireEvent.click(screen.getByRole('button', { name: 'Reload published data' }))
-    expect(screen.getByText(/Illustrative sample — not benchmark measurements/)).toBeInTheDocument()
+    expect(screen.queryByText(/Sample data — fictional models/)).not.toBeInTheDocument()
+    expect(screen.getByText(/Artificial Analysis Intelligence Index v4\.3 · Snapshot/)).toBeInTheDocument()
   })
 })
