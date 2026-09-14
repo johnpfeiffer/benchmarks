@@ -28,6 +28,16 @@ The JSON form keeps score/cost numeric and open-weight status boolean; a missing
 published total is `null`. It does not scrape the multi-model comparison chart.
 
 
+# Intelligence Index versions
+
+`app/src/data/ai.json` keeps one block of rows per Artificial Analysis
+Intelligence Index version (`aa_version`), so methodology revisions never
+erase the previous snapshot. The toggle in the chart header swaps the chart
+and the Model Details table between versions (currently v4.3 and v4.2);
+hardware tables always show the newest version's scores. A model that was
+never re-measured under a version simply has no row in that block.
+
+
 # Pareto chart data
 
 The chart's default snapshot is derived at load time from the

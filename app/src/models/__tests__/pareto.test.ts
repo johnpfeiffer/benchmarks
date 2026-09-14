@@ -42,17 +42,18 @@ describe('Pareto comparison', () => {
 
 describe('paretoSnapshotFromModels', () => {
   const entries: ModelEntry[] = [
-    { id: 'a:x', model: 'X', score: 50, provider: 'A', open_weight: true, released: null, cost_usd: 300, color: '#112233' },
-    { id: 'a:y', model: 'Y', score: 60, provider: 'A', open_weight: false, released: null },
-    { id: 'b:z', model: 'Z', score: 40, provider: 'B', open_weight: false, released: null, cost_usd: 100 },
+    { id: 'a:x', model: 'X', score: 50, aa_version: 'v4.3', provider: 'A', open_weight: true, released: null, cost_usd: 300, color: '#112233' },
+    { id: 'a:y', model: 'Y', score: 60, aa_version: 'v4.3', provider: 'A', open_weight: false, released: null },
+    { id: 'a:x-old', model: 'X', score: 55, aa_version: 'v4.2', provider: 'A', open_weight: true, released: null, cost_usd: 250 },
   ]
 
-  it('keeps only rows carrying a measured cost and maps the chart fields', () => {
+  it('keeps only snapshot-version rows carrying a measured cost and maps the chart fields', () => {
     const snapshot = paretoSnapshotFromModels(entries)
     expect(snapshot.sample).toBe(false)
     expect(snapshot.benchmark_version).toBe(PARETO_SNAPSHOT_VERSION)
     expect(snapshot.date).toBe(PARETO_SNAPSHOT_DATE)
-    expect(snapshot.models.map((point) => point.model)).toEqual(['X', 'Z'])
+    // Y lacks a cost; the v4.2 row of X is a different snapshot.
+    expect(snapshot.models.map((point) => point.model)).toEqual(['X'])
     expect(snapshot.models[0]).toEqual({ model: 'X', provider: 'A', intelligence: 50, cost_usd: 300, color: '#112233' })
   })
 

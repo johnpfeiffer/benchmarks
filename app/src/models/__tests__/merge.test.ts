@@ -11,9 +11,9 @@ describe('modelMatchKey', () => {
 
 describe('mergeHardwareIntelligence', () => {
   const ai: ModelEntry[] = [
-    { id: 'openai:gpt-5.6-sol-max', model: 'GPT-5.6 Sol (max)', score: 59, provider: 'OpenAI', open_weight: false, released: null },
-    { id: 'openai:gpt-5.6-terra-max', model: 'GPT-5.6 Terra (max)', score: 56, provider: 'OpenAI', open_weight: false, released: null },
-    { id: 'minimax:minimax-m3', model: 'MiniMax-M3', score: 44, provider: 'MiniMax', open_weight: true, released: null },
+    { id: 'openai:gpt-5.6-sol-max', model: 'GPT-5.6 Sol (max)', score: 59, aa_version: 'v9.9', provider: 'OpenAI', open_weight: false, released: null },
+    { id: 'openai:gpt-5.6-terra-max', model: 'GPT-5.6 Terra (max)', score: 56, aa_version: 'v9.9', provider: 'OpenAI', open_weight: false, released: null },
+    { id: 'minimax:minimax-m3', model: 'MiniMax-M3', score: 44, aa_version: 'v9.9', provider: 'MiniMax', open_weight: true, released: null },
   ]
   const hardwareRow = (model: string): HardwareEntry => ({
     model,

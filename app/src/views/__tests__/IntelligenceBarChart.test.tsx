@@ -20,7 +20,7 @@ vi.mock('@mui/x-charts/BarChart', () => ({
 }))
 
 const entries: ModelEntry[] = [
-  { id: 'anthropic:alpha', model: 'Alpha', score: 60, provider: 'Anthropic', open_weight: false, released: null, color: '#cc785c' },
+  { id: 'anthropic:alpha', model: 'Alpha', score: 60, aa_version: 'v9.9', provider: 'Anthropic', open_weight: false, released: null, color: '#cc785c' },
 ]
 
 function renderChart(barValues?: boolean) {

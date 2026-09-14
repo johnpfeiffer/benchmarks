@@ -67,16 +67,27 @@ flowchart TD
 
 | File | Responsibility |
 | --- | --- |
-| `types.ts` | `ModelEntry`, `NewsEntry`, `HardwareEntry`, `GpuEntry`, `MachineEntry`, their raw JSON shapes, and benchmark sort types; `ModelEntry.open_weight` is always present after parse; `ModelEntry.color` is the explicit bar color carried from `ai.json`; `ModelEntry.released` is the release date (`YYYY-MM-DD` or null); `ModelEntry.cost_usd` is the optional total benchmark run cost carried from `ai.json` |
-| `parse.ts` | `parseModelEntries`, `parseNewsEntries`, `parseHardwareEntries`, `parseGpuEntries`, `parseMachineEntries`, and `InvariantError`; upholds **INV-001** (every model has a provider) and structural guards at the single gate. News URLs and ISO dates are validated, copied, and sorted newest first before reaching the view; model release dates share the same strict calendar-date guard (`MODEL-RELEASED`). Hardware entries are validated (provider, model, total_params, url required; quant sizes nullable). GPU entries are validated (model, date required; memory, memory_type, memory_bandwidth_gbs, fp16_tflops nullable). Machine entries are validated (machine, chip, vram_gb, url required; memory_bandwidth_gbs, price_usd nullable) |
-| `merge.ts` | `mergeHardwareIntelligence`, `modelMatchKey`; attaches each hardware row's intelligence score via a normalized model-name match with a unique-prefix fallback. `modelMatchKey` ignores parenthetical effort suffixes and "preview" |
+| `types.ts` | `ModelEntry`, `NewsEntry`, `HardwareEntry`, `GpuEntry`, `MachineEntry`, their raw JSON shapes, and benchmark sort types; `ModelEntry.open_weight` is always present after parse; `ModelEntry.color` is the explicit bar color carried from `ai.json`; `ModelEntry.released` is the release date (`YYYY-MM-DD` or null); `ModelEntry.aa_version` is the required Intelligence Index version tag carried from `ai.json` (`ModelEntry.id` stays versionless so selections survive version switches); `ModelEntry.cost_usd` is the optional total benchmark run cost carried from `ai.json` |
+| `parse.ts` | `parseModelEntries`, `parseNewsEntries`, `parseHardwareEntries`, `parseGpuEntries`, `parseMachineEntries`, and `InvariantError`; upholds **INV-001** (every model has a provider) and structural guards at the single gate. News URLs and ISO dates are validated, copied, and sorted newest first before reaching the view; model release dates share the same strict calendar-date guard (`MODEL-RELEASED`), and index version tags are shape-checked (`MODEL-AA-VERSION`). Hardware entries are validated (provider, model, total_params, url required; quant sizes nullable). GPU entries are validated (model, date required; memory, memory_type, memory_bandwidth_gbs, fp16_tflops nullable). Machine entries are validated (machine, chip, vram_gb, url required; memory_bandwidth_gbs, price_usd nullable) |
+| `merge.ts` | `mergeHardwareIntelligence`, `modelMatchKey`; attaches each hardware row's intelligence score via a normalized model-name match with a unique-prefix fallback. `modelMatchKey` ignores parenthetical effort suffixes and "preview". Callers pass the newest version's block only (see `App.tsx`), since a hardware row carries a single score |
+| `version.ts` | `compareAAVersions`, `aaVersionsDesc`, `filterByAAVersion`; numeric newest-first ordering of the `aa_version` tags present in a row set, and the per-version row slice the dashboard renders |
 | `sort.ts` | `sortModels`, `nextSortState`, `DEFAULT_SORT` (score desc) |
 | `filter.ts` | `openWeightIds`; the id set used by the "Open Weights" preset |
 | `index.ts` | Public re-exports |
 
-`data/ai.json` scores track the Artificial Analysis Intelligence Index
-(currently v4.3). Rows are authored sorted by score descending (ties keep
-file order; `benchtool ai-add` maintains this), and every row carries a
+`data/ai.json` tracks the Artificial Analysis Intelligence Index, keeping one
+row per model **per index version**: every row carries `aa_version` (e.g.
+`v4.3`, the tags from AA's methodology version history, enforced by
+`MODEL-AA-VERSION` in `parse.ts`). A methodology refresh augments the file —
+the re-measured rows are inserted as a new block and the previous block is
+kept — so older snapshots survive and score variance stays visible in the
+data itself. Rows are grouped newest version block first, score descending
+within a block (ties keep file order; `benchtool ai-add` maintains both). A
+model never re-measured under a version simply has no row in that block. The
+chart and Model Details table show one version at a time, switched by the
+toggle in the chart section header; hardware rows always merge their score
+from the newest block. Entry ids are versionless (`provider:model`), so chart
+selections survive the switch. Every row carries a
 verified `released` date sourced from the Artificial Analysis leaderboard
 (`benchtool aa-releases`). A row may also carry `cost_usd`: the precise total
 Artificial Analysis charges to run the index on that model, read from the
@@ -121,8 +132,8 @@ All views are pure (props in, callbacks out, no business logic):
   to the open-weight models, turning it off re-selects every model.
 - `Footer` - credits the non-GPU data sources,
   [Artificial Analysis Intelligence Index v4.3](https://artificialanalysis.ai/articles/artificial-analysis-intelligence-index-v4-3)
-  (the label names the index version the scores cite; bump both the label and
-  the article URL on a version refresh) and
+  (the label names the newest index version present in `ai.json`; bump both
+  the label and the article URL when a new version block lands) and
   [HuggingFace](https://huggingface.co/unsloth), and links to the
   [GitHub repository](https://github.com/johnpfeiffer/benchmarks) with an inline
   GitHub SVG mark. GPU-specific source links are rendered uniquely below the
@@ -145,10 +156,12 @@ All views are pure (props in, callbacks out, no business logic):
   frontier". The published snapshot is derived at load from the `ai.json` rows
   carrying `cost_usd` (`paretoSnapshotFromModels` in `models/pareto.ts`,
   surfaced through `controllers/useParetoDataset`), so the default chart is
-  real measured data (`sample: false`) and stays single-version: each point
-  pairs the score and cost read from the same AA model page under the same
-  index version. The snapshot's version/date constants
-  (`PARETO_SNAPSHOT_VERSION`, `PARETO_SNAPSHOT_DATE`) are bumped with each
+  real measured data (`sample: false`) and stays single-version:
+  `PARETO_SNAPSHOT_AA_VERSION` pins which `aa_version` block the points are
+  drawn from, and each point pairs the score and cost read from the same AA
+  model page under that index version. The snapshot's version/date constants
+  (`PARETO_SNAPSHOT_AA_VERSION`, `PARETO_SNAPSHOT_VERSION`,
+  `PARETO_SNAPSHOT_DATE`) are bumped with each
   `ai.json` re-snapshot. `models/pareto.ts` validates provider
   (INV-001), unique model variants, positive finite cost, intelligence 0–100,
   snapshot date, benchmark version, and explicit sample status.
@@ -214,15 +227,22 @@ All views are pure (props in, callbacks out, no business logic):
   specifications table with source links below, then a Local Hardware section
   ("Local AI Machines") with source links below, then footer. News sits
   between the lead intelligence chart and model details, collapsed by default
-  with its top 3 links visible.
+  with its top 3 links visible. The intelligence section header carries the
+  index-version toggle (MUI `ToggleButtonGroup`, right-aligned) that swaps the
+  chart and details table between the version blocks of `ai.json`; it renders
+  only when the data carries more than one version.
 
 ### Controller (`App.tsx`)
 
 Parses embedded JSON once (`useMemo`), including validated newest-first news,
 HuggingFace hardware entries, GPU specification entries, and local machine
-entries, holds the table `SortState` and selected model
-IDs for the intelligence chart, computes sorted/chart-visible entries, and
-forwards header clicks through `nextSortState`. Deselected models are
+entries, holds the selected index version, the table `SortState` and selected
+model
+IDs for the intelligence chart, computes sorted/chart-visible entries from the
+selected version's block (`filterByAAVersion`), and
+forwards header clicks through `nextSortState`. Hardware rows merge their
+intelligence score from the newest version's block only, regardless of the
+selected view version. Deselected models are
 filtered out of the chart while their rows stay visible in the table. The
 "Open Weights"
 preset is a selection: on ->

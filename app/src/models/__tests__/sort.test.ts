@@ -7,6 +7,7 @@ const entries: ModelEntry[] = [
     id: 'openai:gamma',
     model: 'Gamma',
     score: 50,
+    aa_version: 'v9.9',
     provider: 'OpenAI',
     open_weight: false,
     released: '2026-05-01',
@@ -15,11 +16,12 @@ const entries: ModelEntry[] = [
     id: 'anthropic:alpha',
     model: 'Alpha',
     score: 60,
+    aa_version: 'v9.9',
     provider: 'Anthropic',
     open_weight: false,
     released: '2026-07-01',
   },
-  { id: 'openai:beta', model: 'Beta', score: 60, provider: 'OpenAI', open_weight: false, released: null },
+  { id: 'openai:beta', model: 'Beta', score: 60, aa_version: 'v9.9', provider: 'OpenAI', open_weight: false, released: null },
 ]
 
 describe('sortModels', () => {

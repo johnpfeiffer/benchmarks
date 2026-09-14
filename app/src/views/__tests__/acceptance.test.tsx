@@ -8,6 +8,8 @@ import {
   parseGpuEntries,
   parseMachineEntries,
   mergeHardwareIntelligence,
+  aaVersionsDesc,
+  filterByAAVersion,
 } from '../../models'
 import rawIntelligenceData from '../../data/ai.json'
 import rawNewsData from '../../data/news.json'
@@ -24,7 +26,11 @@ import rawMachineData from '../../data/machines.json'
  */
 const intelligence = parseModelEntries(rawIntelligenceData)
 const news = parseNewsEntries(rawNewsData)
-const hardware = mergeHardwareIntelligence(parseHardwareEntries(rawHardwareData), intelligence)
+// Mirror App.tsx: the dashboard shows one index version at a time (newest by
+// default), and hardware scores always merge from the newest version's block.
+const latestVersion = aaVersionsDesc(intelligence)[0]
+const latestIntelligence = filterByAAVersion(intelligence, latestVersion)
+const hardware = mergeHardwareIntelligence(parseHardwareEntries(rawHardwareData), latestIntelligence)
 const gpu = parseGpuEntries(rawGpuData)
 const machines = parseMachineEntries(rawMachineData)
 
@@ -41,13 +47,13 @@ function expandSection(summaryName: RegExp) {
 }
 
 describe('acceptance: every JSON row appears in the UI', () => {
-  it('lists every ai.json model in the Model Details table with provider, italic release date, and score', () => {
+  it('lists every ai.json model of the newest index version in the Model Details table with provider, italic release date, and score', () => {
     render(<App />)
     // Model Details starts collapsed; open it to reveal the table.
     expandSection(/Model Details/)
     const table = screen.getByRole('table', { name: 'Model Details' })
-    expect(within(table).getAllByRole('row')).toHaveLength(intelligence.length + 1)
-    for (const entry of intelligence) {
+    expect(within(table).getAllByRole('row')).toHaveLength(latestIntelligence.length + 1)
+    for (const entry of latestIntelligence) {
       const row = modelRow(table, entry.model)
       expect(row.textContent).toContain(entry.provider)
       expect(row.textContent).toContain(String(entry.score))
@@ -56,6 +62,23 @@ describe('acceptance: every JSON row appears in the UI', () => {
       expect(italic).not.toBeNull()
       expect(italic?.textContent).toBe(entry.released ?? '*')
     }
+  })
+
+  it('switches the Model Details table between index-version snapshots via the version toggle', () => {
+    render(<App />)
+    expandSection(/Model Details/)
+    const table = screen.getByRole('table', { name: 'Model Details' })
+    const previousVersion = aaVersionsDesc(intelligence)[1]
+    const previousRows = filterByAAVersion(intelligence, previousVersion)
+    // Claude Sonnet 4.6 (max) was never re-measured under the newest index
+    // version, so it only exists in the older snapshot.
+    expect(within(table).queryByRole('button', { name: 'Claude Sonnet 4.6 (max)' })).not.toBeInTheDocument()
+    fireEvent.click(screen.getByRole('button', { name: previousVersion }))
+    expect(within(table).getAllByRole('row')).toHaveLength(previousRows.length + 1)
+    expect(within(table).getByRole('button', { name: 'Claude Sonnet 4.6 (max)' })).toBeInTheDocument()
+    fireEvent.click(screen.getByRole('button', { name: latestVersion }))
+    expect(within(table).getAllByRole('row')).toHaveLength(latestIntelligence.length + 1)
+    expect(within(table).queryByRole('button', { name: 'Claude Sonnet 4.6 (max)' })).not.toBeInTheDocument()
   })
 
   it('lists every news.json entry in Hand Picked News as a dated link', () => {

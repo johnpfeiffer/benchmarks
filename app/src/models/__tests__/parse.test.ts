@@ -3,8 +3,8 @@ import { parseModelEntries, parseMachineEntries, InvariantError } from '../parse
 import type { RawMachineEntry, RawModelEntry } from '../types'
 
 const valid: RawModelEntry[] = [
-  { model: 'Alpha', intelligence_score: 60, provider: 'Anthropic', open_weight: true },
-  { model: 'Beta', intelligence_score: 50, provider: 'OpenAI' },
+  { model: 'Alpha', intelligence_score: 60, aa_version: 'v4.3', provider: 'Anthropic', open_weight: true },
+  { model: 'Beta', intelligence_score: 50, aa_version: 'v4.2', provider: 'OpenAI' },
 ]
 
 describe('parseModelEntries', () => {
@@ -15,23 +15,25 @@ describe('parseModelEntries', () => {
       id: 'anthropic:alpha',
       model: 'Alpha',
       score: 60,
+      aa_version: 'v4.3',
       provider: 'Anthropic',
       open_weight: true,
       released: null,
     })
+    expect(out[1].aa_version).toBe('v4.2')
   })
 
   it('passes through a valid ISO release date', () => {
     const out = parseModelEntries([
-      { model: 'X', intelligence_score: 1, provider: 'P', released: '2026-09-01' },
+      { model: 'X', intelligence_score: 1, aa_version: 'v4.3', provider: 'P', released: '2026-09-01' },
     ])
     expect(out[0].released).toBe('2026-09-01')
   })
 
   it('defaults released to null when the raw field is missing or null', () => {
     const out = parseModelEntries([
-      { model: 'X', intelligence_score: 1, provider: 'P' },
-      { model: 'Y', intelligence_score: 2, provider: 'P', released: null },
+      { model: 'X', intelligence_score: 1, aa_version: 'v4.3', provider: 'P' },
+      { model: 'Y', intelligence_score: 2, aa_version: 'v4.3', provider: 'P', released: null },
     ])
     expect(out[0].released).toBeNull()
     expect(out[1].released).toBeNull()
@@ -45,7 +47,7 @@ describe('parseModelEntries', () => {
   ])('rejects a bad release date: $name', ({ released }) => {
     try {
       parseModelEntries([
-        { model: 'X', intelligence_score: 1, provider: 'P', released: released as unknown as string },
+        { model: 'X', intelligence_score: 1, aa_version: 'v4.3', provider: 'P', released: released as unknown as string },
       ])
       throw new Error('should have thrown')
     } catch (e) {
@@ -54,9 +56,28 @@ describe('parseModelEntries', () => {
     }
   })
 
+  it.each([
+    { name: 'missing', aa_version: undefined },
+    { name: 'empty', aa_version: '' },
+    { name: 'no v prefix', aa_version: '4.3' },
+    { name: 'trailing dot', aa_version: 'v4.' },
+    { name: 'not a version', aa_version: 'latest' },
+    { name: 'non-string', aa_version: 4.3 },
+  ])('rejects a bad AA index version: $name', ({ aa_version }) => {
+    try {
+      parseModelEntries([
+        { model: 'X', intelligence_score: 1, provider: 'P', aa_version: aa_version as unknown as string },
+      ])
+      throw new Error('should have thrown')
+    } catch (e) {
+      expect(e).toBeInstanceOf(InvariantError)
+      expect((e as InvariantError).invariant).toBe('MODEL-AA-VERSION')
+    }
+  })
+
   it('passes through a positive total benchmark run cost', () => {
     const out = parseModelEntries([
-      { model: 'X', intelligence_score: 42, provider: 'P', cost_usd: 280.28 },
+      { model: 'X', intelligence_score: 42, aa_version: 'v4.3', provider: 'P', cost_usd: 280.28 },
     ])
     expect(out[0].cost_usd).toBe(280.28)
   })
@@ -75,7 +96,7 @@ describe('parseModelEntries', () => {
   ])('rejects an unusable cost: $name', ({ cost_usd }) => {
     try {
       parseModelEntries([
-        { model: 'X', intelligence_score: 1, provider: 'P', cost_usd: cost_usd as unknown as number },
+        { model: 'X', intelligence_score: 1, aa_version: 'v4.3', provider: 'P', cost_usd: cost_usd as unknown as number },
       ])
       throw new Error('should have thrown')
     } catch (e) {
@@ -91,7 +112,7 @@ describe('parseModelEntries', () => {
 
   it('coerces open_weight to a boolean', () => {
     const out = parseModelEntries([
-      { model: 'X', intelligence_score: 1, provider: 'P', open_weight: 1 as unknown as boolean },
+      { model: 'X', intelligence_score: 1, aa_version: 'v4.3', provider: 'P', open_weight: 1 as unknown as boolean },
     ])
     expect(out[0].open_weight).toBe(true)
   })
@@ -115,8 +136,8 @@ describe('parseModelEntries', () => {
 
   it('reports the offending index in the InvariantError', () => {
     const bad: RawModelEntry[] = [
-      { model: 'Good', intelligence_score: 1, provider: 'P' },
-      { model: 'Bad', intelligence_score: 1, provider: '' },
+      { model: 'Good', intelligence_score: 1, aa_version: 'v4.3', provider: 'P' },
+      { model: 'Bad', intelligence_score: 1, aa_version: 'v4.3', provider: '' },
     ]
     expect(() => parseModelEntries(bad)).toThrow(InvariantError)
     try {

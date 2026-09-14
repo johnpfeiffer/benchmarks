@@ -1,6 +1,7 @@
 import { describe, it, expect } from 'vitest'
 import { parseModelEntries, parseNewsEntries, parseHardwareEntries, parseMachineEntries } from '../parse'
 import { mergeHardwareIntelligence, modelMatchKey } from '../merge'
+import { aaVersionsDesc, filterByAAVersion } from '../version'
 import { parseParetoDataset, paretoSnapshotFromModels } from '../pareto'
 import rawIntelligenceData from '../../data/ai.json'
 import rawNewsData from '../../data/news.json'
@@ -21,17 +22,25 @@ describe('embedded data integrity', () => {
   const news = parseNewsEntries(rawNewsData)
   const hardware = parseHardwareEntries(rawHardwareData)
   const machines = parseMachineEntries(rawMachineData)
+  // The newest index version's block: what the dashboard shows by default and
+  // what hardware rows merge their scores from.
+  const latest = filterByAAVersion(intelligence, aaVersionsDesc(intelligence)[0])
 
-  it('model names are unique in ai.json', () => {
-    const names = intelligence.map((entry) => entry.model)
-    expect(new Set(names).size).toBe(names.length)
+  it('(model, AA version) pairs are unique in ai.json', () => {
+    const keys = intelligence.map((entry) => `${entry.aa_version}:${entry.model}`)
+    expect(new Set(keys).size).toBe(keys.length)
   })
 
-  it('ai.json is authored sorted by score descending (ties keep file order)', () => {
+  it('ai.json groups rows newest AA version block first, score descending within a block', () => {
     // `benchtool ai-add` maintains this; the dashboard's default view and the
-    // chart rely on the file order for tie-breaking.
-    for (let i = 1; i < intelligence.length; i++) {
-      expect(intelligence[i].score).toBeLessThanOrEqual(intelligence[i - 1].score)
+    // chart rely on the file order for tie-breaking within a version.
+    const blocksInFile = [...new Set(intelligence.map((entry) => entry.aa_version))]
+    expect(blocksInFile).toEqual(aaVersionsDesc(intelligence))
+    for (const version of blocksInFile) {
+      const block = filterByAAVersion(intelligence, version)
+      for (let i = 1; i < block.length; i++) {
+        expect(block[i].score).toBeLessThanOrEqual(block[i - 1].score)
+      }
     }
   })
 
@@ -85,8 +94,8 @@ describe('embedded data integrity', () => {
     // Re-derives the expected mapping independently of merge.ts, so a data
     // edit that silently breaks a match (e.g. renaming ai.json's "Nemotron 3
     // Ultra" while hardware.json keeps "Nemotron 3 Ultra 550B") fails here.
-    const enriched = mergeHardwareIntelligence(hardware, intelligence)
-    const scoreByKey = new Map(intelligence.map((entry) => [modelMatchKey(entry.model), entry.score]))
+    const enriched = mergeHardwareIntelligence(hardware, latest)
+    const scoreByKey = new Map(latest.map((entry) => [modelMatchKey(entry.model), entry.score]))
     for (const row of enriched) {
       const key = modelMatchKey(row.model)
       const exact = scoreByKey.get(key)

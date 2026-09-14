@@ -11,6 +11,13 @@ export interface RawModelEntry {
   model: string
   intelligence_score: number
   /**
+   * Artificial Analysis Intelligence Index version this score was measured
+   * under, per AA's methodology version history (e.g. "v4.3"). Required:
+   * ai.json keeps one row per model per version so a methodology revision
+   * augments history instead of overwriting it.
+   */
+  aa_version: string
+  /**
    * Total USD Artificial Analysis charges to run the Intelligence Index on
    * this model, measured under the same index version as the score. Optional
    * in raw data; must be a positive finite number when present (the Pareto
@@ -126,10 +133,17 @@ export interface MachineEntry {
 
 /** A validated model entry. Exists only when INV-001 holds. */
 export interface ModelEntry {
+  /**
+   * Versionless identity (provider:model): rows of the same model under
+   * different AA index versions share it, so chart selections survive a
+   * version switch. Only one version is ever rendered at a time.
+   */
   id: string
   model: string
   /** Primary benchmark score, the "Score" column in the dashboard. */
   score: number
+  /** Index version this score was measured under (e.g. "v4.3"). */
+  aa_version: string
   /** Total benchmark run cost (USD), same index version as the score. */
   cost_usd?: number
   provider: string
