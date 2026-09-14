@@ -12,6 +12,8 @@ import {
   sortModels,
   nextSortState,
   openWeightIds,
+  aaVersionsDesc,
+  filterByAAVersion,
   DEFAULT_SORT,
   type ModelEntry,
   type SortField,
@@ -67,15 +69,30 @@ function useBenchmarkState(entries: readonly ModelEntry[]) {
 function DashboardPage() {
   // Parse + validate once. If the embedded data ever violates INV-001 this
   // throws loudly at module load rather than rendering partial state.
-  const intelligenceEntries = useMemo(() => parseModelEntries(rawIntelligenceData), [])
+  const allIntelligence = useMemo(() => parseModelEntries(rawIntelligenceData), [])
+  // ai.json keeps one row per model per Intelligence Index version; the
+  // chart and table show one version at a time (newest first by default).
+  const aaVersions = useMemo(() => aaVersionsDesc(allIntelligence), [allIntelligence])
+  const [aaVersion, setAaVersion] = useState(aaVersions[0])
+  const intelligenceEntries = useMemo(
+    () => filterByAAVersion(allIntelligence, aaVersion),
+    [allIntelligence, aaVersion],
+  )
   const news = useMemo(() => parseNewsEntries(rawNewsData), [])
+  // Hardware rows carry a single score per model: always the newest version's.
+  const latestIntelligence = useMemo(
+    () => filterByAAVersion(allIntelligence, aaVersions[0]),
+    [allIntelligence, aaVersions],
+  )
   const hardware = useMemo(
-    () => mergeHardwareIntelligence(parseHardwareEntries(rawHardwareData), intelligenceEntries),
-    [intelligenceEntries],
+    () => mergeHardwareIntelligence(parseHardwareEntries(rawHardwareData), latestIntelligence),
+    [latestIntelligence],
   )
   const gpu = useMemo(() => parseGpuEntries(rawGpuData), [])
   const machines = useMemo(() => parseMachineEntries(rawMachineData), [])
 
+  // Entry ids are versionless (provider:model), so chart selections survive
+  // switching the displayed index version.
   const table = useBenchmarkState(intelligenceEntries)
   const [openWeightsOnly, setOpenWeightsOnly] = useState(false)
 
@@ -97,7 +114,7 @@ function DashboardPage() {
   }
 
   const sources: DataSourceCredit[] = [
-    { label: 'Artificial Analysis', href: 'https://artificialanalysis.ai/articles/artificial-analysis-intelligence-index-v4-2' },
+    { label: 'Artificial Analysis Intelligence Index v4.3', href: 'https://artificialanalysis.ai/articles/artificial-analysis-intelligence-index-v4-3' },
     { label: 'HuggingFace and Unsloth', href: 'https://huggingface.co/unsloth' },
     { label: 'Wikipedia Hopper (microarchitecture)', href: 'https://en.wikipedia.org/wiki/Hopper_(microarchitecture)' },
     { label: 'NVIDIA Hopper Architecture', href: 'https://developer.nvidia.com/blog/nvidia-hopper-architecture-in-depth/' },
@@ -113,7 +130,7 @@ function DashboardPage() {
     { label: 'Inferbase B200 SXM', href: 'https://inferbase.ai/gpu-catalog/gpu/nvidia-b200-sxm' },
   ]
   // The lead chart's source chip keeps linking to the AA homepage; only the
-  // footer credit (sources[0]) links to the Intelligence Index v4.2 article.
+  // footer credit (sources[0]) links to the Intelligence Index v4.3 article.
   const intelligenceSource: DataSourceCredit = { label: 'Artificial Analysis', href: 'https://artificialanalysis.ai/' }
   const hardwareSource = sources[1]
   const gpuSources: DataSourceCredit[] = sources.slice(2)
@@ -128,6 +145,9 @@ function DashboardPage() {
     <Dashboard
       entries={table.sorted}
       intelligenceChartEntries={table.chartEntries}
+      aaVersions={aaVersions}
+      aaVersion={aaVersion}
+      onAAVersionChange={setAaVersion}
       sort={table.sort}
       selectedIds={table.selectedIds}
       onSortChange={table.handleSortChange}

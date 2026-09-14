@@ -44,13 +44,15 @@ flowchart TD
     Dashboard --> ChartA["IntelligenceBarChart<br/>(Artificial Analysis)"]
     Dashboard --> News["NewsSection<br/>(collapsed; top-3 preview always visible)"]
     Dashboard --> Pareto["ParetoFrontierSection<br/>(expanded + collapsible)"]
-    ParetoJSON["public/data/pareto.json"] -->|"fetch at runtime"| ParetoController["controllers/useParetoDataset"]
     AA["Artificial Analysis<br/>/models page"] -->|"one model per request"| Benchtool["benchtool aa-model<br/>text or JSON"]
-    Benchtool -->|"review + assemble same-version snapshot"| ParetoJSON
+    Benchtool -->|"score + precise total cost, same index version"| AIJSON
+    AIJSON -->|"rows carrying cost_usd"| ParetoMath["models/pareto<br/>(paretoSnapshotFromModels,<br/>frontier and target predicates)"]
+    ParetoMath -->|"default snapshot (sample:false)"| ParetoController["controllers/useParetoDataset"]
     ParetoController -->|"parseParetoDataset; INV-001"| ParetoData["Validated snapshot"]
     ParetoData --> Pareto
     Pareto --> InteractivePareto["ParetoChart<br/>(log cost, linear intelligence)"]
-    ParetoMath["models/pareto<br/>(frontier and target predicates)"] --> InteractivePareto
+    ParetoMath --> InteractivePareto
+    ParetoSample["data/pareto.json<br/>(fictional sample)"] -->|"download link: paste-format example"| Pareto
     ParetoPNG["public/images/artificial-analysis-pareto-frontier.png"] -->|"copied unchanged by Vite; app-relative URL"| Pareto
     Dashboard --> Table["ModelTable<br/>(collapsed by default; sortable + selectable)"]
     Dashboard --> HWChart["HardwareChart<br/>(dynamic quant sizes)"]
@@ -65,18 +67,36 @@ flowchart TD
 
 | File | Responsibility |
 | --- | --- |
-| `types.ts` | `ModelEntry`, `NewsEntry`, `HardwareEntry`, `GpuEntry`, `MachineEntry`, their raw JSON shapes, and benchmark sort types; `ModelEntry.open_weight` is always present after parse; `ModelEntry.color` is the explicit bar color carried from `ai.json`; `ModelEntry.released` is the release date (`YYYY-MM-DD` or null) |
-| `parse.ts` | `parseModelEntries`, `parseNewsEntries`, `parseHardwareEntries`, `parseGpuEntries`, `parseMachineEntries`, and `InvariantError`; upholds **INV-001** (every model has a provider) and structural guards at the single gate. News URLs and ISO dates are validated, copied, and sorted newest first before reaching the view; model release dates share the same strict calendar-date guard (`MODEL-RELEASED`). Hardware entries are validated (provider, model, total_params, url required; quant sizes nullable). GPU entries are validated (model, date required; memory, memory_type, memory_bandwidth_gbs, fp16_tflops nullable). Machine entries are validated (machine, chip, vram_gb, url required; memory_bandwidth_gbs, price_usd nullable) |
-| `merge.ts` | `mergeHardwareIntelligence`, `modelMatchKey`; attaches each hardware row's intelligence score via a normalized model-name match with a unique-prefix fallback. `modelMatchKey` ignores parenthetical effort suffixes and "preview" |
+| `types.ts` | `ModelEntry`, `NewsEntry`, `HardwareEntry`, `GpuEntry`, `MachineEntry`, their raw JSON shapes, and benchmark sort types; `ModelEntry.open_weight` is always present after parse; `ModelEntry.color` is the explicit bar color carried from `ai.json`; `ModelEntry.released` is the release date (`YYYY-MM-DD` or null); `ModelEntry.aa_version` is the required Intelligence Index version tag carried from `ai.json` (`ModelEntry.id` stays versionless so selections survive version switches); `ModelEntry.cost_usd` is the optional total benchmark run cost carried from `ai.json` |
+| `parse.ts` | `parseModelEntries`, `parseNewsEntries`, `parseHardwareEntries`, `parseGpuEntries`, `parseMachineEntries`, and `InvariantError`; upholds **INV-001** (every model has a provider) and structural guards at the single gate. News URLs and ISO dates are validated, copied, and sorted newest first before reaching the view; model release dates share the same strict calendar-date guard (`MODEL-RELEASED`), and index version tags are shape-checked (`MODEL-AA-VERSION`). Hardware entries are validated (provider, model, total_params, url required; quant sizes nullable). GPU entries are validated (model, date required; memory, memory_type, memory_bandwidth_gbs, fp16_tflops nullable). Machine entries are validated (machine, chip, vram_gb, url required; memory_bandwidth_gbs, price_usd nullable) |
+| `merge.ts` | `mergeHardwareIntelligence`, `modelMatchKey`; attaches each hardware row's intelligence score via a normalized model-name match with a unique-prefix fallback. `modelMatchKey` ignores parenthetical effort suffixes and "preview". Callers pass the newest version's block only (see `App.tsx`), since a hardware row carries a single score |
+| `version.ts` | `compareAAVersions`, `aaVersionsDesc`, `filterByAAVersion`; numeric newest-first ordering of the `aa_version` tags present in a row set, and the per-version row slice the dashboard renders |
 | `sort.ts` | `sortModels`, `nextSortState`, `DEFAULT_SORT` (score desc) |
 | `filter.ts` | `openWeightIds`; the id set used by the "Open Weights" preset |
 | `index.ts` | Public re-exports |
 
-`data/ai.json` scores track the Artificial Analysis Intelligence Index
-(currently v4.2). Rows are authored sorted by score descending (ties keep
-file order; `benchtool ai-add` maintains this), and every row carries a
+`data/ai.json` tracks the Artificial Analysis Intelligence Index, keeping one
+row per model **per index version**: every row carries `aa_version` (e.g.
+`v4.3`, the tags from AA's methodology version history, enforced by
+`MODEL-AA-VERSION` in `parse.ts`). A methodology refresh augments the file —
+the re-measured rows are inserted as a new block and the previous block is
+kept — so older snapshots survive and score variance stays visible in the
+data itself. Rows are grouped newest version block first, score descending
+within a block (ties keep file order; `benchtool ai-add` maintains both). A
+model never re-measured under a version simply has no row in that block. The
+chart and Model Details table show one version at a time, switched by the
+toggle in the chart section header; hardware rows always merge their score
+from the newest block. Entry ids are versionless (`provider:model`), so chart
+selections survive the switch. Every row carries a
 verified `released` date sourced from the Artificial Analysis leaderboard
-(`benchtool aa-releases`).
+(`benchtool aa-releases`). A row may also carry `cost_usd`: the precise total
+Artificial Analysis charges to run the index on that model, read from the
+same model page under the same index version as the score
+(`benchtool aa-model <slug> --json`). The key is omitted when AA publishes no
+precise total (a $0 total is also omitted — the Pareto log cost axis cannot
+plot it), and `parse.ts` rejects non-positive or non-numeric values
+(`MODEL-COST`). The `cost_usd` column powers the Pareto default snapshot
+(see `ParetoFrontierSection` below).
 
 ### Presentation (`views/`)
 
@@ -111,8 +131,9 @@ All views are pure (props in, callbacks out, no business logic):
   clicking it does not toggle the accordion. Turning it on sets the selection
   to the open-weight models, turning it off re-selects every model.
 - `Footer` - credits the non-GPU data sources,
-  [Artificial Analysis](https://artificialanalysis.ai/articles/artificial-analysis-intelligence-index-v4-2)
-  and
+  [Artificial Analysis Intelligence Index v4.3](https://artificialanalysis.ai/articles/artificial-analysis-intelligence-index-v4-3)
+  (the label names the newest index version present in `ai.json`; bump both
+  the label and the article URL when a new version block lands) and
   [HuggingFace](https://huggingface.co/unsloth), and links to the
   [GitHub repository](https://github.com/johnpfeiffer/benchmarks) with an inline
   GitHub SVG mark. GPU-specific source links are rendered uniquely below the
@@ -132,9 +153,16 @@ All views are pure (props in, callbacks out, no business logic):
   state.
 - `ParetoFrontierSection` - outlined accordion between the news and the model
   details table, expanded by default and user-collapsible, titled "Pareto
-  frontier". Loads `public/data/pareto.json` at runtime through
-  `controllers/useParetoDataset`. Ships explicitly labeled fictional sample
-  data until a real snapshot is supplied. `models/pareto.ts` validates provider
+  frontier". The published snapshot is derived at load from the `ai.json` rows
+  carrying `cost_usd` (`paretoSnapshotFromModels` in `models/pareto.ts`,
+  surfaced through `controllers/useParetoDataset`), so the default chart is
+  real measured data (`sample: false`) and stays single-version:
+  `PARETO_SNAPSHOT_AA_VERSION` pins which `aa_version` block the points are
+  drawn from, and each point pairs the score and cost read from the same AA
+  model page under that index version. The snapshot's version/date constants
+  (`PARETO_SNAPSHOT_AA_VERSION`, `PARETO_SNAPSHOT_VERSION`,
+  `PARETO_SNAPSHOT_DATE`) are bumped with each
+  `ai.json` re-snapshot. `models/pareto.ts` validates provider
   (INV-001), unique model variants, positive finite cost, intelligence 0–100,
   snapshot date, benchmark version, and explicit sample status.
   `ParetoChart` renders an SVG scatter plot with logarithmic USD cost, linear
@@ -145,8 +173,9 @@ All views are pure (props in, callbacks out, no business logic):
   improvement, to dominate a point. Identical tradeoffs remain on the frontier.
   Pasted JSON is validated before replacing the current preview; invalid data
   leaves the previous chart intact. Imports last until refresh. Reload restores
-  the published public JSON. The data is intentionally independent of `ai.json`
-  to avoid mixing index versions or effort variants. See [data format](docs/pareto-data.md).
+  the ai.json-derived published snapshot. The bundled `data/pareto.json` keeps
+  its fictional sample rows purely as the paste-format example behind the
+  download link. See [data format](docs/pareto-data.md).
   A collapsed reference panel retains the static captured snapshot of Artificial Analysis'
   "Intelligence Index vs. Cost to Run" scatter chart (dotted Pareto line,
   provider-colored dots) from `public/images/artificial-analysis-pareto-frontier.png`.
@@ -198,15 +227,22 @@ All views are pure (props in, callbacks out, no business logic):
   specifications table with source links below, then a Local Hardware section
   ("Local AI Machines") with source links below, then footer. News sits
   between the lead intelligence chart and model details, collapsed by default
-  with its top 3 links visible.
+  with its top 3 links visible. The intelligence section header carries the
+  index-version toggle (MUI `ToggleButtonGroup`, right-aligned) that swaps the
+  chart and details table between the version blocks of `ai.json`; it renders
+  only when the data carries more than one version.
 
 ### Controller (`App.tsx`)
 
 Parses embedded JSON once (`useMemo`), including validated newest-first news,
 HuggingFace hardware entries, GPU specification entries, and local machine
-entries, holds the table `SortState` and selected model
-IDs for the intelligence chart, computes sorted/chart-visible entries, and
-forwards header clicks through `nextSortState`. Deselected models are
+entries, holds the selected index version, the table `SortState` and selected
+model
+IDs for the intelligence chart, computes sorted/chart-visible entries from the
+selected version's block (`filterByAAVersion`), and
+forwards header clicks through `nextSortState`. Hardware rows merge their
+intelligence score from the newest version's block only, regardless of the
+selected view version. Deselected models are
 filtered out of the chart while their rows stay visible in the table. The
 "Open Weights"
 preset is a selection: on ->
@@ -236,7 +272,7 @@ journey
     See the top 3 Hand Picked News links: 4: User
     Expand Hand Picked News for the full dated list: 4: User
     Toggle news date sort asc/desc: 3: User
-    Load validated Pareto snapshot from public JSON: 4: System
+    Derive validated Pareto snapshot from ai.json costs: 4: System
     Adjust cost and intelligence targets: 5: User
     Inspect model points and the calculated frontier: 5: User
     Paste a new snapshot or expand the historical image: 4: User
@@ -249,7 +285,7 @@ journey
   section Maintain Pareto snapshot
     Extract each model's score, precise total cost, and index version: 5: Maintainer
     Review cost provenance and precision: 5: Maintainer
-    Assemble one same-version JSON snapshot: 5: Maintainer
+    Refresh ai.json rows under one index version: 5: Maintainer
   section Explore Hardware
     See dynamic quant size chart (1/2/4-bit): 4: User
     Sort hardware table (smartest first by default): 4: User
@@ -296,8 +332,10 @@ journey
 - `npm run build` - `tsc -b` typecheck + Vite production build.
 - Pareto tests (`models/__tests__/pareto.test.ts` and
   `views/__tests__/ParetoChart.test.tsx`) cover snapshot validation, dominance
-  and ties, strict target boundaries, keyboard details, runtime loading,
-  temporary JSON imports, and the historical-image fallback on load failure.
+  and ties, strict target boundaries, keyboard details, the ai.json-derived
+  default snapshot (also pinned against the real data in
+  `models/__tests__/data.test.ts`), temporary JSON imports, and the
+  historical-image fallback on load failure.
 - `go test ./tools/...` - benchtool extraction/insertion unit tests (fixture
   HTML, temp-repo data writes; no network).
 

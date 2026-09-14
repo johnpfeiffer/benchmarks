@@ -6,6 +6,7 @@ import (
 	"net/url"
 	"os"
 	"path/filepath"
+	"regexp"
 	"sort"
 	"strconv"
 	"strings"
@@ -107,11 +108,20 @@ func cmdNewsAdd(rawURL, date string) error {
 // --- ai.json ---
 
 type aiRow struct {
-	Model      string `json:"model"`
-	Score      int    `json:"intelligence_score"`
-	Provider   string `json:"provider"`
-	OpenWeight bool   `json:"open_weight"`
-	Color      string `json:"color"`
+	Model string `json:"model"`
+	Score int    `json:"intelligence_score"`
+	// AAVersion tags the Intelligence Index version the score (and cost)
+	// were measured under, per AA's methodology version history. ai.json
+	// keeps one row per model per version, newest block first.
+	AAVersion string `json:"aa_version"`
+	// CostUSD is the precise total Artificial Analysis charges to run the
+	// Intelligence Index on this model (comparison summary), from the same
+	// index version as Score. Nil renders the field away entirely; a row
+	// either carries a verified positive cost or no cost key at all.
+	CostUSD    *float64 `json:"cost_usd,omitempty"`
+	Provider   string   `json:"provider"`
+	OpenWeight bool     `json:"open_weight"`
+	Color      string   `json:"color"`
 	// Released is the model's release date (YYYY-MM-DD); nil renders null
 	// for models whose date is unknown or unverified.
 	Released *string `json:"released"`
@@ -133,12 +143,76 @@ var providerColors = map[string]string{
 }
 
 func renderAIRow(r aiRow) string {
+	cost := ""
+	if r.CostUSD != nil {
+		cost = fmt.Sprintf(`, "cost_usd": %s`, strconv.FormatFloat(*r.CostUSD, 'f', -1, 64))
+	}
 	released := "null"
 	if r.Released != nil {
 		released = jsonString(*r.Released)
 	}
-	return fmt.Sprintf(`{"model": %s, "intelligence_score": %d, "provider": %s, "open_weight": %t, "color": %s, "released": %s}`,
-		jsonString(r.Model), r.Score, jsonString(r.Provider), r.OpenWeight, jsonString(r.Color), released)
+	return fmt.Sprintf(`{"model": %s, "intelligence_score": %d, "aa_version": %s%s, "provider": %s, "open_weight": %t, "color": %s, "released": %s}`,
+		jsonString(r.Model), r.Score, jsonString(r.AAVersion), cost, jsonString(r.Provider), r.OpenWeight, jsonString(r.Color), released)
+}
+
+// aaVersionPattern mirrors the MODEL-AA-VERSION invariant in
+// app/src/models/parse.ts: v<digits>[.<digits>]* such as v4.3 or v4.1.1.
+var aaVersionPattern = regexp.MustCompile(`^v\d+(\.\d+)*$`)
+
+func validateAAVersion(s string) error {
+	if !aaVersionPattern.MatchString(s) {
+		return fmt.Errorf("invalid AA version %q: expected v<major>[.<minor>...] like v4.3", s)
+	}
+	return nil
+}
+
+// compareAAVersions returns > 0 when a is the newer tag ("v4.3" vs "v4.2");
+// missing parts count as zeros ("v4.2" == "v4.2.0"). Mirrors compareAAVersions
+// in app/src/models/version.ts.
+func compareAAVersions(a, b string) int {
+	pa := versionParts(a)
+	pb := versionParts(b)
+	n := len(pa)
+	if len(pb) > n {
+		n = len(pb)
+	}
+	for i := 0; i < n; i++ {
+		var x, y int
+		if i < len(pa) {
+			x = pa[i]
+		}
+		if i < len(pb) {
+			y = pb[i]
+		}
+		if x != y {
+			return x - y
+		}
+	}
+	return 0
+}
+
+func versionParts(v string) []int {
+	parts := strings.Split(strings.TrimPrefix(v, "v"), ".")
+	out := make([]int, len(parts))
+	for i, p := range parts {
+		n, _ := strconv.Atoi(p)
+		out[i] = n
+	}
+	return out
+}
+
+// parseAICost validates a --cost=USD flag value: a positive finite dollar
+// amount. Zero is rejected because the Pareto chart's log cost axis (and the
+// app-side parser) require a positive cost.
+func parseAICost(flag string) (float64, error) {
+	cost, err := strconv.ParseFloat(strings.TrimPrefix(flag, "--cost="), 64)
+	if err != nil {
+		return 0, fmt.Errorf("cost %q is not a number", flag)
+	}
+	if cost <= 0 {
+		return 0, fmt.Errorf("cost must be a positive USD amount, got %v", cost)
+	}
+	return cost, nil
 }
 
 func cmdAIAdd(args []string) error {
@@ -156,12 +230,27 @@ func cmdAIAdd(args []string) error {
 				return err
 			}
 			row.Released = &date
+		case strings.HasPrefix(a, "--cost="):
+			cost, err := parseAICost(a)
+			if err != nil {
+				return err
+			}
+			row.CostUSD = &cost
+		case strings.HasPrefix(a, "--aa-version="):
+			version := strings.TrimPrefix(a, "--aa-version=")
+			if err := validateAAVersion(version); err != nil {
+				return err
+			}
+			row.AAVersion = version
 		default:
 			positional = append(positional, a)
 		}
 	}
 	if len(positional) != 3 {
-		return fmt.Errorf("ai-add expects <model> <score> <provider> [--open-weight] [--color=#hex] [--released=YYYY-MM-DD]")
+		return fmt.Errorf("ai-add expects <model> <score> <provider> --aa-version=vX.Y [--open-weight] [--color=#hex] [--released=YYYY-MM-DD] [--cost=USD]")
+	}
+	if row.AAVersion == "" {
+		return fmt.Errorf("ai-add requires --aa-version=vX.Y (the Intelligence Index version the score was measured under, e.g. v4.3)")
 	}
 	row.Model, row.Provider = positional[0], positional[2]
 	score, err := strconv.Atoi(positional[1])
@@ -189,16 +278,37 @@ func cmdAIAdd(args []string) error {
 		return err
 	}
 	for _, r := range rows {
-		if r.Model == row.Model {
-			return fmt.Errorf("duplicate: %q already in ai.json", row.Model)
+		if r.Model == row.Model && r.AAVersion == row.AAVersion {
+			return fmt.Errorf("duplicate: %q already has a %s row in ai.json", row.Model, row.AAVersion)
 		}
 	}
-	// Insert before the first lower score so equal scores keep file order.
+	// ai.json is grouped into one block per AA version, newest first, score
+	// descending within a block. Insert into the matching block; a brand-new
+	// version starts its own block in newest-first position.
 	at := len(rows)
+	blockStart, blockEnd := -1, -1
 	for i, r := range rows {
-		if r.Score < row.Score {
-			at = i
-			break
+		if r.AAVersion == row.AAVersion {
+			if blockStart == -1 {
+				blockStart = i
+			}
+			blockEnd = i + 1
+		}
+	}
+	if blockStart != -1 {
+		at = blockEnd
+		for i := blockStart; i < blockEnd; i++ {
+			if rows[i].Score < row.Score {
+				at = i
+				break
+			}
+		}
+	} else {
+		for i, r := range rows {
+			if compareAAVersions(row.AAVersion, r.AAVersion) > 0 {
+				at = i
+				break
+			}
 		}
 	}
 	rows = append(rows[:at], append([]aiRow{row}, rows[at:]...)...)
@@ -209,8 +319,10 @@ func cmdAIAdd(args []string) error {
 	return nil
 }
 
-// cmdAISetReleased sets (or clears, with "null") the released date on an
-// existing ai.json row, preserving order and one-row-per-line formatting.
+// cmdAISetReleased sets (or clears, with "null") the released date on every
+// ai.json row for a model. A model has one row per AA version but a single
+// release date, so all of its rows are updated together, preserving order
+// and one-row-per-line formatting.
 func cmdAISetReleased(model, date string) error {
 	var released *string
 	if date != "null" {
@@ -228,17 +340,21 @@ func cmdAISetReleased(model, date string) error {
 	if err := readJSON(path, &rows); err != nil {
 		return err
 	}
+	updated := 0
 	for i := range rows {
 		if rows[i].Model == model {
 			rows[i].Released = released
-			if err := writeSingleLineJSON(path, renderAIRow, rows); err != nil {
-				return err
-			}
-			fmt.Printf("ai.json: %q released -> %s\n", model, date)
-			return nil
+			updated++
 		}
 	}
-	return fmt.Errorf("model %q not found in ai.json", model)
+	if updated == 0 {
+		return fmt.Errorf("model %q not found in ai.json", model)
+	}
+	if err := writeSingleLineJSON(path, renderAIRow, rows); err != nil {
+		return err
+	}
+	fmt.Printf("ai.json: %q released -> %s (%d rows)\n", model, date, updated)
+	return nil
 }
 
 // writeSingleLineJSON rewrites a data file in the repo's one-object-per-line

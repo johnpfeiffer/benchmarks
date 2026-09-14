@@ -51,6 +51,18 @@ function assertScore(score: unknown, index: number, model: string, field: string
   return score
 }
 
+/** AA index version tag, e.g. "v4.3" (see AA's methodology version history). */
+function assertAAVersion(version: unknown, index: number, model: string): string {
+  if (typeof version !== 'string' || !/^v\d+(\.\d+)*$/.test(version)) {
+    throw new InvariantError(
+      `Entry at index ${index} ("${model}") has a missing or malformed aa_version`,
+      index,
+      'MODEL-AA-VERSION',
+    )
+  }
+  return version
+}
+
 /** Strict YYYY-MM-DD real-calendar-date check, shared by news and released. */
 function assertISODate(date: unknown, index: number, invariant: string, what: string): string {
   const isIso = typeof date === 'string' && /^\d{4}-\d{2}-\d{2}$/.test(date)
@@ -72,6 +84,15 @@ function normalize(raw: RawModelEntry, index: number): ModelEntry {
   }
   const model = assertModelName(raw?.model, index)
   const score = assertScore(raw?.intelligence_score, index, model, 'intelligence_score')
+  const aa_version = assertAAVersion(raw?.aa_version, index, model)
+  const cost = raw?.cost_usd
+  if (cost !== undefined && (typeof cost !== 'number' || !Number.isFinite(cost) || cost <= 0)) {
+    throw new InvariantError(
+      `Entry at index ${index} ("${model}") has an invalid cost_usd`,
+      index,
+      'MODEL-COST',
+    )
+  }
   const color = typeof raw?.color === 'string' && raw.color.trim() !== '' ? raw.color : undefined
   const released = raw?.released === undefined || raw?.released === null
     ? null
@@ -81,6 +102,8 @@ function normalize(raw: RawModelEntry, index: number): ModelEntry {
     id: makeId(provider, model),
     model,
     score,
+    aa_version,
+    ...(cost !== undefined ? { cost_usd: cost } : {}),
     provider,
     open_weight: Boolean(raw.open_weight),
     released,

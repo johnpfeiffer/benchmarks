@@ -39,7 +39,7 @@ export function ParetoFrontierSection() {
             <Typography variant="body2" sx={{ my: 1 }}>
               Paste a JSON snapshot with benchmark_version, date, sample, and models. Each model needs model (including effort), provider, intelligence, and cost_usd. Cost is the total benchmark run cost, not token pricing.
             </Typography>
-            <Link href={paretoDatasetUrl} download>Download current JSON / format example</Link>
+            <Link href={paretoDatasetUrl} download>Download format example JSON (sample data)</Link>
             <TextField label="Chart JSON" multiline minRows={4} maxRows={12} fullWidth value={json}
               onChange={event => setJson(event.target.value)} sx={{ my: 2 }} />
             <Box sx={{ display: 'flex', gap: 1 }}>

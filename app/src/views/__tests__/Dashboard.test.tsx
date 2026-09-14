@@ -4,19 +4,20 @@ import { useState } from 'react'
 import { ThemeProvider, CssBaseline } from '@mui/material'
 import { theme } from '../../theme'
 import { Dashboard } from '../Dashboard'
-import { sortModels, nextSortState, openWeightIds, DEFAULT_SORT, type ModelEntry, type HardwareEntry, type GpuEntry, type MachineEntry, type SortField, type SortState } from '../../models'
+import { sortModels, nextSortState, openWeightIds, aaVersionsDesc, DEFAULT_SORT, type ModelEntry, type HardwareEntry, type GpuEntry, type MachineEntry, type SortField, type SortState } from '../../models'
 
 const entries: ModelEntry[] = [
   {
     id: 'anthropic:alpha',
     model: 'Alpha',
     score: 60,
+    aa_version: 'v9.9',
     provider: 'Anthropic',
     open_weight: true,
     released: '2026-07-01',
   },
-  { id: 'openai:beta', model: 'Beta', score: 50, provider: 'OpenAI', open_weight: false, released: null },
-  { id: 'google:gamma', model: 'Gamma', score: 55, provider: 'Google', open_weight: false, released: '2026-03-15' },
+  { id: 'openai:beta', model: 'Beta', score: 50, aa_version: 'v9.9', provider: 'OpenAI', open_weight: false, released: null },
+  { id: 'google:gamma', model: 'Gamma', score: 55, aa_version: 'v9.9', provider: 'Google', open_weight: false, released: '2026-03-15' },
 ]
 
 const hardwareEntries: HardwareEntry[] = [
@@ -38,12 +39,15 @@ const machineEntries: MachineEntry[] = [
   { machine: 'NVIDIA DGX Spark', chip: 'NVIDIA GB10 Grace Blackwell', vram_gb: 128, memory_bandwidth_gbs: 273, price_usd: 4699, url: 'https://example.com/dgx-spark' },
 ]
 
-/** Controller stand-in mirroring App.tsx: owns sort state, feeds sorted rows. */
-function DashboardController({ initialSort = DEFAULT_SORT }: { initialSort?: SortState }) {
+/** Controller stand-in mirroring App.tsx: owns sort + version state, feeds sorted rows. */
+function DashboardController({ initialSort = DEFAULT_SORT, allEntries = entries }: { initialSort?: SortState; allEntries?: readonly ModelEntry[] }) {
   const [sort, setSort] = useState<SortState>(initialSort)
-  const [selectedIds, setSelectedIds] = useState<Set<string>>(() => new Set(entries.map((entry) => entry.id)))
+  const aaVersions = aaVersionsDesc(allEntries)
+  const [aaVersion, setAaVersion] = useState(aaVersions[0])
+  const visible = allEntries.filter((entry) => entry.aa_version === aaVersion)
+  const [selectedIds, setSelectedIds] = useState<Set<string>>(() => new Set(allEntries.map((entry) => entry.id)))
   const [openWeightsOnly, setOpenWeightsOnly] = useState(false)
-  const sorted = sortModels(entries, sort)
+  const sorted = sortModels(visible, sort)
   const chartEntries = sorted.filter((entry) => selectedIds.has(entry.id))
   const handleSortChange = (field: SortField) => setSort((cur) => nextSortState(cur, field))
   const handleToggleEntry = (id: string) => {
@@ -56,10 +60,10 @@ function DashboardController({ initialSort = DEFAULT_SORT }: { initialSort?: Sor
   }
   const handleToggleOpenWeights = () => {
     if (openWeightsOnly) {
-      setSelectedIds(new Set(entries.map((entry) => entry.id)))
+      setSelectedIds(new Set(visible.map((entry) => entry.id)))
       setOpenWeightsOnly(false)
     } else {
-      setSelectedIds(openWeightIds(entries))
+      setSelectedIds(openWeightIds(visible))
       setOpenWeightsOnly(true)
     }
   }
@@ -67,6 +71,9 @@ function DashboardController({ initialSort = DEFAULT_SORT }: { initialSort?: Sor
     <Dashboard
       entries={sorted}
       intelligenceChartEntries={chartEntries}
+      aaVersions={aaVersions}
+      aaVersion={aaVersion}
+      onAAVersionChange={setAaVersion}
       sort={sort}
       selectedIds={selectedIds}
       onSortChange={handleSortChange}
@@ -94,7 +101,7 @@ function DashboardController({ initialSort = DEFAULT_SORT }: { initialSort?: Sor
         { label: 'Daring Fireball: Mac configurations and pricing', href: 'https://daringfireball.net/2026/08/configurations_and_pricing_for_new_mac_minis_and_mac_studios' },
       ]}
       sources={[
-        { label: 'Artificial Analysis', href: 'https://artificialanalysis.ai/articles/artificial-analysis-intelligence-index-v4-2' },
+        { label: 'Artificial Analysis Intelligence Index v4.3', href: 'https://artificialanalysis.ai/articles/artificial-analysis-intelligence-index-v4-3' },
       ]}
     />
   )
@@ -128,16 +135,52 @@ describe('Dashboard', () => {
     renderDashboard()
     expect(screen.getByRole('heading', { name: /AI Model Benchmarks/i })).toBeInTheDocument()
     const artificialAnalysisLinks = screen.getAllByRole('link', { name: /Artificial Analysis/i })
-    // The chart chip links to the AA homepage; the footer credit links to the
-    // Intelligence Index v4.2 article.
+    // The chart chip links to the AA homepage; the footer credit names the
+    // Intelligence Index version it cites and links to that version's article.
     expect(artificialAnalysisLinks[0]).toHaveAttribute('href', 'https://artificialanalysis.ai/')
-    expect(artificialAnalysisLinks[artificialAnalysisLinks.length - 1]).toHaveAttribute(
+    const footerCredit = artificialAnalysisLinks[artificialAnalysisLinks.length - 1]
+    expect(footerCredit).toHaveAttribute(
       'href',
-      'https://artificialanalysis.ai/articles/artificial-analysis-intelligence-index-v4-2',
+      'https://artificialanalysis.ai/articles/artificial-analysis-intelligence-index-v4-3',
     )
+    expect(footerCredit).toHaveTextContent('Intelligence Index v4.3')
     const githubLink = screen.getByRole('link', { name: /GitHub repository/i })
     expect(githubLink).toHaveAttribute('href', 'https://github.com/johnpfeiffer/benchmarks')
     expect(githubLink.querySelector('svg')).toBeInTheDocument()
+  })
+
+  it('swaps the chart and table between Intelligence Index versions via the toggle', () => {
+    // Two snapshots of Alpha plus a v9.9-only Beta; ids are versionless on
+    // purpose so selections survive the switch.
+    const twoVersions: ModelEntry[] = [
+      { id: 'anthropic:alpha', model: 'Alpha', score: 60, aa_version: 'v9.9', provider: 'Anthropic', open_weight: true, released: '2026-07-01' },
+      { id: 'anthropic:alpha', model: 'Alpha', score: 66, aa_version: 'v9.8', provider: 'Anthropic', open_weight: true, released: '2026-07-01' },
+      { id: 'openai:beta', model: 'Beta', score: 50, aa_version: 'v9.9', provider: 'OpenAI', open_weight: false, released: null },
+    ]
+    render(
+      <ThemeProvider theme={theme}>
+        <CssBaseline />
+        <DashboardController allEntries={twoVersions} />
+      </ThemeProvider>,
+    )
+    const alphaRow = () => within(intelligenceTable()).getByRole('button', { name: 'Alpha' }).closest('tr') as HTMLElement
+    // Newest version shows first; the toggle lists both versions.
+    expandModelDetails()
+    expect(within(intelligenceTable()).getAllByRole('row')).toHaveLength(3)
+    expect(alphaRow().textContent).toContain('60')
+    fireEvent.click(screen.getByRole('button', { name: 'v9.8' }))
+    expect(within(intelligenceTable()).getAllByRole('row')).toHaveLength(2)
+    expect(alphaRow().textContent).toContain('66')
+    expect(within(intelligenceTable()).queryByRole('button', { name: 'Beta' })).not.toBeInTheDocument()
+    // Switching back restores the newer snapshot.
+    fireEvent.click(screen.getByRole('button', { name: 'v9.9' }))
+    expect(within(intelligenceTable()).getAllByRole('row')).toHaveLength(3)
+    expect(alphaRow().textContent).toContain('60')
+  })
+
+  it('hides the version toggle when the data carries a single index version', () => {
+    renderDashboard()
+    expect(screen.queryByRole('group', { name: 'Intelligence Index version' })).not.toBeInTheDocument()
   })
 
   it('shows the italic moving-target disclaimer under the title instead of the old sort description', () => {

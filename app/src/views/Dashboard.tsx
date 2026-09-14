@@ -1,4 +1,4 @@
-import { Box, Container, Link, Typography } from '@mui/material'
+import { Box, Container, Link, ToggleButton, ToggleButtonGroup, Typography } from '@mui/material'
 import type { GpuEntry, HardwareEntry, MachineEntry, ModelEntry, NewsEntry, SortField, SortState } from '../models'
 import { IntelligenceBarChart } from './IntelligenceBarChart'
 import { ModelTable } from './ModelTable'
@@ -18,6 +18,11 @@ export interface DataSourceCredit {
 interface DashboardProps {
   entries: readonly ModelEntry[]
   intelligenceChartEntries: readonly ModelEntry[]
+  /** Index versions present in ai.json, newest first. */
+  aaVersions: readonly string[]
+  /** The version currently shown in the chart and details table. */
+  aaVersion: string
+  onAAVersionChange: (version: string) => void
   sort: SortState
   selectedIds: ReadonlySet<string>
   onSortChange: (field: SortField) => void
@@ -44,6 +49,9 @@ interface DashboardProps {
 export function Dashboard({
   entries,
   intelligenceChartEntries,
+  aaVersions,
+  aaVersion,
+  onAAVersionChange,
   sort,
   selectedIds,
   onSortChange,
@@ -72,7 +80,7 @@ export function Dashboard({
       </Box>
 
       <Box component="section" aria-labelledby="intelligence-title" sx={{ mb: 4 }}>
-        <Box sx={{ display: 'flex', alignItems: 'baseline', gap: 1, mb: 1 }}>
+        <Box sx={{ display: 'flex', alignItems: 'center', gap: 1, mb: 1, flexWrap: 'wrap' }}>
           <Typography id="intelligence-title" variant="h5" component="h2">
             Artificial Analysis Intelligence
           </Typography>
@@ -85,6 +93,25 @@ export function Dashboard({
           >
             Source
           </Link>
+          {aaVersions.length > 1 && (
+            <ToggleButtonGroup
+              size="small"
+              exclusive
+              value={aaVersion}
+              onChange={(_, next) => {
+                // MUI emits null when the selected button is clicked again.
+                if (next !== null) onAAVersionChange(next)
+              }}
+              aria-label="Intelligence Index version"
+              sx={{ ml: 'auto' }}
+            >
+              {aaVersions.map((version) => (
+                <ToggleButton key={version} value={version}>
+                  {version}
+                </ToggleButton>
+              ))}
+            </ToggleButtonGroup>
+          )}
         </Box>
         <IntelligenceBarChart
           entries={intelligenceChartEntries}

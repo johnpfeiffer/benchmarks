@@ -3,3 +3,4 @@ export { parseModelEntries, parseNewsEntries, parseHardwareEntries, parseGpuEntr
 export { sortModels, nextSortState, DEFAULT_SORT } from './sort'
 export { mergeHardwareIntelligence, modelMatchKey } from './merge'
 export { openWeightIds } from './filter'
+export { compareAAVersions, aaVersionsDesc, filterByAAVersion } from './version'

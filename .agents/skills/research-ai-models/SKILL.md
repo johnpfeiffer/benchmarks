@@ -41,17 +41,29 @@ Artificial Analysis:
     (e.g. "with fallback" maps to the `(max)` suffix).
 - Index version articles (e.g. `.../articles/artificial-analysis-intelligence-index-v4-1-1`)
   announce each score revision. When scores are refreshed for a new index
-  version, update the footer credit (`sources[0]` in `App.tsx`) to the new
-  article URL. The lead chart's source chip intentionally keeps linking to
-  the AA homepage (`intelligenceSource`) — only the footer entry changes.
+  version, update the footer credit (`sources[0]` in `App.tsx`): both the
+  article URL and the version number in its label
+  (`Artificial Analysis Intelligence Index vX.Y`). The lead chart's source
+  chip intentionally keeps linking to the AA homepage (`intelligenceSource`)
+  — only the footer entry changes.
 
 ## ai.json contract
 
-Row shape: `{ "model", "intelligence_score", "provider", "open_weight",
-"color", "released" }`.
+Row shape: `{ "model", "intelligence_score", "aa_version", "cost_usd"?,
+"provider", "open_weight", "color", "released" }`.
 
 - INV-001: every row requires a provider; the parser throws at load
   otherwise. Missing provider = add one, never omit.
+- `aa_version` is required: the Intelligence Index version the score (and
+  cost) were measured under, tagged per AA's methodology version history
+  (`v4.3`, `v4.2`, ...; shape-checked by `MODEL-AA-VERSION`). The file keeps
+  one row per model **per version**, grouped newest version block first and
+  score-descending within a block. Refreshes augment — insert the new
+  version's rows, keep the old block — so score variance stays visible in
+  the data and the dashboard's version toggle can show both snapshots. A
+  model never re-measured under a version simply has no row in that block
+  (never copy a score across versions). The footer credit names the newest
+  version present.
 - `open_weight` defaults to false; set true only for the curated
   open-weight families: kimi, minimax, deepseek, nemotron, qwen, glm,
   mistral, gemma, gpt-oss, inkling.
@@ -64,12 +76,21 @@ Row shape: `{ "model", "intelligence_score", "provider", "open_weight",
   to the theme gray.
 - `released` is the model's release date (`YYYY-MM-DD`) or null; the data
   invariant requires it populated for every row.
+- `cost_usd` is optional: the precise total USD Artificial Analysis charges
+  to run the Intelligence Index on the model, read from the same model page
+  under the same index version as the score. Omit the key when AA publishes
+  no precise total (or a $0 total, which the Pareto log axis cannot plot).
+  The parser rejects zero, negative, and non-numeric values (`MODEL-COST`).
+  Costed rows feed the Pareto chart's default snapshot
+  (`paretoSnapshotFromModels` in `app/src/models/pareto.ts`).
 - Naming: effort suffix in parentheses — `(max)`, `(xhigh)`, `(high)`;
   dated variants keep their date slug (`DeepSeek V4 Pro 0813 (max)`).
   `hardware.json` joins `ai.json` rows via `modelMatchKey` (lowercases,
   strips `(...)` suffixes and the word `preview`); a rename that breaks
-  the join fails `data.test.ts`.
-- Keep the file roughly sorted by `intelligence_score` descending.
+  the join fails `data.test.ts`. The join uses the newest version's block
+  only — a hardware row carries a single intelligence score.
+- Block order is newest `aa_version` first, `intelligence_score` descending
+  within each block (ties keep file order); `ai-add` maintains both.
 
 ## Update procedures
 
@@ -79,27 +100,45 @@ Add a model:
    provider, open-weights status, and release date; confirm the variant
    matches the naming convention.
 2. Insert the row with
-   `go run . ai-add "<model>" <score> "<provider>" [--open-weight] [--color=#hex] --released=<YYYY-MM-DD>`.
-   The tool keeps score-descending order, rejects duplicates, and applies
+   `go run . ai-add "<model>" <score> "<provider>" --aa-version=<vX.Y> [--open-weight] [--color=#hex] --released=<YYYY-MM-DD> [--cost=USD]`.
+   The tool keeps the version blocks newest-first and score-descending within
+   each block, rejects duplicate (model, version) pairs, and applies
    the provider palette automatically (`--color` only for providers missing
-   from the palette). Every row must carry its verified release date
+   from the palette). `--aa-version` is required — take it from the
+   `benchmark_version` that `aa-model --json` reports for the page. Every
+   row must carry its verified release date
    (a data invariant enforced by the test suite); use the date from step 1,
-   or `aa-releases` when filling dates in bulk.
+   or `aa-releases` when filling dates in bulk. Pass `--cost=` with the
+   precise total from step 1 when the model page publishes one.
 3. No test edits are needed for the new row: the acceptance suite
    (`app/src/views/__tests__/acceptance.test.tsx`) renders the real data
    through the UI and checks every JSON row appears in its listing, and
    `data.test.ts` holds only cross-file invariants (unique names, score
    order, color presence, release dates populated).
 
-Refresh scores for a new Intelligence Index version:
+Refresh scores for a new Intelligence Index version (augment, never
+overwrite — the old block stays in the file):
 
-1. Fetch the leaderboard (Status: All) and the version article.
-2. Build an old → new table of every changed score for the PR body.
-3. For leaderboard-missing models: check Status first, then ask the user
+1. Fetch the leaderboard (Status: All) and the version article; confirm the
+   new tag (e.g. `v4.4`) from AA's methodology version history and from the
+   `benchmark_version` field of `aa-model --json` on a few model pages.
+2. For every model whose page now reports the new version, insert a NEW row
+   with the same model name: `ai-add "<model>" <new-score> "<provider>"
+   --aa-version=<vX.Y> [--cost=...]` (the same name under a different
+   version is not a duplicate; the new block lands at the top
+   automatically, score-descending). Refresh costs at the same time — a
+   cost pairs with the score of the same version.
+3. Models whose pages did not move to the new version keep only their old
+   rows (no row in the new block). Never copy an old score into the new
+   block — the variance table for the PR body is just a per-model join of
+   the two blocks.
+4. For leaderboard-missing models: check Status first, then ask the user
    keep-vs-remove for each — never silently delete rows that
    `hardware.json` or news still reference.
-4. Update the footer article URL in `App.tsx` (`sources[0]` only) and the
-   version mention in `architecture.md`.
+5. Bump `PARETO_SNAPSHOT_AA_VERSION`, `PARETO_SNAPSHOT_VERSION`, and
+   `PARETO_SNAPSHOT_DATE` in `app/src/models/pareto.ts`, update the footer
+   article URL and label in `App.tsx` (`sources[0]` only) to the new
+   version, and the version mention in `architecture.md`.
 
 ## Extract total Intelligence Index evaluation costs
 
@@ -153,11 +192,16 @@ are independently rounded. Keep the authoritative $280.28 total; do not
 replace it with the sum of rounded components. Capture component costs only
 when requested and preserve their original labels and precision.
 
-For a requested data update, inspect the current Pareto data schema before
-writing: `ai.json` has no total-cost field in its documented contract. Keep
-provenance in the supported dataset metadata or accompanying research notes.
-A skill-only request does not authorize changing benchmark data or replacing
-sample data. No parser change is implied by this extraction workflow.
+For a requested data update, record the verified total on the model's
+`ai.json` row as `cost_usd` (the contract above); the Pareto chart's default
+snapshot derives automatically from costed rows in the pinned version block.
+When a refresh re-snapshots scores under a new index version, bump
+`PARETO_SNAPSHOT_AA_VERSION`, `PARETO_SNAPSHOT_VERSION`, and
+`PARETO_SNAPSHOT_DATE` in `app/src/models/pareto.ts` to the new version tag,
+version article, and
+the retrieval date. Keep provenance (source URL, retrieval date, precision)
+in the PR body or accompanying research notes. A skill-only request does not
+authorize changing benchmark data.
 
 ## Validation and PR workflow
 

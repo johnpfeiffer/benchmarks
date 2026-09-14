@@ -139,15 +139,71 @@ func TestValidateHTTPURL(t *testing.T) {
 
 func TestRenderAIRow(t *testing.T) {
 	date := "2026-09-01"
-	got := renderAIRow(aiRow{Model: "Claude Fable 5.1 (max)", Score: 66, Provider: "Anthropic", OpenWeight: false, Color: "#cc785c", Released: &date})
-	want := `{"model": "Claude Fable 5.1 (max)", "intelligence_score": 66, "provider": "Anthropic", "open_weight": false, "color": "#cc785c", "released": "2026-09-01"}`
+	got := renderAIRow(aiRow{Model: "Claude Fable 5.1 (max)", Score: 66, AAVersion: "v4.3", Provider: "Anthropic", OpenWeight: false, Color: "#cc785c", Released: &date})
+	want := `{"model": "Claude Fable 5.1 (max)", "intelligence_score": 66, "aa_version": "v4.3", "provider": "Anthropic", "open_weight": false, "color": "#cc785c", "released": "2026-09-01"}`
 	if got != want {
 		t.Errorf("renderAIRow =\n%s\nwant\n%s", got, want)
 	}
 	// Unknown release dates render as explicit null.
-	got = renderAIRow(aiRow{Model: "Inkling", Score: 42, Provider: "Thinking Machines", OpenWeight: true, Color: "#676767"})
+	got = renderAIRow(aiRow{Model: "Inkling", Score: 42, AAVersion: "v4.3", Provider: "Thinking Machines", OpenWeight: true, Color: "#676767"})
 	if !strings.HasSuffix(got, `"released": null}`) {
 		t.Errorf("nil released = %s", got)
+	}
+	// A measured total run cost renders between the version and the provider.
+	cost := 13128.86
+	got = renderAIRow(aiRow{Model: "Claude Fable 5.1 (max)", Score: 53, AAVersion: "v4.3", Provider: "Anthropic", OpenWeight: false, Color: "#cc785c", CostUSD: &cost, Released: &date})
+	want = `{"model": "Claude Fable 5.1 (max)", "intelligence_score": 53, "aa_version": "v4.3", "cost_usd": 13128.86, "provider": "Anthropic", "open_weight": false, "color": "#cc785c", "released": "2026-09-01"}`
+	if got != want {
+		t.Errorf("renderAIRow with cost =\n%s\nwant\n%s", got, want)
+	}
+}
+
+func TestAIRowRoundTrip(t *testing.T) {
+	// Rows must survive read + rewrite byte-identically, or ai-add and
+	// ai-set-released would silently strip measured costs and version tags.
+	line := `{"model": "GLM-5.3 Flash", "intelligence_score": 42, "aa_version": "v4.3", "cost_usd": 280.28, "provider": "Z AI", "open_weight": true, "color": "#1c7ff8", "released": "2026-08-26"}`
+	var row aiRow
+	if err := json.Unmarshal([]byte(line), &row); err != nil {
+		t.Fatal(err)
+	}
+	if got := renderAIRow(row); got != line {
+		t.Errorf("round trip =\n%s\nwant\n%s", got, line)
+	}
+}
+
+func TestValidateAAVersion(t *testing.T) {
+	for _, ok := range []string{"v4.3", "v4.10", "v3", "v4.1.1"} {
+		if err := validateAAVersion(ok); err != nil {
+			t.Errorf("validateAAVersion(%q) = %v, want nil", ok, err)
+		}
+	}
+	for _, bad := range []string{"4.3", "v", "v4.", "v4.x", "V4.3", "v4 3"} {
+		if err := validateAAVersion(bad); err == nil {
+			t.Errorf("validateAAVersion(%q) = nil, want error", bad)
+		}
+	}
+}
+
+func TestCompareAAVersions(t *testing.T) {
+	if compareAAVersions("v4.3", "v4.2") <= 0 {
+		t.Error("v4.3 should sort newer than v4.2")
+	}
+	if compareAAVersions("v4.10", "v4.3") <= 0 {
+		t.Error("v4.10 should sort newer than v4.3 (numeric, not lexicographic)")
+	}
+	if compareAAVersions("v4.2", "v4.2.0") != 0 {
+		t.Error("v4.2 should equal v4.2.0")
+	}
+}
+
+func TestAIAddCostFlag(t *testing.T) {
+	if _, err := parseAICost("--cost=280.28"); err != nil {
+		t.Errorf("valid cost rejected: %v", err)
+	}
+	for _, bad := range []string{"--cost=0", "--cost=-5", "--cost=abc", "--cost="} {
+		if _, err := parseAICost(bad); err == nil {
+			t.Errorf("parseAICost(%q) = nil, want error", bad)
+		}
 	}
 }
 
@@ -228,11 +284,11 @@ func TestCmdNewsAdd(t *testing.T) {
 
 func TestCmdAIAdd(t *testing.T) {
 	data := chdirToTempRepo(t)
-	seed := []byte("[\n  {\"model\": \"Claude Opus 5 (max)\", \"intelligence_score\": 63, \"provider\": \"Anthropic\", \"open_weight\": false, \"color\": \"#cc785c\"},\n  {\"model\": \"GPT-5.6 Sol (max)\", \"intelligence_score\": 61, \"provider\": \"OpenAI\", \"open_weight\": false, \"color\": \"#1f1f1f\"}\n]\n")
+	seed := []byte("[\n  {\"model\": \"Claude Opus 5 (max)\", \"intelligence_score\": 63, \"aa_version\": \"v4.3\", \"provider\": \"Anthropic\", \"open_weight\": false, \"color\": \"#cc785c\"},\n  {\"model\": \"GPT-5.6 Sol (max)\", \"intelligence_score\": 61, \"aa_version\": \"v4.3\", \"provider\": \"OpenAI\", \"open_weight\": false, \"color\": \"#1f1f1f\"}\n]\n")
 	if err := os.WriteFile(filepath.Join(data, "ai.json"), seed, 0o644); err != nil {
 		t.Fatal(err)
 	}
-	if err := cmdAIAdd([]string{"Claude Fable 5.1 (max)", "66", "Anthropic"}); err != nil {
+	if err := cmdAIAdd([]string{"Claude Fable 5.1 (max)", "66", "Anthropic", "--aa-version=v4.3"}); err != nil {
 		t.Fatal(err)
 	}
 	out, _ := os.ReadFile(filepath.Join(data, "ai.json"))
@@ -245,14 +301,74 @@ func TestCmdAIAdd(t *testing.T) {
 	if !strings.HasSuffix(text, "]\n") {
 		t.Errorf("missing trailing newline/bracket: %q", text[len(text)-4:])
 	}
-	if err := cmdAIAdd([]string{"Claude Fable 5.1 (max)", "66", "Anthropic"}); err == nil {
-		t.Error("duplicate model accepted")
+	if err := cmdAIAdd([]string{"Claude Fable 5.1 (max)", "66", "Anthropic", "--aa-version=v4.3"}); err == nil {
+		t.Error("duplicate (model, version) accepted")
 	}
-	if err := cmdAIAdd([]string{"Mystery", "50", "UnknownLab"}); err == nil {
+	if err := cmdAIAdd([]string{"Mystery", "50", "UnknownLab", "--aa-version=v4.3"}); err == nil {
 		t.Error("unknown provider without --color accepted")
 	}
-	if err := cmdAIAdd([]string{"Bad Date", "40", "Anthropic", "--released=September 1, 2026"}); err == nil {
+	if err := cmdAIAdd([]string{"Bad Date", "40", "Anthropic", "--aa-version=v4.3", "--released=September 1, 2026"}); err == nil {
 		t.Error("non-ISO --released accepted")
+	}
+	if err := cmdAIAdd([]string{"No Version", "40", "Anthropic"}); err == nil {
+		t.Error("missing --aa-version accepted")
+	}
+	if err := cmdAIAdd([]string{"Bad Version", "40", "Anthropic", "--aa-version=4.3"}); err == nil {
+		t.Error("malformed --aa-version accepted")
+	}
+}
+
+func TestCmdAIAddVersionBlocks(t *testing.T) {
+	data := chdirToTempRepo(t)
+	seed := []byte("[\n" +
+		"  {\"model\": \"Apex (max)\", \"intelligence_score\": 50, \"aa_version\": \"v4.3\", \"provider\": \"Anthropic\", \"open_weight\": false, \"color\": \"#cc785c\"},\n" +
+		"  {\"model\": \"Base (max)\", \"intelligence_score\": 40, \"aa_version\": \"v4.3\", \"provider\": \"Anthropic\", \"open_weight\": false, \"color\": \"#cc785c\"},\n" +
+		"  {\"model\": \"Apex (max)\", \"intelligence_score\": 55, \"aa_version\": \"v4.2\", \"provider\": \"Anthropic\", \"open_weight\": false, \"color\": \"#cc785c\"},\n" +
+		"  {\"model\": \"Base (max)\", \"intelligence_score\": 44, \"aa_version\": \"v4.2\", \"provider\": \"Anthropic\", \"open_weight\": false, \"color\": \"#cc785c\"}\n" +
+		"]\n")
+	if err := os.WriteFile(filepath.Join(data, "ai.json"), seed, 0o644); err != nil {
+		t.Fatal(err)
+	}
+	// A new row lands inside its own version block, score descending.
+	if err := cmdAIAdd([]string{"Mid (max)", "45", "Anthropic", "--aa-version=v4.3"}); err != nil {
+		t.Fatal(err)
+	}
+	// The same model name under a different version is not a duplicate.
+	if err := cmdAIAdd([]string{"Mid (max)", "48", "Anthropic", "--aa-version=v4.2"}); err != nil {
+		t.Fatal(err)
+	}
+	// A brand-new older version starts a trailing block; a newer one leads.
+	if err := cmdAIAdd([]string{"Old (max)", "70", "Anthropic", "--aa-version=v4.1"}); err != nil {
+		t.Fatal(err)
+	}
+	if err := cmdAIAdd([]string{"New (max)", "60", "Anthropic", "--aa-version=v4.4"}); err != nil {
+		t.Fatal(err)
+	}
+	out, _ := os.ReadFile(filepath.Join(data, "ai.json"))
+	lines := strings.Split(strings.TrimPrefix(string(out), "[\n"), "\n")
+	order := make([]string, 0, len(lines)-1)
+	for _, l := range lines {
+		l = strings.TrimSuffix(strings.TrimPrefix(l, "  "), ",")
+		if l == "]" || l == "" {
+			continue
+		}
+		var row struct {
+			Model   string `json:"model"`
+			Version string `json:"aa_version"`
+		}
+		if err := json.Unmarshal([]byte(l), &row); err != nil {
+			t.Fatal(err)
+		}
+		order = append(order, row.Version+":"+row.Model)
+	}
+	want := []string{
+		"v4.4:New (max)",
+		"v4.3:Apex (max)", "v4.3:Mid (max)", "v4.3:Base (max)",
+		"v4.2:Apex (max)", "v4.2:Mid (max)", "v4.2:Base (max)",
+		"v4.1:Old (max)",
+	}
+	if strings.Join(order, "|") != strings.Join(want, "|") {
+		t.Errorf("block order =\n%v\nwant\n%v", order, want)
 	}
 }
 
@@ -261,7 +377,7 @@ func TestCmdAIAddReleasedFlag(t *testing.T) {
 	if err := os.WriteFile(filepath.Join(data, "ai.json"), []byte("[]\n"), 0o644); err != nil {
 		t.Fatal(err)
 	}
-	if err := cmdAIAdd([]string{"Gemini 3.8 Flash (high)", "59", "Google", "--released=2026-09-02"}); err != nil {
+	if err := cmdAIAdd([]string{"Gemini 3.8 Flash (high)", "59", "Google", "--aa-version=v4.3", "--released=2026-09-02"}); err != nil {
 		t.Fatal(err)
 	}
 	out, _ := os.ReadFile(filepath.Join(data, "ai.json"))
@@ -272,7 +388,13 @@ func TestCmdAIAddReleasedFlag(t *testing.T) {
 
 func TestCmdAISetReleased(t *testing.T) {
 	data := chdirToTempRepo(t)
-	seed := []byte("[\n  {\"model\": \"Claude Opus 5 (max)\", \"intelligence_score\": 63, \"provider\": \"Anthropic\", \"open_weight\": false, \"color\": \"#cc785c\", \"released\": null},\n  {\"model\": \"GPT-5.6 Sol (max)\", \"intelligence_score\": 61, \"provider\": \"OpenAI\", \"open_weight\": false, \"color\": \"#1f1f1f\", \"released\": null}\n]\n")
+	// One model with a row in each of two version blocks: the release date is
+	// a model fact, so both rows update together.
+	seed := []byte("[\n" +
+		"  {\"model\": \"Claude Opus 5 (max)\", \"intelligence_score\": 60, \"aa_version\": \"v4.3\", \"provider\": \"Anthropic\", \"open_weight\": false, \"color\": \"#cc785c\", \"released\": null},\n" +
+		"  {\"model\": \"GPT-5.6 Sol (max)\", \"intelligence_score\": 58, \"aa_version\": \"v4.3\", \"provider\": \"OpenAI\", \"open_weight\": false, \"color\": \"#1f1f1f\", \"released\": null},\n" +
+		"  {\"model\": \"Claude Opus 5 (max)\", \"intelligence_score\": 63, \"aa_version\": \"v4.2\", \"provider\": \"Anthropic\", \"open_weight\": false, \"color\": \"#cc785c\", \"released\": null}\n" +
+		"]\n")
 	if err := os.WriteFile(filepath.Join(data, "ai.json"), seed, 0o644); err != nil {
 		t.Fatal(err)
 	}
@@ -281,8 +403,8 @@ func TestCmdAISetReleased(t *testing.T) {
 	}
 	out, _ := os.ReadFile(filepath.Join(data, "ai.json"))
 	text := string(out)
-	if !strings.Contains(text, `"Claude Opus 5 (max)", "intelligence_score": 63, "provider": "Anthropic", "open_weight": false, "color": "#cc785c", "released": "2026-07-24"`) {
-		t.Errorf("row not updated in place:\n%s", text)
+	if strings.Count(text, `"Claude Opus 5 (max)"`) != 2 || strings.Count(text, `"released": "2026-07-24"`) != 2 {
+		t.Errorf("expected both version rows updated:\n%s", text)
 	}
 	// Other rows untouched, order preserved.
 	lines := strings.Split(text, "\n")

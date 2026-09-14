@@ -28,55 +28,31 @@ The JSON form keeps score/cost numeric and open-weight status boolean; a missing
 published total is `null`. It does not scrape the multi-model comparison chart.
 
 
+# Intelligence Index versions
+
+`app/src/data/ai.json` keeps one block of rows per Artificial Analysis
+Intelligence Index version (`aa_version`), so methodology revisions never
+erase the previous snapshot. The toggle in the chart header swaps the chart
+and the Model Details table between versions (currently v4.3 and v4.2);
+hardware tables always show the newest version's scores. A model that was
+never re-measured under a version simply has no row in that block.
+
+
 # Pareto chart data
 
-The chart reads `app/public/data/pareto.json` at runtime. The included data uses
-fictional model names and values; the visible sample banner is controlled by
-`sample: true`.
-
-## Snapshot format
-
-```json
-{
-  "benchmark_version": "Illustrative example",
-  "date": "2026-09-06",
-  "sample": true,
-  "models": [
-    {
-      "model": "Example Model (high)",
-      "provider": "Example Labs",
-      "intelligence": 50.5,
-      "cost_usd": 1234.56,
-      "color": "#34A853"
-    }
-  ]
-}
-```
-
-For real data, use the actual benchmark version and snapshot date and set
-`sample` to `false`. All points must use the same benchmark version and cost
-definition. Cost means **total USD to run the Intelligence Index**, not price
-per million tokens or weighted cost per task. Keep effort variants in the model
-name so they remain distinct points. Intelligence can be decimal (0–100); cost
-must be positive and finite because the x-axis is logarithmic. Color is optional.
-Every model requires a provider (kernel INV-001). Duplicate model/provider pairs
-are rejected. A snapshot can contain 1–1000 points.
-
-## Updating the chart
+The chart's default snapshot is derived at load time from the
+`app/src/data/ai.json` rows carrying a `cost_usd` field, so it always shows
+real measured data from a single Artificial Analysis Intelligence Index
+version (currently v4.3). `app/src/data/pareto.json` keeps a fictional,
+clearly labeled sample purely as the paste-format example behind the
+section's download link. The full format and the refresh procedure are
+documented in [docs/pareto-data.md](docs/pareto-data.md).
 
 - For a temporary preview, expand **Load chart data**, paste the snapshot JSON,
   and click **Apply JSON**. Data stays in page memory and is cleared on refresh.
-  **Reload published data** restores the server snapshot.
-- For a persistent update, replace `app/public/data/pareto.json` and use the
-  normal deployment workflow. Vite copies it unchanged to `dist/data/pareto.json`.
-  A host that supports updating static files directly can replace that JSON
-  without rebuilding JavaScript; this repository's deployment pipeline may
-  still run its normal build. No chart image generation is required.
-- The fetch URL is relative (`data/pareto.json`), so the deployed
-  `<base href="/benchmarks/">` resolves it to `/benchmarks/data/pareto.json`.
-- The JSON format is our normalized format, not a claim of direct compatibility
-  with Artificial Analysis exports. A downloaded CSV/JSON can be mapped to it
-  once the actual export columns are available.
+  **Reload published data** restores the ai.json-derived snapshot.
+- For a persistent update, refresh the `cost_usd` values in `ai.json`
+  (`benchtool aa-model <slug> --json` extracts them) and deploy normally.
 
 ## Reading the chart
 

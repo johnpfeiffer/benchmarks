@@ -10,8 +10,8 @@
 //	benchtool aa-model <slug-or-url> [--json]       score/provider/release plus index version and precise total cost
 //	benchtool aa-releases                           every leaderboard variant's release date as TSV (one fetch)
 //	benchtool news-add <url> <YYYY-MM-DD>           validate + dedupe + insert into news.json (newest first)
-//	benchtool ai-add <model> <score> <provider> [--open-weight] [--color=#hex] [--released=YYYY-MM-DD]
-//	benchtool ai-set-released <model> <YYYY-MM-DD|null>   set/clear the release date on an existing ai.json row
+//	benchtool ai-add <model> <score> <provider> --aa-version=vX.Y [--open-weight] [--color=#hex] [--released=YYYY-MM-DD] [--cost=USD]
+//	benchtool ai-set-released <model> <YYYY-MM-DD|null>   set/clear the release date on all of a model's ai.json rows
 //
 // The add commands rewrite files under app/src/data (located by walking up
 // from the working directory) and only guarantee file conventions; run
@@ -29,7 +29,7 @@ func usage() {
   benchtool aa-model <slug-or-url> [--json]
   benchtool aa-releases
   benchtool news-add <url> <YYYY-MM-DD>
-  benchtool ai-add <model> <score> <provider> [--open-weight] [--color=#hex] [--released=YYYY-MM-DD]
+  benchtool ai-add <model> <score> <provider> --aa-version=vX.Y [--open-weight] [--color=#hex] [--released=YYYY-MM-DD] [--cost=USD]
   benchtool ai-set-released <model> <YYYY-MM-DD|null>`)
 	os.Exit(2)
 }
