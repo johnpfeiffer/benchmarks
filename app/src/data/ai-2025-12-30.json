@@ -1,0 +1,21 @@
+[
+  {"model": "Gemini 3 Pro Preview (high)", "intelligence_score": 73, "aa_version": "v3.0", "cost_usd": 1201, "provider": "Google", "open_weight": false, "color": "#34A853", "released": "2025-11-18"},
+  {"model": "GPT-5.2 (xhigh)", "intelligence_score": 73, "aa_version": "v3.0", "cost_usd": 1294, "provider": "OpenAI", "open_weight": false, "color": "#1f1f1f", "released": "2025-12-11"},
+  {"model": "Gemini 3 Flash", "intelligence_score": 71, "aa_version": "v3.0", "cost_usd": 524, "provider": "Google", "open_weight": false, "color": "#34A853", "released": "2025-12-17"},
+  {"model": "Claude Opus 4.5", "intelligence_score": 70, "aa_version": "v3.0", "cost_usd": 1498, "provider": "Anthropic", "open_weight": false, "color": "#cc785c", "released": "2025-11-24"},
+  {"model": "GPT-5.1 (high)", "intelligence_score": 70, "aa_version": "v3.0", "cost_usd": 859, "provider": "OpenAI", "open_weight": false, "color": "#1f1f1f", "released": "2025-11-13"},
+  {"model": "GLM-4.7", "intelligence_score": 68, "aa_version": "v3.0", "cost_usd": 334, "provider": "Z AI", "open_weight": true, "color": "#1c7ff8", "released": "2025-12-22"},
+  {"model": "Kimi K2 Thinking", "intelligence_score": 67, "aa_version": "v3.0", "cost_usd": 380, "provider": "Moonshot AI", "open_weight": true, "color": "#00B4D8", "released": "2025-11-06"},
+  {"model": "GPT-5.1 Codex (high)", "intelligence_score": 67, "aa_version": "v3.0", "cost_usd": 697, "provider": "OpenAI", "open_weight": false, "color": "#1f1f1f", "released": "2025-11-13"},
+  {"model": "DeepSeek V3.2", "intelligence_score": 66, "aa_version": "v3.0", "cost_usd": 54, "provider": "DeepSeek", "open_weight": true, "color": "#2243e6", "released": "2025-12-01"},
+  {"model": "Grok 4", "intelligence_score": 65, "aa_version": "v3.0", "cost_usd": 1888, "provider": "xAI", "open_weight": false, "color": "#736cd3", "released": "2025-07-10"},
+  {"model": "MiniMax-M2.1", "intelligence_score": 64, "aa_version": "v3.0", "cost_usd": 128, "provider": "MiniMax", "open_weight": true, "color": "#EB3568", "released": "2025-12-23"},
+  {"model": "Claude 4.5 Sonnet", "intelligence_score": 63, "aa_version": "v3.0", "cost_usd": 817, "provider": "Anthropic", "open_weight": false, "color": "#cc785c", "released": "2025-09-29"},
+  {"model": "gpt-oss-120B (high)", "intelligence_score": 61, "aa_version": "v3.0", "cost_usd": 76, "provider": "OpenAI", "open_weight": true, "color": "#1f1f1f", "released": "2025-08-05"},
+  {"model": "Qwen3 235B A22B 2507", "intelligence_score": 57, "aa_version": "v3.0", "cost_usd": 934, "provider": "Alibaba", "open_weight": true, "color": "#F54F35", "released": "2025-07-25"},
+  {"model": "Claude 4.5 Haiku", "intelligence_score": 55, "aa_version": "v3.0", "cost_usd": 262, "provider": "Anthropic", "open_weight": false, "color": "#cc785c", "released": "2025-10-15"},
+  {"model": "gpt-oss-20B (high)", "intelligence_score": 52, "aa_version": "v3.0", "cost_usd": 22, "provider": "OpenAI", "open_weight": true, "color": "#1f1f1f", "released": "2025-08-05"},
+  {"model": "DeepSeek R1 0528", "intelligence_score": 52, "aa_version": "v3.0", "cost_usd": 382, "provider": "DeepSeek", "open_weight": true, "color": "#2243e6", "released": "2025-05-28"},
+  {"model": "NVIDIA Nemotron 3 Nano", "intelligence_score": 52, "aa_version": "v3.0", "cost_usd": 43, "provider": "NVIDIA", "open_weight": true, "color": "#86b737", "released": "2025-12-15"},
+  {"model": "Mistral Large 3", "intelligence_score": 38, "aa_version": "v3.0", "cost_usd": 37, "provider": "Mistral", "open_weight": true, "color": "#FF7000", "released": "2025-12-02"}
+]
