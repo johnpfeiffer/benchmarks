@@ -15,9 +15,11 @@ const entries: ModelEntry[] = [
     provider: 'Anthropic',
     open_weight: true,
     released: '2026-07-01',
+    cost_usd: 950,
   },
+  // Beta has no measured benchmark cost: its cost cell renders "*".
   { id: 'openai:beta', model: 'Beta', score: 50, aa_version: 'v9.9', provider: 'OpenAI', open_weight: false, released: null },
-  { id: 'google:gamma', model: 'Gamma', score: 55, aa_version: 'v9.9', provider: 'Google', open_weight: false, released: '2026-03-15' },
+  { id: 'google:gamma', model: 'Gamma', score: 55, aa_version: 'v9.9', provider: 'Google', open_weight: false, released: '2026-03-15', cost_usd: 1200 },
 ]
 
 const hardwareEntries: HardwareEntry[] = [
@@ -134,11 +136,16 @@ describe('Dashboard', () => {
   it('renders the heading and the data-source credit', () => {
     renderDashboard()
     expect(screen.getByRole('heading', { name: /AI Model Benchmarks/i })).toBeInTheDocument()
-    const artificialAnalysisLinks = screen.getAllByRole('link', { name: /Artificial Analysis/i })
-    // The chart chip links to the AA homepage; the footer credit names the
-    // Intelligence Index version it cites and links to that version's article.
-    expect(artificialAnalysisLinks[0]).toHaveAttribute('href', 'https://artificialanalysis.ai/')
-    const footerCredit = artificialAnalysisLinks[artificialAnalysisLinks.length - 1]
+    // The Pareto section (collapsed by default) credits the AA homepage; the
+    // footer credit names the Intelligence Index version it cites and links to
+    // that version's article.
+    const paretoSection = screen.getByRole('heading', { name: 'Pareto frontier' }).closest('section') as HTMLElement
+    fireEvent.click(within(paretoSection).getByRole('button', { name: 'Pareto frontier' }))
+    expect(within(paretoSection).getByRole('link', { name: 'Artificial Analysis' })).toHaveAttribute(
+      'href',
+      'https://artificialanalysis.ai/',
+    )
+    const footerCredit = within(screen.getByRole('contentinfo')).getByRole('link', { name: /Artificial Analysis/i })
     expect(footerCredit).toHaveAttribute(
       'href',
       'https://artificialanalysis.ai/articles/artificial-analysis-intelligence-index-v4-3',
@@ -185,9 +192,10 @@ describe('Dashboard', () => {
 
   it('shows the italic moving-target disclaimer under the title instead of the old sort description', () => {
     renderDashboard()
-    const tagline = screen.getByText(/Best effort in on a moving target/i)
+    const tagline = screen.getByText(/Best effort on a moving target/i)
     expect(tagline).toHaveStyle('font-style: italic')
     expect(tagline.textContent).toContain('your own use cases and evals may differ')
+    expect(screen.queryByText(/Best effort in on a moving target/i)).not.toBeInTheDocument()
     expect(screen.queryByText(/sorted highest to lowest by default/i)).not.toBeInTheDocument()
   })
 
@@ -247,7 +255,7 @@ describe('Dashboard', () => {
     })
   })
 
-  it('shows the Pareto frontier image between news and model details, expanded by default', () => {
+  it('shows the Pareto frontier between news and model details, collapsed by default', () => {
     renderDashboard()
     const paretoHeading = screen.getByRole('heading', { name: 'Pareto frontier' })
     const paretoSection = paretoHeading.closest('section') as HTMLElement
@@ -260,6 +268,14 @@ describe('Dashboard', () => {
     expect(newsHeading.compareDocumentPosition(paretoHeading) & Node.DOCUMENT_POSITION_FOLLOWING).toBeTruthy()
     expect(paretoHeading.compareDocumentPosition(detailsTable) & Node.DOCUMENT_POSITION_FOLLOWING).toBeTruthy()
 
+    // Collapsed by default: the chart and reference image stay out of the
+    // accessibility tree until the summary is clicked.
+    const header = within(paretoSection).getByRole('button', { name: 'Pareto frontier' })
+    expect(header).toHaveAttribute('aria-expanded', 'false')
+    expect(within(paretoSection).queryByRole('img', { name: /Intelligence Index versus cost/i })).not.toBeInTheDocument()
+
+    fireEvent.click(header)
+    expect(header).toHaveAttribute('aria-expanded', 'true')
     // The captured chart image renders responsively with alt text and a source
     // credit. Keep the URL relative so the host's /benchmarks/ base applies.
     const image = within(paretoSection).getByRole('img', { name: /Intelligence Index versus cost/i })
@@ -269,9 +285,7 @@ describe('Dashboard', () => {
       'https://artificialanalysis.ai/',
     )
 
-    // Accordion starts expanded and collapses on click
-    const header = within(paretoSection).getByRole('button', { name: 'Pareto frontier' })
-    expect(header).toHaveAttribute('aria-expanded', 'true')
+    // Collapses again on click
     fireEvent.click(header)
     expect(header).toHaveAttribute('aria-expanded', 'false')
   })
@@ -323,16 +337,20 @@ describe('Dashboard', () => {
     expect(within(table).queryByRole('button', { name: /avg_tokens/i })).not.toBeInTheDocument()
   })
 
-  it('shows the release date in italics between Provider and Model Name, "*" when unknown', () => {
+  it('orders the columns Intelligence, Model Name, Provider, Released, Benchmark cost USD', () => {
     renderDashboard()
     expandModelDetails()
     const table = intelligenceTable()
     const headers = within(table).getAllByRole('columnheader')
-    // Column order: Provider, Released, Model Name, ...
-    expect(headers[0]).toHaveTextContent('Provider')
-    expect(headers[1]).toHaveTextContent('Released')
-    expect(headers[2]).toHaveTextContent('Model Name')
+    expect(headers.map((header) => header.textContent)).toEqual([
+      'Intelligence',
+      'Model Name',
+      'Provider',
+      'Released',
+      'Benchmark cost USD',
+    ])
 
+    // The release date renders in italics (<em>); "*" when unknown.
     const alphaRow = screen.getByRole('button', { name: 'Alpha' }).closest('tr') as HTMLElement
     const italic = alphaRow.querySelector('em')
     expect(italic).not.toBeNull()
@@ -340,6 +358,72 @@ describe('Dashboard', () => {
 
     const betaRow = screen.getByRole('button', { name: 'Beta' }).closest('tr') as HTMLElement
     expect(betaRow.querySelector('em')).toHaveTextContent('*')
+  })
+
+  it('shows the benchmark cost in USD, "*" when unmeasured, with an italic footnote', () => {
+    renderDashboard()
+    expandModelDetails()
+    const table = intelligenceTable()
+    const alphaRow = screen.getByRole('button', { name: 'Alpha' }).closest('tr') as HTMLElement
+    expect(alphaRow.textContent).toContain('$950')
+    const gammaRow = screen.getByRole('button', { name: 'Gamma' }).closest('tr') as HTMLElement
+    expect(gammaRow.textContent).toContain('$1,200')
+    const betaRow = screen.getByRole('button', { name: 'Beta' }).closest('tr') as HTMLElement
+    expect(betaRow.textContent).toContain('*')
+
+    const footnote = within(table.closest('section') as HTMLElement).getByText(
+      'USD Cost to Run Artificial Analysis Intelligence Index',
+    )
+    expect(footnote).toHaveStyle('font-style: italic')
+  })
+
+  it('sorts by benchmark cost when the cost header is clicked, missing costs last', () => {
+    renderDashboard()
+    expandModelDetails()
+    const costHeader = within(intelligenceTable()).getByRole('button', { name: /Benchmark cost USD/i })
+    fireEvent.click(costHeader) // asc: cheapest first, unmeasured last
+    let rows = within(intelligenceTable()).getAllByRole('row')
+    expect(rows[1].textContent).toContain('Alpha')
+    expect(rows[2].textContent).toContain('Gamma')
+    expect(rows[3].textContent).toContain('Beta')
+    fireEvent.click(costHeader) // desc: priciest first, unmeasured still last
+    rows = within(intelligenceTable()).getAllByRole('row')
+    expect(rows[1].textContent).toContain('Gamma')
+    expect(rows[2].textContent).toContain('Alpha')
+    expect(rows[3].textContent).toContain('Beta')
+  })
+
+  it('names the displayed index version next to the Model Details title', () => {
+    renderDashboard()
+    expandModelDetails()
+    const section = intelligenceTable().closest('section') as HTMLElement
+    expect(within(section).getByText('Index v9.9')).toBeInTheDocument()
+  })
+
+  it('keeps the 2025 historical Artificial Analysis charts in a collapsed expander below Model Details', () => {
+    renderDashboard()
+    const summary = screen.getByRole('button', { name: 'Historical Artificial Analysis Intelligence charts' })
+    const section = summary.closest('section') as HTMLElement
+    expect(section).not.toBeNull()
+
+    // Sits below Model Details in document order
+    const detailsHeading = screen.getByRole('button', { name: /Model Details/i })
+    expect(detailsHeading.compareDocumentPosition(summary) & Node.DOCUMENT_POSITION_FOLLOWING).toBeTruthy()
+
+    // Collapsed by default; expanding reveals both 2025-12-30 snapshots with a
+    // source credit. URLs stay relative so the host's /benchmarks/ base applies.
+    expect(summary).toHaveAttribute('aria-expanded', 'false')
+    fireEvent.click(summary)
+    expect(summary).toHaveAttribute('aria-expanded', 'true')
+    const indexImage = within(section).getByRole('img', { name: /Intelligence Index v3\.0 bar chart/i })
+    expect(indexImage).toHaveAttribute('src', 'images/2025-12-30-artificial-analysis-index.png')
+    const costImage = within(section).getByRole('img', { name: /cost to run the Intelligence Index/i })
+    expect(costImage).toHaveAttribute('src', 'images/2025-12-30-artificial-analysis-index-eval-cost-usd.png')
+    expect(within(section).getAllByText(/2025-12-30/).length).toBeGreaterThan(0)
+    expect(within(section).getByRole('link', { name: 'Artificial Analysis' })).toHaveAttribute(
+      'href',
+      'https://artificialanalysis.ai/',
+    )
   })
 
   it('sorts by release date when the Released header is clicked', () => {

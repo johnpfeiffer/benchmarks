@@ -17,7 +17,7 @@ export function ParetoFrontierSection() {
   const [json, setJson] = useState('')
   return (
     <Box component="section" aria-labelledby="pareto-title">
-      <Accordion defaultExpanded disableGutters variant="outlined">
+      <Accordion disableGutters variant="outlined">
         <AccordionSummary expandIcon={<ExpandMoreIcon />} aria-controls="pareto-content" id="pareto-header">
           <Typography id="pareto-title" variant="h6" component="span">
             Pareto frontier

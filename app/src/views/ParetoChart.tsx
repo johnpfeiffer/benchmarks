@@ -16,8 +16,8 @@ export function ParetoChart({ dataset }: { dataset: ParetoDataset }) {
   const points = dataset.models
   const bounds = useMemo(() => paretoBounds(points), [points])
   const frontier = useMemo(() => paretoFrontier(points), [points])
-  const [maxCost, setMaxCost] = useState('1500')
-  const [minScore, setMinScore] = useState('45')
+  const [maxCost, setMaxCost] = useState('1000')
+  const [minScore, setMinScore] = useState('42')
   const [labels, setLabels] = useState(points.length <= 20)
   const [active, setActive] = useState<ParetoPoint | null>(null)
   const cost = Number(maxCost)

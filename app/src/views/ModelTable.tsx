@@ -5,6 +5,7 @@ import {
   AccordionSummary,
   Box,
   Button,
+  Chip,
   Table,
   TableBody,
   TableCell,
@@ -20,6 +21,8 @@ import type { ModelEntry } from '../models'
 interface ModelTableProps {
   /** Entries already sorted by the controller. */
   entries: readonly ModelEntry[]
+  /** Index version the rows belong to, shown beside the title. */
+  aaVersion: string
   sort: SortState
   /** Called when a header is clicked; the controller decides the next state. */
   onSortChange: (field: SortField) => void
@@ -32,11 +35,16 @@ interface ModelTableProps {
 
 /** Column config: header label -> domain sort field + cell accessor. */
 const COLUMNS: Array<{ label: string; field: SortField; accessor: (e: ModelEntry) => string | number | undefined }> = [
+  { label: 'Intelligence', field: 'score', accessor: (e) => e.score },
+  { label: 'Model Name', field: 'model', accessor: (e) => e.model },
   { label: 'Provider', field: 'provider', accessor: (e) => e.provider },
   { label: 'Released', field: 'released', accessor: (e) => e.released ?? undefined },
-  { label: 'Model Name', field: 'model', accessor: (e) => e.model },
-  { label: 'Intelligence', field: 'score', accessor: (e) => e.score },
+  { label: 'Benchmark cost USD', field: 'cost', accessor: (e) => e.cost_usd },
 ]
+
+/** Same USD formatting as the Pareto chart: cents only when they exist. */
+const formatCost = (value: number) =>
+  new Intl.NumberFormat('en-US', { style: 'currency', currency: 'USD', maximumFractionDigits: 2 }).format(value)
 
 /**
  * Sortable, collapsible table of model benchmarks, collapsed by default (the
@@ -48,7 +56,7 @@ const COLUMNS: Array<{ label: string; field: SortField; accessor: (e: ModelEntry
  * Weights" toggle sits immediately to the right of the title in the accordion
  * summary; clicking it does not toggle the accordion.
  */
-export function ModelTable({ entries, sort, onSortChange, selectedIds, onToggleEntry, title, openWeightsOnly, onToggleOpenWeights }: ModelTableProps) {
+export function ModelTable({ entries, aaVersion, sort, onSortChange, selectedIds, onToggleEntry, title, openWeightsOnly, onToggleOpenWeights }: ModelTableProps) {
   return (
     <Box>
       <Accordion disableGutters variant="outlined">
@@ -57,6 +65,7 @@ export function ModelTable({ entries, sort, onSortChange, selectedIds, onToggleE
             <Typography variant="h6" component="span">
               {title}
             </Typography>
+            <Chip size="small" variant="outlined" label={`Index ${aaVersion}`} />
             <Button
               size="small"
               variant={openWeightsOnly ? 'contained' : 'outlined'}
@@ -114,6 +123,10 @@ export function ModelTable({ entries, sort, onSortChange, selectedIds, onToggleE
                             // when the date is unknown. <em> carries the style
                             // semantically and survives in the DOM for tests.
                             <em>{col.accessor(entry) ?? '*'}</em>
+                          ) : col.field === 'cost' ? (
+                            // Total benchmark run cost in USD; "*" when AA
+                            // publishes no precise total for this model.
+                            col.accessor(entry) !== undefined ? formatCost(col.accessor(entry) as number) : '*'
                           ) : col.field === 'model' ? (
                             <Button
                               size="small"
@@ -144,6 +157,14 @@ export function ModelTable({ entries, sort, onSortChange, selectedIds, onToggleE
               </TableBody>
             </Table>
           </TableContainer>
+          <Typography
+            variant="caption"
+            component="p"
+            color="text.secondary"
+            sx={{ px: 2, py: 1, m: 0, fontStyle: 'italic' }}
+          >
+            USD Cost to Run Artificial Analysis Intelligence Index
+          </Typography>
         </AccordionDetails>
       </Accordion>
     </Box>

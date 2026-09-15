@@ -4,6 +4,7 @@ import { mergeHardwareIntelligence, modelMatchKey } from '../merge'
 import { aaVersionsDesc, filterByAAVersion } from '../version'
 import { parseParetoDataset, paretoSnapshotFromModels } from '../pareto'
 import rawIntelligenceData from '../../data/ai.json'
+import rawHistoricalIntelligenceData from '../../data/ai-2025-12-30.json'
 import rawNewsData from '../../data/news.json'
 import rawHardwareData from '../../data/hardware.json'
 import rawMachineData from '../../data/machines.json'
@@ -79,6 +80,25 @@ describe('embedded data integrity', () => {
   it('news URLs are unique', () => {
     const urls = news.map((entry) => entry.url)
     expect(new Set(urls).size).toBe(urls.length)
+  })
+
+  it('the 2025-12-30 backfill holds only v3.0 rows that meet the ai.json conventions', () => {
+    // App.tsx concatenates this snapshot with ai.json, so it must satisfy the
+    // same per-block conventions: one version, score descending, unique
+    // (model, version) pairs, a bar color and a release date on every row.
+    const backfill = parseModelEntries(rawHistoricalIntelligenceData)
+    expect(backfill.length).toBeGreaterThan(0)
+    const keys = backfill.map((entry) => `${entry.aa_version}:${entry.model}`)
+    expect(new Set(keys).size).toBe(keys.length)
+    for (let i = 0; i < backfill.length; i++) {
+      expect(backfill[i].aa_version).toBe('v3.0')
+      expect(backfill[i].color).toMatch(/^#[0-9a-f]{6}$/i)
+      expect(backfill[i].released).not.toBeNull()
+      if (i > 0) expect(backfill[i].score).toBeLessThanOrEqual(backfill[i - 1].score)
+    }
+    // No (model, version) pair may exist in both files.
+    const mainKeys = new Set(intelligence.map((entry) => `${entry.aa_version}:${entry.model}`))
+    for (const key of keys) expect(mainKeys.has(key)).toBe(false)
   })
 
   it('machines stay ordered by VRAM descending, one row per machine', () => {

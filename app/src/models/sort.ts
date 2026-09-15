@@ -15,6 +15,9 @@ function fieldValue(entry: ModelEntry, field: SortField): string | number | unde
       return entry.model
     case 'score':
       return entry.score
+    case 'cost':
+      // Rows without a measured benchmark cost sort last in both directions.
+      return entry.cost_usd
   }
 }
 

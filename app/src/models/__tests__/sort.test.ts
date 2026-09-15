@@ -11,6 +11,7 @@ const entries: ModelEntry[] = [
     provider: 'OpenAI',
     open_weight: false,
     released: '2026-05-01',
+    cost_usd: 250,
   },
   {
     id: 'anthropic:alpha',
@@ -20,7 +21,9 @@ const entries: ModelEntry[] = [
     provider: 'Anthropic',
     open_weight: false,
     released: '2026-07-01',
+    cost_usd: 900,
   },
+  // Beta carries no measured cost: it sorts last on the cost column either way.
   { id: 'openai:beta', model: 'Beta', score: 60, aa_version: 'v9.9', provider: 'OpenAI', open_weight: false, released: null },
 ]
 
@@ -48,6 +51,9 @@ describe('sortModels', () => {
     { name: 'model desc', sort: { field: 'model', direction: 'desc' }, key: (e) => e.model, expected: ['Gamma', 'Beta', 'Alpha'] },
     { name: 'score asc', sort: { field: 'score', direction: 'asc' }, key: (e) => String(e.score), expected: ['50', '60', '60'] },
     { name: 'score desc', sort: { field: 'score', direction: 'desc' }, key: (e) => String(e.score), expected: ['60', '60', '50'] },
+    // Missing costs sort last in both directions, like unknown release dates.
+    { name: 'cost asc', sort: { field: 'cost', direction: 'asc' }, key: (e) => e.model, expected: ['Gamma', 'Alpha', 'Beta'] },
+    { name: 'cost desc', sort: { field: 'cost', direction: 'desc' }, key: (e) => e.model, expected: ['Alpha', 'Gamma', 'Beta'] },
   ]
 
   it.each(cases)('sorts by $name', ({ sort, key, expected }) => {

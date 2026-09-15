@@ -12,6 +12,7 @@ import {
   filterByAAVersion,
 } from '../../models'
 import rawIntelligenceData from '../../data/ai.json'
+import rawHistoricalIntelligenceData from '../../data/ai-2025-12-30.json'
 import rawNewsData from '../../data/news.json'
 import rawHardwareData from '../../data/hardware.json'
 import rawGpuData from '../../data/gpu.json'
@@ -24,7 +25,8 @@ import rawMachineData from '../../data/machines.json'
  * that matters is not "does the parser return what the file says" (a
  * tautology) but "does the user actually see every row of the data".
  */
-const intelligence = parseModelEntries(rawIntelligenceData)
+// Mirror App.tsx: ai.json plus the historical v3.0 backfill snapshot.
+const intelligence = parseModelEntries([...rawIntelligenceData, ...rawHistoricalIntelligenceData])
 const news = parseNewsEntries(rawNewsData)
 // Mirror App.tsx: the dashboard shows one index version at a time (newest by
 // default), and hardware scores always merge from the newest version's block.
@@ -53,6 +55,7 @@ describe('acceptance: every JSON row appears in the UI', () => {
     expandSection(/Model Details/)
     const table = screen.getByRole('table', { name: 'Model Details' })
     expect(within(table).getAllByRole('row')).toHaveLength(latestIntelligence.length + 1)
+    const usd = new Intl.NumberFormat('en-US', { style: 'currency', currency: 'USD', maximumFractionDigits: 2 })
     for (const entry of latestIntelligence) {
       const row = modelRow(table, entry.model)
       expect(row.textContent).toContain(entry.provider)
@@ -61,6 +64,10 @@ describe('acceptance: every JSON row appears in the UI', () => {
       const italic = row.querySelector('em')
       expect(italic).not.toBeNull()
       expect(italic?.textContent).toBe(entry.released ?? '*')
+      // Costed rows show the total benchmark run cost as USD.
+      if (entry.cost_usd !== undefined) {
+        expect(row.textContent).toContain(usd.format(entry.cost_usd))
+      }
     }
   })
 
@@ -68,17 +75,27 @@ describe('acceptance: every JSON row appears in the UI', () => {
     render(<App />)
     expandSection(/Model Details/)
     const table = screen.getByRole('table', { name: 'Model Details' })
-    const previousVersion = aaVersionsDesc(intelligence)[1]
+    const versions = aaVersionsDesc(intelligence)
+    const previousVersion = versions[1]
     const previousRows = filterByAAVersion(intelligence, previousVersion)
     // Claude Sonnet 4.6 (max) was never re-measured under the newest index
     // version, so it only exists in the older snapshot.
     expect(within(table).queryByRole('button', { name: 'Claude Sonnet 4.6 (max)' })).not.toBeInTheDocument()
     fireEvent.click(screen.getByRole('button', { name: previousVersion }))
     expect(within(table).getAllByRole('row')).toHaveLength(previousRows.length + 1)
-    expect(within(table).getByRole('button', { name: 'Claude Sonnet 4.6 (max)' })).toBeInTheDocument()
+    // Models that first appear under the newly shown version start selected:
+    // their rows are not grayed out and they join the chart.
+    expect(within(table).getByRole('button', { name: 'Claude Sonnet 4.6 (max)' })).toHaveAttribute('aria-pressed', 'true')
+    // The v3.0 backfill snapshot is listed and selectable like any version.
+    const historicalRows = filterByAAVersion(intelligence, 'v3.0')
+    fireEvent.click(screen.getByRole('button', { name: 'v3.0' }))
+    expect(within(table).getAllByRole('row')).toHaveLength(historicalRows.length + 1)
+    expect(within(table).getByRole('button', { name: 'Kimi K2 Thinking' })).toHaveAttribute('aria-pressed', 'true')
+    expect(within(table).queryByRole('button', { name: 'Claude Sonnet 4.6 (max)' })).not.toBeInTheDocument()
     fireEvent.click(screen.getByRole('button', { name: latestVersion }))
     expect(within(table).getAllByRole('row')).toHaveLength(latestIntelligence.length + 1)
     expect(within(table).queryByRole('button', { name: 'Claude Sonnet 4.6 (max)' })).not.toBeInTheDocument()
+    expect(versions).toEqual(['v4.3', 'v4.2', 'v3.0'])
   })
 
   it('lists every news.json entry in Hand Picked News as a dated link', () => {
