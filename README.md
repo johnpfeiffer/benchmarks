@@ -30,17 +30,26 @@ published total is `null`. It does not scrape the multi-model comparison chart.
 
 # Intelligence Index versions
 
-`app/src/data/ai.json` keeps one block of rows per Artificial Analysis
-Intelligence Index version (`aa_version`), so methodology revisions never
-erase the previous snapshot. The toggle in the chart header swaps the chart
-and the Model Details table between versions (currently v4.3 and v4.2, plus
-the v3.0 snapshot backfilled from 2025-12-30 in
+`app/src/data/ai.json` keeps one block of rows per Artificial Analysis Intelligence Index version (`aa_version`).
+The methodology revisions never erase the previous snapshot. The toggle in the chart header swaps the chart
+and the Model Details table between versions.
+
 `app/src/data/ai-2025-12-30.json`, which the app concatenates with `ai.json`);
-hardware tables always show the newest version's scores. A model that was
-never re-measured under a version simply has no row in that block. Models that
-first appear in the selected version start selected in the table and chart;
-the captured v3.0 charts also live in the collapsed "Historical Artificial
-Analysis Intelligence charts" expander below Model Details.
+
+the captured v3.0 charts also live in the collapsed "Historical Artificial Analysis Intelligence charts" expander below Model Details.
+
+Hardware tables always show the newest version's scores.
+A model that was ever re-measured under a version simply has no row in that block.
+
+## Historical Data
+
+**V3**
+
+https://web.archive.org/web/20251229181306/https://artificialanalysis.ai/methodology/intelligence-benchmarking
+
+As of 2025-12-30
+
+https://web.archive.org/web/20251230102900/https://artificialanalysis.ai/evaluations/artificial-analysis-intelligence-index?models=gpt-oss-120b%2Cgpt-5-2%2Cgpt-oss-20b%2Cgpt-5-1%2Cgpt-5-1-codex%2Cgemini-3-pro%2Cgemini-3-flash-reasoning%2Cclaude-4-5-sonnet-thinking%2Cclaude-opus-4-5-thinking%2Cclaude-4-5-haiku-reasoning%2Cmistral-large-3%2Cdeepseek-r1%2Cdeepseek-v3-2-reasoning%2Cgrok-4%2Cminimax-m2-1%2Cnvidia-nemotron-3-nano-30b-a3b-reasoning%2Ckimi-k2-thinking%2Cglm-4-7%2Cqwen3-235b-a22b-instruct-2507-reasoning
 
 
 # Pareto chart data
@@ -71,3 +80,6 @@ does not follow the main dashboard's model selection.
 
 The historical PNG remains available in the reference panel. Its date and
 scores can differ from the interactive snapshot.
+
+
+
