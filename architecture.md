@@ -88,11 +88,12 @@ data itself. Rows are grouped newest version block first, score descending
 within a block (ties keep file order; `benchtool ai-add` maintains both). A
 model never re-measured under a version simply has no row in that block. The
 chart and Model Details table show one version at a time, switched by the
-toggle in the chart section header; hardware rows always merge their score
-from the newest block. Entry ids are versionless (`provider:model`), so chart
-selections survive the switch; models that first appear in the newly selected
-block start selected (the controller unions previously unseen ids into the
-selection), so the table and chart fully reflect a version switch. The v3.0
+toggle in the chart section header or the identical one in the Model Details
+summary; hardware rows always merge their score
+from the newest block. Entry ids are versionless (`provider:model`), and a
+version switch resets the selection to exactly the shown version's models
+(carrying a selection across snapshots with different model sets produced
+charts showing only a stray shared model). The v3.0
 snapshot is a 2025-12-30 backfill kept in `data/ai-2025-12-30.json` and
 concatenated with `ai.json` at parse time, so `ai.json` stays the curated
 current ledger while the toggle lists v4.3, v4.2, and v3.0. Every row carries a
@@ -129,8 +130,10 @@ All views are pure (props in, callbacks out, no business logic):
 - `ModelTable` - collapsible (Accordion, collapsed by default) sortable table;
   headers `Intelligence`, `Model Name`, `Provider`, `Released`, and
   `Benchmark cost USD`; click headers to
-  toggle asc/desc (default: intelligence descending). A chip beside the title
-  names the displayed index version (`Index v4.3`). The release date renders
+  toggle asc/desc (default: intelligence descending). When the data carries
+  more than one index version, the accordion summary carries the same
+  index-version `ToggleButtonGroup` as the chart header (same selected-state
+  styling, clicks do not toggle the accordion). The release date renders
   in italics after the provider,
   `*` when unknown; ISO dates sort chronologically and unknown
   dates sort last in both directions. The cost column shows the total
@@ -243,6 +246,10 @@ All views are pure (props in, callbacks out, no business logic):
   `...-eval-cost-usd.png`) via relative `images/...` URLs (same `<base
   href="/benchmarks/">` contract as the Pareto reference image), with alt
   text and a caption crediting Artificial Analysis with the capture date.
+  Expansion is controlled by the Dashboard: when the chart's version selector
+  shows the historical version (`HISTORICAL_AA_VERSION`, `v3.0`), a "Scores
+  and costs predate the current index version" link appears below the chart
+  and opens this section via its `#historical-aa-title` anchor.
 - `Dashboard` - layout composing the intelligence chart, the collapsed-by-default
   enriched details table and the historical-charts expander, HuggingFace estimated
   hardware chart and table ("Unsloth Open Weight Hosting Sizes"), collapsible GPU
@@ -253,7 +260,11 @@ All views are pure (props in, callbacks out, no business logic):
   index-version toggle (MUI `ToggleButtonGroup`, right-aligned) that swaps the
   chart and details table between the version blocks of `ai.json` plus the
   v3.0 backfill (`data/ai-2025-12-30.json`); it renders
-  only when the data carries more than one version.
+  only when the data carries more than one version, as does the identical
+  toggle in the Model Details summary. When the historical version is shown,
+  a "Scores and costs predate the current index version" link below the chart
+  opens the historical charts section (the only local UI state Dashboard
+  holds).
 
 ### Controller (`App.tsx`)
 
@@ -268,11 +279,9 @@ forwards header clicks through `nextSortState`. Hardware rows merge their
 intelligence score from the newest version's block only, regardless of the
 selected view version. Deselected models are
 filtered out of the chart while their rows stay visible in the table. A
-version switch unions the new block's previously unseen ids into the
-selection (deliberate deselections of already-seen ids survive), so every row
-of the selected version starts selected, and the "Open Weights" preset flag
-resets on a version switch since the selection no longer equals the
-open-weight set. The
+version switch resets the selection to exactly the shown version's models and
+clears the "Open Weights" preset flag, so the table and chart always reflect
+the chosen snapshot with no leftover state from another version. The
 "Open Weights"
 preset is a selection: on ->
 `replaceSelection(openWeightIds(...))`; off -> `replaceSelection(allIds)`, so the

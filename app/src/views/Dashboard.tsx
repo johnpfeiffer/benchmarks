@@ -1,8 +1,9 @@
+import { useState } from 'react'
 import { Box, Container, Link, ToggleButton, ToggleButtonGroup, Typography } from '@mui/material'
 import type { GpuEntry, HardwareEntry, MachineEntry, ModelEntry, NewsEntry, SortField, SortState } from '../models'
 import { IntelligenceBarChart } from './IntelligenceBarChart'
 import { ModelTable } from './ModelTable'
-import { HistoricalIntelligenceCharts } from './HistoricalIntelligenceCharts'
+import { HISTORICAL_AA_VERSION, HistoricalIntelligenceCharts } from './HistoricalIntelligenceCharts'
 import { Footer } from './Footer'
 import { NewsSection } from './NewsSection'
 import { ParetoFrontierSection } from './ParetoFrontierSection'
@@ -42,7 +43,9 @@ interface DashboardProps {
 }
 
 /**
- * Dashboard layout (pure presentation).
+ * Dashboard layout. Presentation only except one piece of local UI state:
+ * whether the historical-charts expander is open, so the chart's predate
+ * note can open it. All data flow stays with the controller (App.tsx).
  *
  * Progressive disclosure per DESIGN.md: a summary chart on top, collapsible
  * news and sortable details below, then sources/credit in the footer.
@@ -69,6 +72,9 @@ export function Dashboard({
   intelligenceSource,
   sources,
 }: DashboardProps) {
+  // Local UI state only: lets the chart's predate note open the historical
+  // charts section. All data flow stays with the controller.
+  const [historicalExpanded, setHistoricalExpanded] = useState(false)
   return (
     <Container maxWidth={false} sx={{ py: 3, px: { xs: 2, md: 3 } }}>
       <Box sx={{ mb: 3 }}>
@@ -119,6 +125,13 @@ export function Dashboard({
           scoreLabel="Score"
           barValues
         />
+        {aaVersion === HISTORICAL_AA_VERSION && (
+          <Typography variant="body2" sx={{ mt: 1 }}>
+            <Link href="#historical-aa-title" onClick={() => setHistoricalExpanded(true)}>
+              Scores and costs predate the current index version
+            </Link>
+          </Typography>
+        )}
       </Box>
 
       <Box sx={{ mb: 4 }}>
@@ -132,7 +145,9 @@ export function Dashboard({
       <Box component="section" aria-labelledby="details-title" sx={{ mb: 2 }}>
         <ModelTable
           entries={entries}
+          aaVersions={aaVersions}
           aaVersion={aaVersion}
+          onAAVersionChange={onAAVersionChange}
           sort={sort}
           onSortChange={onSortChange}
           selectedIds={selectedIds}
@@ -144,7 +159,7 @@ export function Dashboard({
       </Box>
 
       <Box sx={{ mb: 5 }}>
-        <HistoricalIntelligenceCharts />
+        <HistoricalIntelligenceCharts expanded={historicalExpanded} onExpandedChange={setHistoricalExpanded} />
       </Box>
 
       <Box component="section" aria-labelledby="hardware-title" sx={{ mb: 5 }}>

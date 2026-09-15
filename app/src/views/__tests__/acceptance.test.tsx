@@ -78,24 +78,68 @@ describe('acceptance: every JSON row appears in the UI', () => {
     const versions = aaVersionsDesc(intelligence)
     const previousVersion = versions[1]
     const previousRows = filterByAAVersion(intelligence, previousVersion)
+    // The version selector appears twice (chart header and table summary);
+    // either drives the same state.
+    const versionButton = (version: string) => screen.getAllByRole('button', { name: version })[0]
     // Claude Sonnet 4.6 (max) was never re-measured under the newest index
     // version, so it only exists in the older snapshot.
     expect(within(table).queryByRole('button', { name: 'Claude Sonnet 4.6 (max)' })).not.toBeInTheDocument()
-    fireEvent.click(screen.getByRole('button', { name: previousVersion }))
+    fireEvent.click(versionButton(previousVersion))
     expect(within(table).getAllByRole('row')).toHaveLength(previousRows.length + 1)
     // Models that first appear under the newly shown version start selected:
     // their rows are not grayed out and they join the chart.
     expect(within(table).getByRole('button', { name: 'Claude Sonnet 4.6 (max)' })).toHaveAttribute('aria-pressed', 'true')
     // The v3.0 backfill snapshot is listed and selectable like any version.
     const historicalRows = filterByAAVersion(intelligence, 'v3.0')
-    fireEvent.click(screen.getByRole('button', { name: 'v3.0' }))
+    fireEvent.click(versionButton('v3.0'))
     expect(within(table).getAllByRole('row')).toHaveLength(historicalRows.length + 1)
     expect(within(table).getByRole('button', { name: 'Kimi K2 Thinking' })).toHaveAttribute('aria-pressed', 'true')
     expect(within(table).queryByRole('button', { name: 'Claude Sonnet 4.6 (max)' })).not.toBeInTheDocument()
-    fireEvent.click(screen.getByRole('button', { name: latestVersion }))
+    fireEvent.click(versionButton(latestVersion))
     expect(within(table).getAllByRole('row')).toHaveLength(latestIntelligence.length + 1)
     expect(within(table).queryByRole('button', { name: 'Claude Sonnet 4.6 (max)' })).not.toBeInTheDocument()
     expect(versions).toEqual(['v4.3', 'v4.2', 'v3.0'])
+  })
+
+  it('selects every model of the shown version after mixing the Open Weights preset with version switches', () => {
+    // Regression: selection used to persist across version switches, so a
+    // preset from another version could shrink the chart to a handful of
+    // models (e.g. only Claude 4.5 Haiku) with no visible explanation.
+    render(<App />)
+    expandSection(/Model Details/)
+    const table = screen.getByRole('table', { name: 'Model Details' })
+    const section = table.closest('section') as HTMLElement
+    const openWeights = () => within(section).getByRole('button', { name: 'Open Weights' })
+    const versionButton = (version: string) => screen.getAllByRole('button', { name: version })[0]
+
+    fireEvent.click(openWeights()) // preset on: only open-weight v4.3 models
+    fireEvent.click(versionButton('v3.0'))
+    fireEvent.click(openWeights()) // preset on for v3.0
+    fireEvent.click(versionButton('v4.2'))
+
+    const previousRows = filterByAAVersion(intelligence, 'v4.2')
+    expect(within(table).getAllByRole('row')).toHaveLength(previousRows.length + 1)
+    for (const entry of previousRows) {
+      expect(within(table).getByRole('button', { name: entry.model })).toHaveAttribute('aria-pressed', 'true')
+    }
+    // The preset flag reflects the selection: a full version is showing.
+    expect(openWeights()).toHaveAttribute('aria-pressed', 'false')
+    expect(screen.queryByText('No models selected')).not.toBeInTheDocument()
+  })
+
+  it('shows the predate note on the v3.0 view and expands the historical charts when clicked', () => {
+    render(<App />)
+    // Newest version: no note, historical section collapsed.
+    expect(screen.queryByRole('link', { name: 'Scores and costs predate the current index version' })).not.toBeInTheDocument()
+    const historySummary = screen.getByRole('button', { name: 'Historical Artificial Analysis Intelligence charts' })
+    expect(historySummary).toHaveAttribute('aria-expanded', 'false')
+
+    fireEvent.click(screen.getAllByRole('button', { name: 'v3.0' })[0])
+    const note = screen.getByRole('link', { name: 'Scores and costs predate the current index version' })
+    expect(note).toHaveAttribute('href', '#historical-aa-title')
+    fireEvent.click(note)
+    expect(historySummary).toHaveAttribute('aria-expanded', 'true')
+    expect(screen.getByRole('img', { name: /Intelligence Index v3\.0 bar chart/i })).toBeInTheDocument()
   })
 
   it('lists every news.json entry in Hand Picked News as a dated link', () => {

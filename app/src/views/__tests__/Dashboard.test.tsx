@@ -69,13 +69,20 @@ function DashboardController({ initialSort = DEFAULT_SORT, allEntries = entries 
       setOpenWeightsOnly(true)
     }
   }
+  // Mirror App.tsx: a version switch resets the selection to the shown
+  // version's models and clears the Open Weights preset.
+  const handleAAVersionChange = (version: string) => {
+    setAaVersion(version)
+    setOpenWeightsOnly(false)
+    setSelectedIds(new Set(allEntries.filter((entry) => entry.aa_version === version).map((entry) => entry.id)))
+  }
   return (
     <Dashboard
       entries={sorted}
       intelligenceChartEntries={chartEntries}
       aaVersions={aaVersions}
       aaVersion={aaVersion}
-      onAAVersionChange={setAaVersion}
+      onAAVersionChange={handleAAVersionChange}
       sort={sort}
       selectedIds={selectedIds}
       onSortChange={handleSortChange}
@@ -157,8 +164,7 @@ describe('Dashboard', () => {
   })
 
   it('swaps the chart and table between Intelligence Index versions via the toggle', () => {
-    // Two snapshots of Alpha plus a v9.9-only Beta; ids are versionless on
-    // purpose so selections survive the switch.
+    // Two snapshots of Alpha plus a v9.9-only Beta.
     const twoVersions: ModelEntry[] = [
       { id: 'anthropic:alpha', model: 'Alpha', score: 60, aa_version: 'v9.9', provider: 'Anthropic', open_weight: true, released: '2026-07-01' },
       { id: 'anthropic:alpha', model: 'Alpha', score: 66, aa_version: 'v9.8', provider: 'Anthropic', open_weight: true, released: '2026-07-01' },
@@ -171,18 +177,81 @@ describe('Dashboard', () => {
       </ThemeProvider>,
     )
     const alphaRow = () => within(intelligenceTable()).getByRole('button', { name: 'Alpha' }).closest('tr') as HTMLElement
-    // Newest version shows first; the toggle lists both versions.
+    // Newest version shows first; the toggle lists both versions (once in the
+    // chart header, once in the table summary — either drives both views).
     expandModelDetails()
     expect(within(intelligenceTable()).getAllByRole('row')).toHaveLength(3)
     expect(alphaRow().textContent).toContain('60')
-    fireEvent.click(screen.getByRole('button', { name: 'v9.8' }))
+    fireEvent.click(screen.getAllByRole('button', { name: 'v9.8' })[0])
     expect(within(intelligenceTable()).getAllByRole('row')).toHaveLength(2)
     expect(alphaRow().textContent).toContain('66')
     expect(within(intelligenceTable()).queryByRole('button', { name: 'Beta' })).not.toBeInTheDocument()
     // Switching back restores the newer snapshot.
-    fireEvent.click(screen.getByRole('button', { name: 'v9.9' }))
+    fireEvent.click(screen.getAllByRole('button', { name: 'v9.9' })[0])
     expect(within(intelligenceTable()).getAllByRole('row')).toHaveLength(3)
     expect(alphaRow().textContent).toContain('60')
+  })
+
+  it('shows a synced version selector in the Model Details summary that does not toggle the accordion', () => {
+    const twoVersions: ModelEntry[] = [
+      { id: 'anthropic:alpha', model: 'Alpha', score: 60, aa_version: 'v9.9', provider: 'Anthropic', open_weight: true, released: '2026-07-01' },
+      { id: 'anthropic:alpha', model: 'Alpha', score: 66, aa_version: 'v9.8', provider: 'Anthropic', open_weight: true, released: '2026-07-01' },
+    ]
+    render(
+      <ThemeProvider theme={theme}>
+        <CssBaseline />
+        <DashboardController allEntries={twoVersions} />
+      </ThemeProvider>,
+    )
+    // Chart header and table summary both carry the selector, same selection.
+    const groups = screen.getAllByRole('group', { name: 'Intelligence Index version' })
+    expect(groups).toHaveLength(2)
+    for (const group of groups) {
+      expect(within(group).getByRole('button', { name: 'v9.9' })).toHaveAttribute('aria-pressed', 'true')
+    }
+
+    // Clicking the table summary's selector (rendered even while collapsed)
+    // switches the version without expanding the accordion.
+    const summary = screen.getByRole('button', { name: /Model Details/i })
+    expect(summary).toHaveAttribute('aria-expanded', 'false')
+    fireEvent.click(within(groups[1]).getByRole('button', { name: 'v9.8' }))
+    expect(summary).toHaveAttribute('aria-expanded', 'false')
+    for (const group of screen.getAllByRole('group', { name: 'Intelligence Index version' })) {
+      expect(within(group).getByRole('button', { name: 'v9.8' })).toHaveAttribute('aria-pressed', 'true')
+    }
+
+    // The table follows even though it was toggled from its own summary.
+    expandModelDetails()
+    expect(within(intelligenceTable()).getAllByRole('row')).toHaveLength(2)
+    expect(within(intelligenceTable()).getByRole('button', { name: 'Alpha' }).closest('tr')?.textContent).toContain('66')
+  })
+
+  it('links from the v3.0 chart view to the expanded historical charts section', () => {
+    const withHistorical: ModelEntry[] = [
+      { id: 'anthropic:alpha', model: 'Alpha', score: 60, aa_version: 'v9.9', provider: 'Anthropic', open_weight: true, released: '2026-07-01' },
+      { id: 'google:gamma', model: 'Gamma', score: 55, aa_version: 'v3.0', provider: 'Google', open_weight: false, released: '2025-12-17' },
+    ]
+    render(
+      <ThemeProvider theme={theme}>
+        <CssBaseline />
+        <DashboardController allEntries={withHistorical} />
+      </ThemeProvider>,
+    )
+    // No note while the newest version is shown; history starts collapsed.
+    expect(screen.queryByRole('link', { name: 'Scores and costs predate the current index version' })).not.toBeInTheDocument()
+    const historySummary = screen.getByRole('button', { name: 'Historical Artificial Analysis Intelligence charts' })
+    expect(historySummary).toHaveAttribute('aria-expanded', 'false')
+
+    fireEvent.click(screen.getAllByRole('button', { name: 'v3.0' })[0])
+    const note = screen.getByRole('link', { name: 'Scores and costs predate the current index version' })
+    expect(note).toHaveAttribute('href', '#historical-aa-title')
+    fireEvent.click(note)
+    expect(historySummary).toHaveAttribute('aria-expanded', 'true')
+    expect(screen.getByRole('img', { name: /Intelligence Index v3\.0 bar chart/i })).toBeInTheDocument()
+
+    // Returning to the newest version hides the note again.
+    fireEvent.click(screen.getAllByRole('button', { name: 'v9.9' })[0])
+    expect(screen.queryByRole('link', { name: 'Scores and costs predate the current index version' })).not.toBeInTheDocument()
   })
 
   it('hides the version toggle when the data carries a single index version', () => {
@@ -393,11 +462,11 @@ describe('Dashboard', () => {
     expect(rows[3].textContent).toContain('Beta')
   })
 
-  it('names the displayed index version next to the Model Details title', () => {
+  it('hides the version selector in the Model Details summary when the data carries a single index version', () => {
     renderDashboard()
     expandModelDetails()
     const section = intelligenceTable().closest('section') as HTMLElement
-    expect(within(section).getByText('Index v9.9')).toBeInTheDocument()
+    expect(within(section).queryByRole('group', { name: 'Intelligence Index version' })).not.toBeInTheDocument()
   })
 
   it('keeps the 2025 historical Artificial Analysis charts in a collapsed expander below Model Details', () => {

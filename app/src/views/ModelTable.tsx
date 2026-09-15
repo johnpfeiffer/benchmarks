@@ -5,7 +5,6 @@ import {
   AccordionSummary,
   Box,
   Button,
-  Chip,
   Table,
   TableBody,
   TableCell,
@@ -13,6 +12,8 @@ import {
   TableHead,
   TableSortLabel,
   TableRow,
+  ToggleButton,
+  ToggleButtonGroup,
   Typography,
 } from '@mui/material'
 import type { SortField, SortState } from '../models'
@@ -21,8 +22,12 @@ import type { ModelEntry } from '../models'
 interface ModelTableProps {
   /** Entries already sorted by the controller. */
   entries: readonly ModelEntry[]
-  /** Index version the rows belong to, shown beside the title. */
+  /** Index versions present in the data, newest first. */
+  aaVersions: readonly string[]
+  /** Index version the rows belong to. */
   aaVersion: string
+  /** Called when the summary's version selector is used. */
+  onAAVersionChange: (version: string) => void
   sort: SortState
   /** Called when a header is clicked; the controller decides the next state. */
   onSortChange: (field: SortField) => void
@@ -56,16 +61,36 @@ const formatCost = (value: number) =>
  * Weights" toggle sits immediately to the right of the title in the accordion
  * summary; clicking it does not toggle the accordion.
  */
-export function ModelTable({ entries, aaVersion, sort, onSortChange, selectedIds, onToggleEntry, title, openWeightsOnly, onToggleOpenWeights }: ModelTableProps) {
+export function ModelTable({ entries, aaVersions, aaVersion, onAAVersionChange, sort, onSortChange, selectedIds, onToggleEntry, title, openWeightsOnly, onToggleOpenWeights }: ModelTableProps) {
   return (
     <Box>
       <Accordion disableGutters variant="outlined">
         <AccordionSummary expandIcon={<ExpandMoreIcon />} aria-controls="details-content" id="details-header">
-          <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
+          <Box sx={{ display: 'flex', alignItems: 'center', gap: 1, flexWrap: 'wrap' }}>
             <Typography variant="h6" component="span">
               {title}
             </Typography>
-            <Chip size="small" variant="outlined" label={`Index ${aaVersion}`} />
+            {aaVersions.length > 1 && (
+              // Same ToggleButtonGroup as the chart header's version selector;
+              // clicks stay local so the accordion does not toggle.
+              <ToggleButtonGroup
+                size="small"
+                exclusive
+                value={aaVersion}
+                onClick={(e) => e.stopPropagation()}
+                onChange={(_, next) => {
+                  // MUI emits null when the selected button is clicked again.
+                  if (next !== null) onAAVersionChange(next)
+                }}
+                aria-label="Intelligence Index version"
+              >
+                {aaVersions.map((version) => (
+                  <ToggleButton key={version} value={version}>
+                    {version}
+                  </ToggleButton>
+                ))}
+              </ToggleButtonGroup>
+            )}
             <Button
               size="small"
               variant={openWeightsOnly ? 'contained' : 'outlined'}
