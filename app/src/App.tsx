@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useRef, useState } from 'react'
+import { useMemo, useState } from 'react'
 import { RouterProvider, createBrowserRouter, Outlet, useParams } from 'react-router-dom'
 import { CssBaseline, ThemeProvider } from '@mui/material'
 import { theme } from './theme'
@@ -38,18 +38,6 @@ export type AppContext = { app: string }
 function useBenchmarkState(entries: readonly ModelEntry[]) {
   const [sort, setSort] = useState<SortState>(DEFAULT_SORT)
   const [selectedIds, setSelectedIds] = useState<Set<string>>(() => new Set(entries.map((entry) => entry.id)))
-  // Ids the selection has ever covered. When the displayed index version
-  // changes, models that first appear in the new block start selected (so the
-  // table and chart reflect the switch), while deliberate deselections of
-  // already-seen ids survive: ids are versionless by design.
-  const seenIds = useRef<Set<string>>(new Set(entries.map((entry) => entry.id)))
-
-  useEffect(() => {
-    const unseen = entries.map((entry) => entry.id).filter((id) => !seenIds.current.has(id))
-    if (unseen.length === 0) return
-    unseen.forEach((id) => seenIds.current.add(id))
-    setSelectedIds((current) => new Set([...current, ...unseen]))
-  }, [entries])
 
   const sorted = useMemo(() => sortModels(entries, sort), [entries, sort])
   const chartEntries = useMemo(
@@ -111,8 +99,10 @@ function DashboardPage() {
   const gpu = useMemo(() => parseGpuEntries(rawGpuData), [])
   const machines = useMemo(() => parseMachineEntries(rawMachineData), [])
 
-  // Entry ids are versionless (provider:model), so chart selections survive
-  // switching the displayed index version.
+  // Entry ids are versionless (provider:model). A version switch resets the
+  // selection to exactly the shown version's models (see handleAAVersionChange):
+  // carrying a selection across snapshots with different model sets produced
+  // charts showing only a stray shared model.
   const table = useBenchmarkState(intelligenceEntries)
   const [openWeightsOnly, setOpenWeightsOnly] = useState(false)
 
@@ -133,12 +123,13 @@ function DashboardPage() {
     }
   }
 
-  // Switching the displayed version auto-selects that block's new models (see
-  // useBenchmarkState), so an active open-weights-only selection no longer
-  // holds; the preset flag resets to match what the table and chart show.
+  // A version switch resets the selection to the shown version's full model
+  // set and clears the Open Weights preset, so the table and chart always
+  // reflect the chosen snapshot with no leftover state from another version.
   const handleAAVersionChange = (version: string) => {
     setAaVersion(version)
     setOpenWeightsOnly(false)
+    table.replaceSelection(new Set(filterByAAVersion(allIntelligence, version).map((entry) => entry.id)))
   }
 
   const sources: DataSourceCredit[] = [

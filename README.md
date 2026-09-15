@@ -32,14 +32,17 @@ published total is `null`. It does not scrape the multi-model comparison chart.
 
 `app/src/data/ai.json` keeps one block of rows per Artificial Analysis Intelligence Index version (`aa_version`).
 The methodology revisions never erase the previous snapshot. The toggle in the chart header swaps the chart
-and the Model Details table between versions.
+and the Model Details table between versions; the same toggle also sits in the Model Details summary.
+Switching versions resets the table/chart selection to the shown snapshot's models.
 
-`app/src/data/ai-2025-12-30.json`, which the app concatenates with `ai.json`);
+The v3.0 snapshot was backfilled from 2025-12-30 and lives in `app/src/data/ai-2025-12-30.json`,
+which the app concatenates with `ai.json`.
 
-the captured v3.0 charts also live in the collapsed "Historical Artificial Analysis Intelligence charts" expander below Model Details.
+The captured v3.0 charts also live in the collapsed "Historical Artificial Analysis Intelligence charts" expander below Model Details.
+When v3.0 is selected, a "Scores and costs predate the current index version" link below the chart opens that expander.
 
 Hardware tables always show the newest version's scores.
-A model that was ever re-measured under a version simply has no row in that block.
+A model that was never re-measured under a version simply has no row in that block.
 
 ## Historical Data
 

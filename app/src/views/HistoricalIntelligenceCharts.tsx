@@ -15,14 +15,32 @@ const imageSx = {
 } as const
 
 /**
+ * The index version this section's captures belong to. The Dashboard shows a
+ * "predate the current index version" note below the chart when this version
+ * is selected, linking here.
+ */
+export const HISTORICAL_AA_VERSION = 'v3.0'
+
+interface HistoricalIntelligenceChartsProps {
+  /** Controlled expansion so the chart's predate note can open the section. */
+  expanded: boolean
+  onExpandedChange: (expanded: boolean) => void
+}
+
+/**
  * Collapsed-by-default expander below Model Details holding the captured
  * 2025-12-30 Artificial Analysis charts (Intelligence Index v3.0), kept for
  * reference alongside the live version-switched chart above.
  */
-export function HistoricalIntelligenceCharts() {
+export function HistoricalIntelligenceCharts({ expanded, onExpandedChange }: HistoricalIntelligenceChartsProps) {
   return (
     <Box component="section" aria-labelledby="historical-aa-title">
-      <Accordion disableGutters variant="outlined">
+      <Accordion
+        disableGutters
+        variant="outlined"
+        expanded={expanded}
+        onChange={(_, next) => onExpandedChange(next)}
+      >
         <AccordionSummary expandIcon={<ExpandMoreIcon />} aria-controls="historical-aa-content" id="historical-aa-header">
           <Typography id="historical-aa-title" variant="h6" component="span">
             Historical Artificial Analysis Intelligence charts

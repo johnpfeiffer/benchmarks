@@ -6,6 +6,7 @@
   {"model": "Muse Spark 1.3 (max)", "intelligence_score": 48, "aa_version": "v4.3", "cost_usd": 2000.35, "provider": "Meta", "open_weight": false, "color": "#0089f4", "released": "2026-09-02"},
   {"model": "GPT-5.6 Sol (max)", "intelligence_score": 47, "aa_version": "v4.3", "cost_usd": 3464.84, "provider": "OpenAI", "open_weight": false, "color": "#1f1f1f", "released": "2026-07-09"},
   {"model": "GLM-5.3 (max)", "intelligence_score": 45, "aa_version": "v4.3", "cost_usd": 2503.48, "provider": "Z AI", "open_weight": true, "color": "#1c7ff8", "released": "2026-08-18"},
+  {"model": "Qwen3.8 Max 0902", "intelligence_score": 45, "aa_version": "v4.3", "cost_usd": 4934.79, "provider": "Alibaba", "open_weight": false, "color": "#F54F35", "released": "2026-09-02"},
   {"model": "Grok 4.6 (high)", "intelligence_score": 44, "aa_version": "v4.3", "cost_usd": 2351.83, "provider": "xAI", "open_weight": false, "color": "#736cd3", "released": "2026-08-12"},
   {"model": "Kimi K3", "intelligence_score": 44, "aa_version": "v4.3", "cost_usd": 3658.07, "provider": "Moonshot AI", "open_weight": true, "color": "#00B4D8", "released": "2026-07-16"},
   {"model": "GPT-5.6 Terra (max)", "intelligence_score": 42, "aa_version": "v4.3", "cost_usd": 2500.72, "provider": "OpenAI", "open_weight": false, "color": "#1f1f1f", "released": "2026-07-09"},
