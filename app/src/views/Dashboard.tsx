@@ -2,6 +2,7 @@ import { Box, Container, Link, ToggleButton, ToggleButtonGroup, Typography } fro
 import type { GpuEntry, HardwareEntry, MachineEntry, ModelEntry, NewsEntry, SortField, SortState } from '../models'
 import { IntelligenceBarChart } from './IntelligenceBarChart'
 import { ModelTable } from './ModelTable'
+import { HistoricalIntelligenceCharts } from './HistoricalIntelligenceCharts'
 import { Footer } from './Footer'
 import { NewsSection } from './NewsSection'
 import { ParetoFrontierSection } from './ParetoFrontierSection'
@@ -75,7 +76,7 @@ export function Dashboard({
           AI Model Benchmarks
         </Typography>
         <Typography variant="body2" color="text.secondary" sx={{ fontStyle: 'italic' }}>
-          Best effort in on a moving target - your own use cases and evals may differ
+          Best effort on a moving target - your own use cases and evals may differ
         </Typography>
       </Box>
 
@@ -128,9 +129,10 @@ export function Dashboard({
         <ParetoFrontierSection />
       </Box>
 
-      <Box component="section" aria-labelledby="details-title" sx={{ mb: 5 }}>
+      <Box component="section" aria-labelledby="details-title" sx={{ mb: 2 }}>
         <ModelTable
           entries={entries}
+          aaVersion={aaVersion}
           sort={sort}
           onSortChange={onSortChange}
           selectedIds={selectedIds}
@@ -139,6 +141,10 @@ export function Dashboard({
           openWeightsOnly={openWeightsOnly}
           onToggleOpenWeights={onToggleOpenWeights}
         />
+      </Box>
+
+      <Box sx={{ mb: 5 }}>
+        <HistoricalIntelligenceCharts />
       </Box>
 
       <Box component="section" aria-labelledby="hardware-title" sx={{ mb: 5 }}>

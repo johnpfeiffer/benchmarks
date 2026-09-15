@@ -161,6 +161,7 @@ export type SortField =
   | 'released'
   | 'model'
   | 'score'
+  | 'cost'
 
 /** Sort direction. */
 export type SortDirection = 'asc' | 'desc'

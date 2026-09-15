@@ -12,6 +12,12 @@ const dataset: ParetoDataset = {
   ],
 }
 
+it('defaults to a $1k cost target and intelligence 42', () => {
+  render(<ParetoChart dataset={dataset} />)
+  expect(screen.getByLabelText('Cost below (USD)')).toHaveValue(1000)
+  expect(screen.getByLabelText('Intelligence above')).toHaveValue(42)
+})
+
 it('updates targets without changing the frontier and exposes point details to keyboard users', () => {
   render(<ParetoChart dataset={dataset} />)
   expect(screen.getByText('1 of 2 meet your target')).toBeInTheDocument()
@@ -30,6 +36,8 @@ it('updates targets without changing the frontier and exposes point details to k
 describe('Pareto dataset loading', () => {
   it('loads the ai.json-derived snapshot and rejects invalid imports without losing the chart', async () => {
     render(<ParetoFrontierSection />)
+    // Collapsed by default; open the section to reach the chart.
+    fireEvent.click(screen.getByRole('button', { name: 'Pareto frontier' }))
     // The published default is real measured data: no sample banner.
     await screen.findByText(/Artificial Analysis Intelligence Index v4\.3 · Snapshot/)
     expect(screen.queryByText(/Sample data — fictional models/)).not.toBeInTheDocument()

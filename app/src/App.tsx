@@ -1,4 +1,4 @@
-import { useMemo, useState } from 'react'
+import { useEffect, useMemo, useRef, useState } from 'react'
 import { RouterProvider, createBrowserRouter, Outlet, useParams } from 'react-router-dom'
 import { CssBaseline, ThemeProvider } from '@mui/material'
 import { theme } from './theme'
@@ -21,6 +21,9 @@ import {
 } from './models'
 import { Dashboard, type DataSourceCredit } from './views/Dashboard'
 import rawIntelligenceData from './data/ai.json'
+// Historical snapshot: the 2025-12-30 backfill of Intelligence Index v3.0
+// rows, kept in its own file so ai.json stays the curated current ledger.
+import rawHistoricalIntelligenceData from './data/ai-2025-12-30.json'
 import rawNewsData from './data/news.json'
 import rawHardwareData from './data/hardware.json'
 import rawGpuData from './data/gpu.json'
@@ -35,6 +38,18 @@ export type AppContext = { app: string }
 function useBenchmarkState(entries: readonly ModelEntry[]) {
   const [sort, setSort] = useState<SortState>(DEFAULT_SORT)
   const [selectedIds, setSelectedIds] = useState<Set<string>>(() => new Set(entries.map((entry) => entry.id)))
+  // Ids the selection has ever covered. When the displayed index version
+  // changes, models that first appear in the new block start selected (so the
+  // table and chart reflect the switch), while deliberate deselections of
+  // already-seen ids survive: ids are versionless by design.
+  const seenIds = useRef<Set<string>>(new Set(entries.map((entry) => entry.id)))
+
+  useEffect(() => {
+    const unseen = entries.map((entry) => entry.id).filter((id) => !seenIds.current.has(id))
+    if (unseen.length === 0) return
+    unseen.forEach((id) => seenIds.current.add(id))
+    setSelectedIds((current) => new Set([...current, ...unseen]))
+  }, [entries])
 
   const sorted = useMemo(() => sortModels(entries, sort), [entries, sort])
   const chartEntries = useMemo(
@@ -69,7 +84,12 @@ function useBenchmarkState(entries: readonly ModelEntry[]) {
 function DashboardPage() {
   // Parse + validate once. If the embedded data ever violates INV-001 this
   // throws loudly at module load rather than rendering partial state.
-  const allIntelligence = useMemo(() => parseModelEntries(rawIntelligenceData), [])
+  // The v3.0 backfill augments ai.json: one row per model per version, so the
+  // version toggle can show the 2025-12-30 snapshot alongside the current ones.
+  const allIntelligence = useMemo(
+    () => parseModelEntries([...rawIntelligenceData, ...rawHistoricalIntelligenceData]),
+    [],
+  )
   // ai.json keeps one row per model per Intelligence Index version; the
   // chart and table show one version at a time (newest first by default).
   const aaVersions = useMemo(() => aaVersionsDesc(allIntelligence), [allIntelligence])
@@ -113,6 +133,14 @@ function DashboardPage() {
     }
   }
 
+  // Switching the displayed version auto-selects that block's new models (see
+  // useBenchmarkState), so an active open-weights-only selection no longer
+  // holds; the preset flag resets to match what the table and chart show.
+  const handleAAVersionChange = (version: string) => {
+    setAaVersion(version)
+    setOpenWeightsOnly(false)
+  }
+
   const sources: DataSourceCredit[] = [
     { label: 'Artificial Analysis Intelligence Index v4.3', href: 'https://artificialanalysis.ai/articles/artificial-analysis-intelligence-index-v4-3' },
     { label: 'HuggingFace and Unsloth', href: 'https://huggingface.co/unsloth' },
@@ -147,7 +175,7 @@ function DashboardPage() {
       intelligenceChartEntries={table.chartEntries}
       aaVersions={aaVersions}
       aaVersion={aaVersion}
-      onAAVersionChange={setAaVersion}
+      onAAVersionChange={handleAAVersionChange}
       sort={table.sort}
       selectedIds={table.selectedIds}
       onSortChange={table.handleSortChange}

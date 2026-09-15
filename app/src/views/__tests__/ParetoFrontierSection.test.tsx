@@ -2,7 +2,7 @@
 import { readFileSync } from 'node:fs'
 import { resolve } from 'node:path'
 import { afterEach, describe, expect, it } from 'vitest'
-import { render, screen } from '@testing-library/react'
+import { fireEvent, render, screen } from '@testing-library/react'
 import { ParetoFrontierSection } from '../ParetoFrontierSection'
 
 describe('Pareto frontier public asset', () => {
@@ -17,6 +17,8 @@ describe('Pareto frontier public asset', () => {
     document.head.appendChild(base)
     render(<ParetoFrontierSection />)
 
+    // The section is collapsed by default; open it to mount the reference image.
+    fireEvent.click(screen.getByRole('button', { name: 'Pareto frontier' }))
     const image = screen.getByRole('img', { name: /Intelligence Index versus cost/i }) as HTMLImageElement
     expect(image.src).toBe(`${baseUrl}images/artificial-analysis-pareto-frontier.png`)
   })

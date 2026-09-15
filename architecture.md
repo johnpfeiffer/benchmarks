@@ -34,6 +34,7 @@ the views. The `App` component is the controller (owns state and data flow).
 ```mermaid
 flowchart TD
     AIJSON["data/ai.json<br/>(embedded)"] --> App["App.tsx<br/>(controller)"]
+    AIHIST["data/ai-2025-12-30.json<br/>(embedded v3.0 backfill)"] --> App
     NEWSJSON["data/news.json<br/>(embedded)"] --> App
     HWJSON["data/hardware.json<br/>(embedded)"] --> App
     GPUJSON["data/gpu.json<br/>(embedded)"] --> App
@@ -43,7 +44,7 @@ flowchart TD
     App -->|sorted table rows + selected ids| Dashboard["views/Dashboard"]
     Dashboard --> ChartA["IntelligenceBarChart<br/>(Artificial Analysis)"]
     Dashboard --> News["NewsSection<br/>(collapsed; top-3 preview always visible)"]
-    Dashboard --> Pareto["ParetoFrontierSection<br/>(expanded + collapsible)"]
+    Dashboard --> Pareto["ParetoFrontierSection<br/>(collapsed by default)"]
     AA["Artificial Analysis<br/>/models page"] -->|"one model per request"| Benchtool["benchtool aa-model<br/>text or JSON"]
     Benchtool -->|"score + precise total cost, same index version"| AIJSON
     AIJSON -->|"rows carrying cost_usd"| ParetoMath["models/pareto<br/>(paretoSnapshotFromModels,<br/>frontier and target predicates)"]
@@ -55,6 +56,8 @@ flowchart TD
     ParetoSample["data/pareto.json<br/>(fictional sample)"] -->|"download link: paste-format example"| Pareto
     ParetoPNG["public/images/artificial-analysis-pareto-frontier.png"] -->|"copied unchanged by Vite; app-relative URL"| Pareto
     Dashboard --> Table["ModelTable<br/>(collapsed by default; sortable + selectable)"]
+    Dashboard --> HistAA["HistoricalIntelligenceCharts<br/>(collapsed 2025-12-30 v3.0 captures)"]
+    HistAAPNG["public/images/2025-12-30-artificial-analysis-index*.png"] -->|"copied unchanged by Vite; app-relative URLs"| HistAA
     Dashboard --> HWChart["HardwareChart<br/>(dynamic quant sizes)"]
     Dashboard --> HWTable["HardwareTable<br/>(sortable hardware details)"]
     Dashboard --> GPUTable["GpuTable<br/>(collapsible + sortable GPU specs)"]
@@ -87,7 +90,12 @@ model never re-measured under a version simply has no row in that block. The
 chart and Model Details table show one version at a time, switched by the
 toggle in the chart section header; hardware rows always merge their score
 from the newest block. Entry ids are versionless (`provider:model`), so chart
-selections survive the switch. Every row carries a
+selections survive the switch; models that first appear in the newly selected
+block start selected (the controller unions previously unseen ids into the
+selection), so the table and chart fully reflect a version switch. The v3.0
+snapshot is a 2025-12-30 backfill kept in `data/ai-2025-12-30.json` and
+concatenated with `ai.json` at parse time, so `ai.json` stays the curated
+current ledger while the toggle lists v4.3, v4.2, and v3.0. Every row carries a
 verified `released` date sourced from the Artificial Analysis leaderboard
 (`benchtool aa-releases`). A row may also carry `cost_usd`: the precise total
 Artificial Analysis charges to run the index on that model, read from the
@@ -119,11 +127,17 @@ All views are pure (props in, callbacks out, no business logic):
   only in non-production builds, so keying on it breaks mobile scrolling in
   the deployed bundle).
 - `ModelTable` - collapsible (Accordion, collapsed by default) sortable table;
-  headers `Provider`, `Released`, `Model Name`, and `Intelligence`;
-  click headers to
-  toggle asc/desc. The release date renders in italics between provider and
-  model name, `*` when unknown; ISO dates sort chronologically and unknown
-  dates sort last in both directions. The table scrolls horizontally on narrow
+  headers `Intelligence`, `Model Name`, `Provider`, `Released`, and
+  `Benchmark cost USD`; click headers to
+  toggle asc/desc (default: intelligence descending). A chip beside the title
+  names the displayed index version (`Index v4.3`). The release date renders
+  in italics after the provider,
+  `*` when unknown; ISO dates sort chronologically and unknown
+  dates sort last in both directions. The cost column shows the total
+  benchmark run cost as USD (`*` when AA publishes no precise total, sorting
+  last in both directions) with an italic footnote ("USD Cost to Run
+  Artificial Analysis Intelligence Index") below the table. The table scrolls
+  horizontally on narrow
   viewports. Model names are buttons; clicking toggles the
   model's inclusion in the chart while the row remains visible when
   deselected, with a gray background and faded text. An "Open Weights" toggle
@@ -152,7 +166,7 @@ All views are pure (props in, callbacks out, no business logic):
   local `useState`/`useMemo` in the component and does not affect controller
   state.
 - `ParetoFrontierSection` - outlined accordion between the news and the model
-  details table, expanded by default and user-collapsible, titled "Pareto
+  details table, collapsed by default and user-expandable, titled "Pareto
   frontier". The published snapshot is derived at load from the `ai.json` rows
   carrying `cost_usd` (`paretoSnapshotFromModels` in `models/pareto.ts`,
   surfaced through `controllers/useParetoDataset`), so the default chart is
@@ -167,7 +181,8 @@ All views are pure (props in, callbacks out, no business logic):
   snapshot date, benchmark version, and explicit sample status.
   `ParetoChart` renders an SVG scatter plot with logarithmic USD cost, linear
   intelligence, provider colors, optional labels, and hover/focus/tap details.
-  The green area uses strict `cost < X && intelligence > Y` thresholds. The
+  The target inputs start at a $1,000 cost ceiling and an intelligence floor
+  of 42. The green area uses strict `cost < X && intelligence > Y` thresholds. The
   dotted frontier uses all points, independent of thresholds: another point
   must have no higher cost and no lower intelligence, with at least one strict
   improvement, to dominate a point. Identical tradeoffs remain on the frontier.
@@ -221,20 +236,29 @@ All views are pure (props in, callbacks out, no business logic):
   (largest first). Sort is local `useState`/`useMemo` in the component.
   Machine source links (Daring Fireball, NVIDIA, Framework) are rendered as
   plain links below the table.
+- `HistoricalIntelligenceCharts` - outlined accordion directly below Model
+  Details, collapsed by default, titled "Historical Artificial Analysis
+  Intelligence charts". It embeds the two 2025-12-30 captures
+  (`public/images/2025-12-30-artificial-analysis-index.png` and
+  `...-eval-cost-usd.png`) via relative `images/...` URLs (same `<base
+  href="/benchmarks/">` contract as the Pareto reference image), with alt
+  text and a caption crediting Artificial Analysis with the capture date.
 - `Dashboard` - layout composing the intelligence chart, the collapsed-by-default
-  enriched details table, HuggingFace estimated
+  enriched details table and the historical-charts expander, HuggingFace estimated
   hardware chart and table ("Unsloth Open Weight Hosting Sizes"), collapsible GPU
   specifications table with source links below, then a Local Hardware section
   ("Local AI Machines") with source links below, then footer. News sits
   between the lead intelligence chart and model details, collapsed by default
   with its top 3 links visible. The intelligence section header carries the
   index-version toggle (MUI `ToggleButtonGroup`, right-aligned) that swaps the
-  chart and details table between the version blocks of `ai.json`; it renders
+  chart and details table between the version blocks of `ai.json` plus the
+  v3.0 backfill (`data/ai-2025-12-30.json`); it renders
   only when the data carries more than one version.
 
 ### Controller (`App.tsx`)
 
-Parses embedded JSON once (`useMemo`), including validated newest-first news,
+Parses embedded JSON once (`useMemo`) — `ai.json` concatenated with the
+`ai-2025-12-30.json` v3.0 backfill, plus validated newest-first news,
 HuggingFace hardware entries, GPU specification entries, and local machine
 entries, holds the selected index version, the table `SortState` and selected
 model
@@ -243,7 +267,12 @@ selected version's block (`filterByAAVersion`), and
 forwards header clicks through `nextSortState`. Hardware rows merge their
 intelligence score from the newest version's block only, regardless of the
 selected view version. Deselected models are
-filtered out of the chart while their rows stay visible in the table. The
+filtered out of the chart while their rows stay visible in the table. A
+version switch unions the new block's previously unseen ids into the
+selection (deliberate deselections of already-seen ids survive), so every row
+of the selected version starts selected, and the "Open Weights" preset flag
+resets on a version switch since the selection no longer equals the
+open-weight set. The
 "Open Weights"
 preset is a selection: on ->
 `replaceSelection(openWeightIds(...))`; off -> `replaceSelection(allIds)`, so the
