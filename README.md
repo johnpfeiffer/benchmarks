@@ -35,16 +35,23 @@ The methodology revisions never erase the previous snapshot. The toggle in the c
 and the Model Details table between versions; the same toggle also sits in the Model Details summary.
 Switching versions resets the table/chart selection to the shown snapshot's models.
 
-The v3.0 snapshot was backfilled from 2025-12-30 and lives in `app/src/data/ai-2025-12-30.json`,
-which the app concatenates with `ai.json`.
+The v4.0.2 and v3.0 snapshots were backfilled from 2026-02-19 and 2025-12-30 and live in
+`app/src/data/ai-2026-02-19.json` and `app/src/data/ai-2025-12-30.json`, which the app concatenates with `ai.json`.
 
-The captured v3.0 charts also live in the collapsed "Historical Artificial Analysis Intelligence charts" expander below Model Details.
-When v3.0 is selected, a "Scores and costs predate the current index version" link below the chart opens that expander.
+The captured v4.0.2 and v3.0 charts also live in the collapsed "Historical Artificial Analysis Intelligence charts" expander below Model Details,
+each block crediting its version's archived methodology page.
+When a historical version (v4.0.2 or v3.0) is selected, a "Scores and costs predate the current index version" link below the chart opens that expander.
 
 Hardware tables always show the newest version's scores.
 A model that was never re-measured under a version simply has no row in that block.
 
 ## Historical Data
+
+**V4.0.2**
+
+https://web.archive.org/web/20260217215328/https://artificialanalysis.ai/methodology/intelligence-benchmarking
+
+As of 2026-02-19
 
 **V3**
 

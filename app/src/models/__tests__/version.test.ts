@@ -6,6 +6,9 @@ describe('compareAAVersions', () => {
     expect(compareAAVersions('v4.10', 'v4.3')).toBeGreaterThan(0)
     expect(compareAAVersions('v4.3', 'v4.2')).toBeGreaterThan(0)
     expect(compareAAVersions('v4.2', 'v4.1.1')).toBeGreaterThan(0)
+    // Three-part tags sit where their numbers put them: v4.2 > v4.0.2 > v3.0.
+    expect(compareAAVersions('v4.2', 'v4.0.2')).toBeGreaterThan(0)
+    expect(compareAAVersions('v4.0.2', 'v3.0')).toBeGreaterThan(0)
     expect(compareAAVersions('v4.3', 'v4.3')).toBe(0)
     expect(compareAAVersions('v4.2', 'v4.2.0')).toBe(0)
   })

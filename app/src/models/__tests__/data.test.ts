@@ -4,7 +4,8 @@ import { mergeHardwareIntelligence, modelMatchKey } from '../merge'
 import { aaVersionsDesc, filterByAAVersion } from '../version'
 import { parseParetoDataset, paretoSnapshotFromModels } from '../pareto'
 import rawIntelligenceData from '../../data/ai.json'
-import rawHistoricalIntelligenceData from '../../data/ai-2025-12-30.json'
+import rawHistoricalV402Data from '../../data/ai-2026-02-19.json'
+import rawHistoricalV30Data from '../../data/ai-2025-12-30.json'
 import rawNewsData from '../../data/news.json'
 import rawHardwareData from '../../data/hardware.json'
 import rawMachineData from '../../data/machines.json'
@@ -82,16 +83,20 @@ describe('embedded data integrity', () => {
     expect(new Set(urls).size).toBe(urls.length)
   })
 
-  it('the 2025-12-30 backfill holds only v3.0 rows that meet the ai.json conventions', () => {
-    // App.tsx concatenates this snapshot with ai.json, so it must satisfy the
-    // same per-block conventions: one version, score descending, unique
-    // (model, version) pairs, a bar color and a release date on every row.
-    const backfill = parseModelEntries(rawHistoricalIntelligenceData)
+  // App.tsx concatenates each historical snapshot with ai.json, so each must
+  // satisfy the same per-block conventions: one version, score descending,
+  // unique (model, version) pairs, a bar color and a release date on every
+  // row, and no (model, version) pair shared with ai.json.
+  it.each([
+    ['2026-02-19', 'v4.0.2', rawHistoricalV402Data],
+    ['2025-12-30', 'v3.0', rawHistoricalV30Data],
+  ] as const)('the %s backfill holds only %s rows that meet the ai.json conventions', (_date, version, raw) => {
+    const backfill = parseModelEntries(raw)
     expect(backfill.length).toBeGreaterThan(0)
     const keys = backfill.map((entry) => `${entry.aa_version}:${entry.model}`)
     expect(new Set(keys).size).toBe(keys.length)
     for (let i = 0; i < backfill.length; i++) {
-      expect(backfill[i].aa_version).toBe('v3.0')
+      expect(backfill[i].aa_version).toBe(version)
       expect(backfill[i].color).toMatch(/^#[0-9a-f]{6}$/i)
       expect(backfill[i].released).not.toBeNull()
       if (i > 0) expect(backfill[i].score).toBeLessThanOrEqual(backfill[i - 1].score)
