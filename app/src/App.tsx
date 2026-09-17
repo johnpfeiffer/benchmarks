@@ -21,9 +21,11 @@ import {
 } from './models'
 import { Dashboard, type DataSourceCredit } from './views/Dashboard'
 import rawIntelligenceData from './data/ai.json'
-// Historical snapshot: the 2025-12-30 backfill of Intelligence Index v3.0
-// rows, kept in its own file so ai.json stays the curated current ledger.
-import rawHistoricalIntelligenceData from './data/ai-2025-12-30.json'
+// Historical snapshots: the 2026-02-19 backfill of Intelligence Index v4.0.2
+// rows and the 2025-12-30 backfill of v3.0 rows, each kept in its own file so
+// ai.json stays the curated current ledger.
+import rawHistoricalV402Data from './data/ai-2026-02-19.json'
+import rawHistoricalV30Data from './data/ai-2025-12-30.json'
 import rawNewsData from './data/news.json'
 import rawHardwareData from './data/hardware.json'
 import rawGpuData from './data/gpu.json'
@@ -72,10 +74,11 @@ function useBenchmarkState(entries: readonly ModelEntry[]) {
 function DashboardPage() {
   // Parse + validate once. If the embedded data ever violates INV-001 this
   // throws loudly at module load rather than rendering partial state.
-  // The v3.0 backfill augments ai.json: one row per model per version, so the
-  // version toggle can show the 2025-12-30 snapshot alongside the current ones.
+  // The v4.0.2 and v3.0 backfills augment ai.json: one row per model per
+  // version, so the version toggle can show the 2026-02-19 and 2025-12-30
+  // snapshots alongside the current ones.
   const allIntelligence = useMemo(
-    () => parseModelEntries([...rawIntelligenceData, ...rawHistoricalIntelligenceData]),
+    () => parseModelEntries([...rawIntelligenceData, ...rawHistoricalV402Data, ...rawHistoricalV30Data]),
     [],
   )
   // ai.json keeps one row per model per Intelligence Index version; the

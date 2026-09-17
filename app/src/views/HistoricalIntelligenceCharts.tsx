@@ -3,8 +3,61 @@ import { Accordion, AccordionDetails, AccordionSummary, Box, Link, Typography } 
 
 // Public assets, relative to the host-injected <base href="/benchmarks/">.
 // A leading slash would bypass that base and request the wrong app's root.
-const indexImageUrl = 'images/2025-12-30-artificial-analysis-index.png'
-const costImageUrl = 'images/2025-12-30-artificial-analysis-index-eval-cost-usd.png'
+
+interface HistoricalSnapshot {
+  /** Index version these captures belong to. */
+  version: string
+  /** Capture date (YYYY-MM-DD) of the charts. */
+  captured: string
+  /** Archived AA methodology page describing this index version. */
+  methodologyUrl: string
+  indexImage: { src: string; alt: string }
+  costImage: { src: string; alt: string }
+}
+
+/**
+ * Captured Artificial Analysis charts per historical index version, newest
+ * version first (matching the dashboard's version ordering). Each snapshot
+ * links to its version's methodology page as archived by the Wayback Machine,
+ * since AA replaces the live page when a new methodology ships.
+ */
+export const HISTORICAL_SNAPSHOTS: readonly HistoricalSnapshot[] = [
+  {
+    version: 'v4.0.2',
+    captured: '2026-02-19',
+    methodologyUrl:
+      'https://web.archive.org/web/20260217215328/https://artificialanalysis.ai/methodology/intelligence-benchmarking',
+    indexImage: {
+      src: 'images/2026-02-19-artificial-analysis-index.png',
+      alt: 'Artificial Analysis Intelligence Index v4.0.2 bar chart captured 2026-02-19, ranking models by intelligence score with Claude Opus 4.6 (max) leading at 53',
+    },
+    costImage: {
+      src: 'images/2026-02-19-artificial-analysis-index-eval-cost-usd.png',
+      alt: 'Artificial Analysis bar chart captured 2026-02-19 of the USD cost to run the Intelligence Index per model, with Claude Opus 4.6 (max) the most expensive at 2486 dollars',
+    },
+  },
+  {
+    version: 'v3.0',
+    captured: '2025-12-30',
+    methodologyUrl:
+      'https://web.archive.org/web/20251229181306/https://artificialanalysis.ai/methodology/intelligence-benchmarking',
+    indexImage: {
+      src: 'images/2025-12-30-artificial-analysis-index.png',
+      alt: 'Artificial Analysis Intelligence Index v3.0 bar chart captured 2025-12-30, ranking models by intelligence score with Gemini 3 Pro Preview (high) and GPT-5.2 (xhigh) leading at 73',
+    },
+    costImage: {
+      src: 'images/2025-12-30-artificial-analysis-index-eval-cost-usd.png',
+      alt: 'Artificial Analysis bar chart captured 2025-12-30 of the USD cost to run the Intelligence Index per model, with Grok 4 the most expensive at 1888 dollars',
+    },
+  },
+]
+
+/**
+ * The index versions with historical chart captures. The Dashboard shows a
+ * "predate the current index version" note below the chart when one of these
+ * versions is selected, linking here.
+ */
+export const HISTORICAL_AA_VERSIONS: readonly string[] = HISTORICAL_SNAPSHOTS.map((snapshot) => snapshot.version)
 
 const imageSx = {
   display: 'block',
@@ -14,13 +67,6 @@ const imageSx = {
   borderRadius: 1,
 } as const
 
-/**
- * The index version this section's captures belong to. The Dashboard shows a
- * "predate the current index version" note below the chart when this version
- * is selected, linking here.
- */
-export const HISTORICAL_AA_VERSION = 'v3.0'
-
 interface HistoricalIntelligenceChartsProps {
   /** Controlled expansion so the chart's predate note can open the section. */
   expanded: boolean
@@ -29,8 +75,9 @@ interface HistoricalIntelligenceChartsProps {
 
 /**
  * Collapsed-by-default expander below Model Details holding the captured
- * 2025-12-30 Artificial Analysis charts (Intelligence Index v3.0), kept for
- * reference alongside the live version-switched chart above.
+ * Artificial Analysis charts of historical Intelligence Index versions
+ * (v4.0.2 from 2026-02-19, v3.0 from 2025-12-30), kept for reference
+ * alongside the live version-switched chart above.
  */
 export function HistoricalIntelligenceCharts({ expanded, onExpandedChange }: HistoricalIntelligenceChartsProps) {
   return (
@@ -47,27 +94,33 @@ export function HistoricalIntelligenceCharts({ expanded, onExpandedChange }: His
           </Typography>
         </AccordionSummary>
         <AccordionDetails id="historical-aa-content">
-          <Typography variant="body2" color="text.secondary" sx={{ mb: 2 }}>
-            Intelligence Index v3.0 charts captured 2025-12-30 from{' '}
-            <Link href="https://artificialanalysis.ai/" target="_blank" rel="noopener noreferrer">
-              Artificial Analysis
-            </Link>
-            . Scores and costs predate the current index version; use the version toggle on the
-            main chart for the v3.0 numbers in interactive form.
-          </Typography>
-          <Box sx={{ display: 'flex', flexDirection: 'column', gap: 2 }}>
-            <Box
-              component="img"
-              src={indexImageUrl}
-              alt="Artificial Analysis Intelligence Index v3.0 bar chart captured 2025-12-30, ranking models by intelligence score with Gemini 3 Pro Preview (high) and GPT-5.2 (xhigh) leading at 73"
-              sx={imageSx}
-            />
-            <Box
-              component="img"
-              src={costImageUrl}
-              alt="Artificial Analysis bar chart captured 2025-12-30 of the USD cost to run the Intelligence Index per model, with Grok 4 the most expensive at 1888 dollars"
-              sx={imageSx}
-            />
+          <Box sx={{ display: 'flex', flexDirection: 'column', gap: 4 }}>
+            {HISTORICAL_SNAPSHOTS.map((snapshot) => (
+              <Box key={snapshot.version}>
+                <Typography variant="body2" color="text.secondary" sx={{ mb: 2 }}>
+                  Intelligence Index {snapshot.version} charts captured {snapshot.captured} from{' '}
+                  <Link href={snapshot.methodologyUrl} target="_blank" rel="noopener noreferrer">
+                    Artificial Analysis
+                  </Link>
+                  . Scores and costs predate the current index version; use the version toggle on the
+                  main chart for the {snapshot.version} numbers in interactive form.
+                </Typography>
+                <Box sx={{ display: 'flex', flexDirection: 'column', gap: 2 }}>
+                  <Box
+                    component="img"
+                    src={snapshot.indexImage.src}
+                    alt={snapshot.indexImage.alt}
+                    sx={imageSx}
+                  />
+                  <Box
+                    component="img"
+                    src={snapshot.costImage.src}
+                    alt={snapshot.costImage.alt}
+                    sx={imageSx}
+                  />
+                </Box>
+              </Box>
+            ))}
           </Box>
         </AccordionDetails>
       </Accordion>

@@ -3,7 +3,7 @@ import { Box, Container, Link, ToggleButton, ToggleButtonGroup, Typography } fro
 import type { GpuEntry, HardwareEntry, MachineEntry, ModelEntry, NewsEntry, SortField, SortState } from '../models'
 import { IntelligenceBarChart } from './IntelligenceBarChart'
 import { ModelTable } from './ModelTable'
-import { HISTORICAL_AA_VERSION, HistoricalIntelligenceCharts } from './HistoricalIntelligenceCharts'
+import { HISTORICAL_AA_VERSIONS, HistoricalIntelligenceCharts } from './HistoricalIntelligenceCharts'
 import { Footer } from './Footer'
 import { NewsSection } from './NewsSection'
 import { ParetoFrontierSection } from './ParetoFrontierSection'
@@ -125,7 +125,7 @@ export function Dashboard({
           scoreLabel="Score"
           barValues
         />
-        {aaVersion === HISTORICAL_AA_VERSION && (
+        {HISTORICAL_AA_VERSIONS.includes(aaVersion) && (
           <Typography variant="body2" sx={{ mt: 1 }}>
             <Link href="#historical-aa-title" onClick={() => setHistoricalExpanded(true)}>
               Scores and costs predate the current index version

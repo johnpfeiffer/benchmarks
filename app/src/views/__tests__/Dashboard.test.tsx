@@ -226,9 +226,10 @@ describe('Dashboard', () => {
     expect(within(intelligenceTable()).getByRole('button', { name: 'Alpha' }).closest('tr')?.textContent).toContain('66')
   })
 
-  it('links from the v3.0 chart view to the expanded historical charts section', () => {
+  it('links from a historical chart view to the expanded historical charts section', () => {
     const withHistorical: ModelEntry[] = [
       { id: 'anthropic:alpha', model: 'Alpha', score: 60, aa_version: 'v9.9', provider: 'Anthropic', open_weight: true, released: '2026-07-01' },
+      { id: 'openai:delta', model: 'Delta', score: 44, aa_version: 'v4.0.2', provider: 'OpenAI', open_weight: true, released: '2026-02-16' },
       { id: 'google:gamma', model: 'Gamma', score: 55, aa_version: 'v3.0', provider: 'Google', open_weight: false, released: '2025-12-17' },
     ]
     render(
@@ -248,6 +249,11 @@ describe('Dashboard', () => {
     fireEvent.click(note)
     expect(historySummary).toHaveAttribute('aria-expanded', 'true')
     expect(screen.getByRole('img', { name: /Intelligence Index v3\.0 bar chart/i })).toBeInTheDocument()
+    expect(screen.getByRole('img', { name: /Intelligence Index v4\.0\.2 bar chart/i })).toBeInTheDocument()
+
+    // The other captured version shows the note too.
+    fireEvent.click(screen.getAllByRole('button', { name: 'v4.0.2' })[0])
+    expect(screen.getByRole('link', { name: 'Scores and costs predate the current index version' })).toBeInTheDocument()
 
     // Returning to the newest version hides the note again.
     fireEvent.click(screen.getAllByRole('button', { name: 'v9.9' })[0])
@@ -469,7 +475,7 @@ describe('Dashboard', () => {
     expect(within(section).queryByRole('group', { name: 'Intelligence Index version' })).not.toBeInTheDocument()
   })
 
-  it('keeps the 2025 historical Artificial Analysis charts in a collapsed expander below Model Details', () => {
+  it('keeps the historical Artificial Analysis charts in a collapsed expander below Model Details', () => {
     renderDashboard()
     const summary = screen.getByRole('button', { name: 'Historical Artificial Analysis Intelligence charts' })
     const section = summary.closest('section') as HTMLElement
@@ -479,19 +485,35 @@ describe('Dashboard', () => {
     const detailsHeading = screen.getByRole('button', { name: /Model Details/i })
     expect(detailsHeading.compareDocumentPosition(summary) & Node.DOCUMENT_POSITION_FOLLOWING).toBeTruthy()
 
-    // Collapsed by default; expanding reveals both 2025-12-30 snapshots with a
-    // source credit. URLs stay relative so the host's /benchmarks/ base applies.
+    // Collapsed by default; expanding reveals both snapshots (v4.0.2 from
+    // 2026-02-19 first, v3.0 from 2025-12-30 second), each with an index and
+    // a cost capture. URLs stay relative so the host's /benchmarks/ base applies.
     expect(summary).toHaveAttribute('aria-expanded', 'false')
     fireEvent.click(summary)
     expect(summary).toHaveAttribute('aria-expanded', 'true')
-    const indexImage = within(section).getByRole('img', { name: /Intelligence Index v3\.0 bar chart/i })
-    expect(indexImage).toHaveAttribute('src', 'images/2025-12-30-artificial-analysis-index.png')
-    const costImage = within(section).getByRole('img', { name: /cost to run the Intelligence Index/i })
-    expect(costImage).toHaveAttribute('src', 'images/2025-12-30-artificial-analysis-index-eval-cost-usd.png')
-    expect(within(section).getAllByText(/2025-12-30/).length).toBeGreaterThan(0)
-    expect(within(section).getByRole('link', { name: 'Artificial Analysis' })).toHaveAttribute(
+    const v402Index = within(section).getByRole('img', { name: /Intelligence Index v4\.0\.2 bar chart/i })
+    expect(v402Index).toHaveAttribute('src', 'images/2026-02-19-artificial-analysis-index.png')
+    const v402Cost = within(section).getByRole('img', { name: /captured 2026-02-19.*cost to run the Intelligence Index/i })
+    expect(v402Cost).toHaveAttribute('src', 'images/2026-02-19-artificial-analysis-index-eval-cost-usd.png')
+    const v30Index = within(section).getByRole('img', { name: /Intelligence Index v3\.0 bar chart/i })
+    expect(v30Index).toHaveAttribute('src', 'images/2025-12-30-artificial-analysis-index.png')
+    const v30Cost = within(section).getByRole('img', { name: /captured 2025-12-30.*cost to run the Intelligence Index/i })
+    expect(v30Cost).toHaveAttribute('src', 'images/2025-12-30-artificial-analysis-index-eval-cost-usd.png')
+    // Newest snapshot first.
+    expect(v402Index.compareDocumentPosition(v30Index) & Node.DOCUMENT_POSITION_FOLLOWING).toBeTruthy()
+    expect(within(section).getAllByText(/captured 2026-02-19/).length).toBeGreaterThan(0)
+    expect(within(section).getAllByText(/captured 2025-12-30/).length).toBeGreaterThan(0)
+    // Each block credits Artificial Analysis via its version's archived
+    // methodology page, newest snapshot first.
+    const credits = within(section).getAllByRole('link', { name: 'Artificial Analysis' })
+    expect(credits).toHaveLength(2)
+    expect(credits[0]).toHaveAttribute(
       'href',
-      'https://artificialanalysis.ai/',
+      'https://web.archive.org/web/20260217215328/https://artificialanalysis.ai/methodology/intelligence-benchmarking',
+    )
+    expect(credits[1]).toHaveAttribute(
+      'href',
+      'https://web.archive.org/web/20251229181306/https://artificialanalysis.ai/methodology/intelligence-benchmarking',
     )
   })
 

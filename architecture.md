@@ -34,6 +34,7 @@ the views. The `App` component is the controller (owns state and data flow).
 ```mermaid
 flowchart TD
     AIJSON["data/ai.json<br/>(embedded)"] --> App["App.tsx<br/>(controller)"]
+    AIHIST402["data/ai-2026-02-19.json<br/>(embedded v4.0.2 backfill)"] --> App
     AIHIST["data/ai-2025-12-30.json<br/>(embedded v3.0 backfill)"] --> App
     NEWSJSON["data/news.json<br/>(embedded)"] --> App
     HWJSON["data/hardware.json<br/>(embedded)"] --> App
@@ -56,8 +57,8 @@ flowchart TD
     ParetoSample["data/pareto.json<br/>(fictional sample)"] -->|"download link: paste-format example"| Pareto
     ParetoPNG["public/images/artificial-analysis-pareto-frontier.png"] -->|"copied unchanged by Vite; app-relative URL"| Pareto
     Dashboard --> Table["ModelTable<br/>(collapsed by default; sortable + selectable)"]
-    Dashboard --> HistAA["HistoricalIntelligenceCharts<br/>(collapsed 2025-12-30 v3.0 captures)"]
-    HistAAPNG["public/images/2025-12-30-artificial-analysis-index*.png"] -->|"copied unchanged by Vite; app-relative URLs"| HistAA
+    Dashboard --> HistAA["HistoricalIntelligenceCharts<br/>(collapsed v4.0.2 + v3.0 captures)"]
+    HistAAPNG["public/images/2026-02-19-artificial-analysis-index*.png<br/>public/images/2025-12-30-artificial-analysis-index*.png"] -->|"copied unchanged by Vite; app-relative URLs"| HistAA
     Dashboard --> HWChart["HardwareChart<br/>(dynamic quant sizes)"]
     Dashboard --> HWTable["HardwareTable<br/>(sortable hardware details)"]
     Dashboard --> GPUTable["GpuTable<br/>(collapsible + sortable GPU specs)"]
@@ -93,10 +94,11 @@ summary; hardware rows always merge their score
 from the newest block. Entry ids are versionless (`provider:model`), and a
 version switch resets the selection to exactly the shown version's models
 (carrying a selection across snapshots with different model sets produced
-charts showing only a stray shared model). The v3.0
-snapshot is a 2025-12-30 backfill kept in `data/ai-2025-12-30.json` and
+charts showing only a stray shared model). The v4.0.2
+snapshot is a 2026-02-19 backfill kept in `data/ai-2026-02-19.json` and the
+v3.0 snapshot a 2025-12-30 backfill kept in `data/ai-2025-12-30.json`, both
 concatenated with `ai.json` at parse time, so `ai.json` stays the curated
-current ledger while the toggle lists v4.3, v4.2, and v3.0. Every row carries a
+current ledger while the toggle lists v4.3, v4.2, v4.0.2, and v3.0. Every row carries a
 verified `released` date sourced from the Artificial Analysis leaderboard
 (`benchtool aa-releases`). A row may also carry `cost_usd`: the precise total
 Artificial Analysis charges to run the index on that model, read from the
@@ -241,15 +243,21 @@ All views are pure (props in, callbacks out, no business logic):
   plain links below the table.
 - `HistoricalIntelligenceCharts` - outlined accordion directly below Model
   Details, collapsed by default, titled "Historical Artificial Analysis
-  Intelligence charts". It embeds the two 2025-12-30 captures
-  (`public/images/2025-12-30-artificial-analysis-index.png` and
-  `...-eval-cost-usd.png`) via relative `images/...` URLs (same `<base
+  Intelligence charts". It renders the `HISTORICAL_SNAPSHOTS` list (newest
+  version first): the v4.0.2 captures from 2026-02-19
+  (`public/images/2026-02-19-artificial-analysis-index.png` and
+  `...-eval-cost-usd.png`) and the v3.0 captures from 2025-12-30
+  (`public/images/2025-12-30-artificial-analysis-index*.png`), via relative
+  `images/...` URLs (same `<base
   href="/benchmarks/">` contract as the Pareto reference image), with alt
   text and a caption crediting Artificial Analysis with the capture date.
-  Expansion is controlled by the Dashboard: when the chart's version selector
-  shows the historical version (`HISTORICAL_AA_VERSION`, `v3.0`), a "Scores
-  and costs predate the current index version" link appears below the chart
-  and opens this section via its `#historical-aa-title` anchor.
+  Each block's credit links to that version's methodology page archived on
+  the Wayback Machine (AA replaces the live page when a new methodology
+  ships). Expansion is controlled by the Dashboard: when the chart's version
+  selector shows a version with captures (`HISTORICAL_AA_VERSIONS`: v4.0.2,
+  v3.0), a "Scores and costs predate the current index version" link appears
+  below the chart and opens this section via its `#historical-aa-title`
+  anchor.
 - `Dashboard` - layout composing the intelligence chart, the collapsed-by-default
   enriched details table and the historical-charts expander, HuggingFace estimated
   hardware chart and table ("Unsloth Open Weight Hosting Sizes"), collapsible GPU
@@ -259,9 +267,11 @@ All views are pure (props in, callbacks out, no business logic):
   with its top 3 links visible. The intelligence section header carries the
   index-version toggle (MUI `ToggleButtonGroup`, right-aligned) that swaps the
   chart and details table between the version blocks of `ai.json` plus the
-  v3.0 backfill (`data/ai-2025-12-30.json`); it renders
+  v4.0.2 and v3.0 backfills (`data/ai-2026-02-19.json`,
+  `data/ai-2025-12-30.json`); it renders
   only when the data carries more than one version, as does the identical
-  toggle in the Model Details summary. When the historical version is shown,
+  toggle in the Model Details summary. When a version with historical
+  captures (v4.0.2 or v3.0) is shown,
   a "Scores and costs predate the current index version" link below the chart
   opens the historical charts section (the only local UI state Dashboard
   holds).
@@ -269,7 +279,8 @@ All views are pure (props in, callbacks out, no business logic):
 ### Controller (`App.tsx`)
 
 Parses embedded JSON once (`useMemo`) — `ai.json` concatenated with the
-`ai-2025-12-30.json` v3.0 backfill, plus validated newest-first news,
+`ai-2026-02-19.json` v4.0.2 and `ai-2025-12-30.json` v3.0 backfills, plus
+validated newest-first news,
 HuggingFace hardware entries, GPU specification entries, and local machine
 entries, holds the selected index version, the table `SortState` and selected
 model
