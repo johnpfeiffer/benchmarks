@@ -34,6 +34,7 @@ the views. The `App` component is the controller (owns state and data flow).
 ```mermaid
 flowchart TD
     AIJSON["data/ai.json<br/>(embedded)"] --> App["App.tsx<br/>(controller)"]
+    AIHIST411["data/ai-2026-08-11.json<br/>(embedded v4.1.1 backfill)"] --> App
     AIHIST402["data/ai-2026-02-19.json<br/>(embedded v4.0.2 backfill)"] --> App
     AIHIST["data/ai-2025-12-30.json<br/>(embedded v3.0 backfill)"] --> App
     NEWSJSON["data/news.json<br/>(embedded)"] --> App
@@ -57,8 +58,8 @@ flowchart TD
     ParetoSample["data/pareto.json<br/>(fictional sample)"] -->|"download link: paste-format example"| Pareto
     ParetoPNG["public/images/artificial-analysis-pareto-frontier.png"] -->|"copied unchanged by Vite; app-relative URL"| Pareto
     Dashboard --> Table["ModelTable<br/>(collapsed by default; sortable + selectable)"]
-    Dashboard --> HistAA["HistoricalIntelligenceCharts<br/>(collapsed v4.0.2 + v3.0 captures)"]
-    HistAAPNG["public/images/2026-02-19-artificial-analysis-index*.png<br/>public/images/2025-12-30-artificial-analysis-index*.png"] -->|"copied unchanged by Vite; app-relative URLs"| HistAA
+    Dashboard --> HistAA["HistoricalIntelligenceCharts<br/>(collapsed v4.1.1 + v4.0.2 + v3.0 captures)"]
+    HistAAPNG["public/images/2026-08-11-artificial-analysis-index*.png<br/>public/images/2026-02-19-artificial-analysis-index*.png<br/>public/images/2025-12-30-artificial-analysis-index*.png"] -->|"copied unchanged by Vite; app-relative URLs"| HistAA
     Dashboard --> HWChart["HardwareChart<br/>(dynamic quant sizes)"]
     Dashboard --> HWTable["HardwareTable<br/>(sortable hardware details)"]
     Dashboard --> GPUTable["GpuTable<br/>(collapsible + sortable GPU specs)"]
@@ -89,16 +90,18 @@ data itself. Rows are grouped newest version block first, score descending
 within a block (ties keep file order; `benchtool ai-add` maintains both). A
 model never re-measured under a version simply has no row in that block. The
 chart and Model Details table show one version at a time, switched by the
-toggle in the chart section header or the identical one in the Model Details
-summary; hardware rows always merge their score
+toggle in the Model Details summary (the details section sits directly below
+the chart, so its summary is the version control center); hardware rows
+always merge their score
 from the newest block. Entry ids are versionless (`provider:model`), and a
 version switch resets the selection to exactly the shown version's models
 (carrying a selection across snapshots with different model sets produced
-charts showing only a stray shared model). The v4.0.2
-snapshot is a 2026-02-19 backfill kept in `data/ai-2026-02-19.json` and the
-v3.0 snapshot a 2025-12-30 backfill kept in `data/ai-2025-12-30.json`, both
-concatenated with `ai.json` at parse time, so `ai.json` stays the curated
-current ledger while the toggle lists v4.3, v4.2, v4.0.2, and v3.0. Every row carries a
+charts showing only a stray shared model). The v4.1.1
+snapshot is a 2026-08-11 backfill kept in `data/ai-2026-08-11.json`, the
+v4.0.2 snapshot a 2026-02-19 backfill kept in `data/ai-2026-02-19.json`, and
+the v3.0 snapshot a 2025-12-30 backfill kept in `data/ai-2025-12-30.json`,
+all concatenated with `ai.json` at parse time, so `ai.json` stays the curated
+current ledger while the toggle lists v4.3, v4.2, v4.1.1, v4.0.2, and v3.0. Every row carries a
 verified `released` date sourced from the Artificial Analysis leaderboard
 (`benchtool aa-releases`). A row may also carry `cost_usd`: the precise total
 Artificial Analysis charges to run the index on that model, read from the
@@ -133,9 +136,9 @@ All views are pure (props in, callbacks out, no business logic):
   headers `Intelligence`, `Model Name`, `Provider`, `Released`, and
   `Benchmark cost USD`; click headers to
   toggle asc/desc (default: intelligence descending). When the data carries
-  more than one index version, the accordion summary carries the same
-  index-version `ToggleButtonGroup` as the chart header (same selected-state
-  styling, clicks do not toggle the accordion). The release date renders
+  more than one index version, the accordion summary carries the
+  index-version `ToggleButtonGroup` that drives both the chart and the table
+  (clicks do not toggle the accordion). The release date renders
   in italics after the provider,
   `*` when unknown; ISO dates sort chronologically and unknown
   dates sort last in both directions. The cost column shows the total
@@ -241,37 +244,41 @@ All views are pure (props in, callbacks out, no business logic):
   (largest first). Sort is local `useState`/`useMemo` in the component.
   Machine source links (Daring Fireball, NVIDIA, Framework) are rendered as
   plain links below the table.
-- `HistoricalIntelligenceCharts` - outlined accordion directly below Model
-  Details, collapsed by default, titled "Historical Artificial Analysis
+- `HistoricalIntelligenceCharts` - outlined accordion below the Pareto
+  section, collapsed by default, titled "Historical Artificial Analysis
   Intelligence charts". It renders the `HISTORICAL_SNAPSHOTS` list (newest
-  version first): the v4.0.2 captures from 2026-02-19
+  version first): the v4.1.1 captures from 2026-08-11
+  (`public/images/2026-08-11-artificial-analysis-index.png` and
+  `...-eval-cost-usd.png`), the v4.0.2 captures from 2026-02-19
   (`public/images/2026-02-19-artificial-analysis-index.png` and
-  `...-eval-cost-usd.png`) and the v3.0 captures from 2025-12-30
+  `...-eval-cost-usd.png`), and the v3.0 captures from 2025-12-30
   (`public/images/2025-12-30-artificial-analysis-index*.png`), via relative
   `images/...` URLs (same `<base
   href="/benchmarks/">` contract as the Pareto reference image), with alt
   text and a caption crediting Artificial Analysis with the capture date.
   Each block's credit links to that version's methodology page archived on
   the Wayback Machine (AA replaces the live page when a new methodology
-  ships). Expansion is controlled by the Dashboard: when the chart's version
-  selector shows a version with captures (`HISTORICAL_AA_VERSIONS`: v4.0.2,
+  ships). Expansion is controlled by the Dashboard: when the version selector
+  shows a version with captures (`HISTORICAL_AA_VERSIONS`: v4.1.1, v4.0.2,
   v3.0), a "Scores and costs predate the current index version" link appears
   below the chart and opens this section via its `#historical-aa-title`
   anchor.
-- `Dashboard` - layout composing the intelligence chart, the collapsed-by-default
-  enriched details table and the historical-charts expander, HuggingFace estimated
+- `Dashboard` - layout composing the intelligence chart with the
+  collapsed-by-default enriched details table directly below it, then news
+  (collapsed by default with its top 3 links visible), the Pareto frontier,
+  and the historical-charts expander, then the HuggingFace estimated
   hardware chart and table ("Unsloth Open Weight Hosting Sizes"), collapsible GPU
   specifications table with source links below, then a Local Hardware section
-  ("Local AI Machines") with source links below, then footer. News sits
-  between the lead intelligence chart and model details, collapsed by default
-  with its top 3 links visible. The intelligence section header carries the
-  index-version toggle (MUI `ToggleButtonGroup`, right-aligned) that swaps the
-  chart and details table between the version blocks of `ai.json` plus the
-  v4.0.2 and v3.0 backfills (`data/ai-2026-02-19.json`,
-  `data/ai-2025-12-30.json`); it renders
-  only when the data carries more than one version, as does the identical
-  toggle in the Model Details summary. When a version with historical
-  captures (v4.0.2 or v3.0) is shown,
+  ("Local AI Machines") with source links below, then footer. The Model
+  Details summary carries the index-version toggle (MUI `ToggleButtonGroup`)
+  that swaps the chart and details table between the version blocks of
+  `ai.json` plus the v4.1.1, v4.0.2, and v3.0 backfills
+  (`data/ai-2026-08-11.json`, `data/ai-2026-02-19.json`,
+  `data/ai-2025-12-30.json`); with the details table directly below the
+  chart, a separate chart-header toggle would be duplicative, so this summary
+  toggle is the only selector. It renders
+  only when the data carries more than one version. When a version with
+  historical captures (v4.1.1, v4.0.2, or v3.0) is shown,
   a "Scores and costs predate the current index version" link below the chart
   opens the historical charts section (the only local UI state Dashboard
   holds).
@@ -279,7 +286,8 @@ All views are pure (props in, callbacks out, no business logic):
 ### Controller (`App.tsx`)
 
 Parses embedded JSON once (`useMemo`) — `ai.json` concatenated with the
-`ai-2026-02-19.json` v4.0.2 and `ai-2025-12-30.json` v3.0 backfills, plus
+`ai-2026-08-11.json` v4.1.1, `ai-2026-02-19.json` v4.0.2, and
+`ai-2025-12-30.json` v3.0 backfills, plus
 validated newest-first news,
 HuggingFace hardware entries, GPU specification entries, and local machine
 entries, holds the selected index version, the table `SortState` and selected

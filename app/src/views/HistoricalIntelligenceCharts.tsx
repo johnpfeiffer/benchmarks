@@ -23,6 +23,20 @@ interface HistoricalSnapshot {
  */
 export const HISTORICAL_SNAPSHOTS: readonly HistoricalSnapshot[] = [
   {
+    version: 'v4.1.1',
+    captured: '2026-08-11',
+    methodologyUrl:
+      'https://web.archive.org/web/20260811173412/https://artificialanalysis.ai/methodology/intelligence-benchmarking',
+    indexImage: {
+      src: 'images/2026-08-11-artificial-analysis-index.png',
+      alt: 'Artificial Analysis Intelligence Index v4.1.1 bar chart captured 2026-08-11, ranking models by intelligence score with Claude Opus 5 (max) and Claude Opus 5 (xhigh) leading at 63',
+    },
+    costImage: {
+      src: 'images/2026-08-11-artificial-analysis-index-eval-cost-usd.png',
+      alt: 'Artificial Analysis bar chart captured 2026-08-11 of the USD cost to run the Intelligence Index per model, with Claude Fable 5 (max) the most expensive at 5455 dollars',
+    },
+  },
+  {
     version: 'v4.0.2',
     captured: '2026-02-19',
     methodologyUrl:
@@ -74,9 +88,9 @@ interface HistoricalIntelligenceChartsProps {
 }
 
 /**
- * Collapsed-by-default expander below Model Details holding the captured
- * Artificial Analysis charts of historical Intelligence Index versions
- * (v4.0.2 from 2026-02-19, v3.0 from 2025-12-30), kept for reference
+ * Collapsed-by-default expander holding the captured Artificial Analysis
+ * charts of historical Intelligence Index versions (v4.1.1 from 2026-08-11,
+ * v4.0.2 from 2026-02-19, v3.0 from 2025-12-30), kept for reference
  * alongside the live version-switched chart above.
  */
 export function HistoricalIntelligenceCharts({ expanded, onExpandedChange }: HistoricalIntelligenceChartsProps) {
@@ -102,8 +116,8 @@ export function HistoricalIntelligenceCharts({ expanded, onExpandedChange }: His
                   <Link href={snapshot.methodologyUrl} target="_blank" rel="noopener noreferrer">
                     Artificial Analysis
                   </Link>
-                  . Scores and costs predate the current index version; use the version toggle on the
-                  main chart for the {snapshot.version} numbers in interactive form.
+                  . Scores and costs predate the current index version; use the version toggle in the
+                  Model Details section for the {snapshot.version} numbers in interactive form.
                 </Typography>
                 <Box sx={{ display: 'flex', flexDirection: 'column', gap: 2 }}>
                   <Box

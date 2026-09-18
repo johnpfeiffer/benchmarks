@@ -177,8 +177,8 @@ describe('Dashboard', () => {
       </ThemeProvider>,
     )
     const alphaRow = () => within(intelligenceTable()).getByRole('button', { name: 'Alpha' }).closest('tr') as HTMLElement
-    // Newest version shows first; the toggle lists both versions (once in the
-    // chart header, once in the table summary — either drives both views).
+    // Newest version shows first; the toggle lives in the Model Details
+    // summary and drives both the chart and the table.
     expandModelDetails()
     expect(within(intelligenceTable()).getAllByRole('row')).toHaveLength(3)
     expect(alphaRow().textContent).toContain('60')
@@ -192,7 +192,7 @@ describe('Dashboard', () => {
     expect(alphaRow().textContent).toContain('60')
   })
 
-  it('shows a synced version selector in the Model Details summary that does not toggle the accordion', () => {
+  it('carries the only version selector in the Model Details summary, driving chart and table without toggling the accordion', () => {
     const twoVersions: ModelEntry[] = [
       { id: 'anthropic:alpha', model: 'Alpha', score: 60, aa_version: 'v9.9', provider: 'Anthropic', open_weight: true, released: '2026-07-01' },
       { id: 'anthropic:alpha', model: 'Alpha', score: 66, aa_version: 'v9.8', provider: 'Anthropic', open_weight: true, released: '2026-07-01' },
@@ -203,22 +203,23 @@ describe('Dashboard', () => {
         <DashboardController allEntries={twoVersions} />
       </ThemeProvider>,
     )
-    // Chart header and table summary both carry the selector, same selection.
+    // One selector page-wide, inside the Model Details summary: with the
+    // details table right below the chart, a chart-header selector would be
+    // duplicative.
     const groups = screen.getAllByRole('group', { name: 'Intelligence Index version' })
-    expect(groups).toHaveLength(2)
-    for (const group of groups) {
-      expect(within(group).getByRole('button', { name: 'v9.9' })).toHaveAttribute('aria-pressed', 'true')
-    }
-
-    // Clicking the table summary's selector (rendered even while collapsed)
-    // switches the version without expanding the accordion.
+    expect(groups).toHaveLength(1)
     const summary = screen.getByRole('button', { name: /Model Details/i })
+    expect(summary.contains(groups[0])).toBe(true)
+    const intelSection = screen.getByRole('heading', { name: 'Artificial Analysis Intelligence' }).closest('section') as HTMLElement
+    expect(within(intelSection).queryByRole('group', { name: 'Intelligence Index version' })).not.toBeInTheDocument()
+    expect(within(groups[0]).getByRole('button', { name: 'v9.9' })).toHaveAttribute('aria-pressed', 'true')
+
+    // Clicking the summary's selector (rendered even while collapsed)
+    // switches the version without expanding the accordion.
     expect(summary).toHaveAttribute('aria-expanded', 'false')
-    fireEvent.click(within(groups[1]).getByRole('button', { name: 'v9.8' }))
+    fireEvent.click(within(groups[0]).getByRole('button', { name: 'v9.8' }))
     expect(summary).toHaveAttribute('aria-expanded', 'false')
-    for (const group of screen.getAllByRole('group', { name: 'Intelligence Index version' })) {
-      expect(within(group).getByRole('button', { name: 'v9.8' })).toHaveAttribute('aria-pressed', 'true')
-    }
+    expect(within(groups[0]).getByRole('button', { name: 'v9.8' })).toHaveAttribute('aria-pressed', 'true')
 
     // The table follows even though it was toggled from its own summary.
     expandModelDetails()
@@ -229,6 +230,7 @@ describe('Dashboard', () => {
   it('links from a historical chart view to the expanded historical charts section', () => {
     const withHistorical: ModelEntry[] = [
       { id: 'anthropic:alpha', model: 'Alpha', score: 60, aa_version: 'v9.9', provider: 'Anthropic', open_weight: true, released: '2026-07-01' },
+      { id: 'meta:epsilon', model: 'Epsilon', score: 57, aa_version: 'v4.1.1', provider: 'Meta', open_weight: false, released: '2026-08-05' },
       { id: 'openai:delta', model: 'Delta', score: 44, aa_version: 'v4.0.2', provider: 'OpenAI', open_weight: true, released: '2026-02-16' },
       { id: 'google:gamma', model: 'Gamma', score: 55, aa_version: 'v3.0', provider: 'Google', open_weight: false, released: '2025-12-17' },
     ]
@@ -250,9 +252,12 @@ describe('Dashboard', () => {
     expect(historySummary).toHaveAttribute('aria-expanded', 'true')
     expect(screen.getByRole('img', { name: /Intelligence Index v3\.0 bar chart/i })).toBeInTheDocument()
     expect(screen.getByRole('img', { name: /Intelligence Index v4\.0\.2 bar chart/i })).toBeInTheDocument()
+    expect(screen.getByRole('img', { name: /Intelligence Index v4\.1\.1 bar chart/i })).toBeInTheDocument()
 
-    // The other captured version shows the note too.
+    // The other captured versions show the note too.
     fireEvent.click(screen.getAllByRole('button', { name: 'v4.0.2' })[0])
+    expect(screen.getByRole('link', { name: 'Scores and costs predate the current index version' })).toBeInTheDocument()
+    fireEvent.click(screen.getAllByRole('button', { name: 'v4.1.1' })[0])
     expect(screen.getByRole('link', { name: 'Scores and costs predate the current index version' })).toBeInTheDocument()
 
     // Returning to the newest version hides the note again.
@@ -330,18 +335,27 @@ describe('Dashboard', () => {
     })
   })
 
-  it('shows the Pareto frontier between news and model details, collapsed by default', () => {
+  it('shows Model Details right below the intelligence chart, ahead of news', () => {
+    renderDashboard()
+    const intelHeading = screen.getByRole('heading', { name: 'Artificial Analysis Intelligence' })
+    const detailsSummary = screen.getByRole('button', { name: /Model Details/i })
+    const newsHeading = screen.getByRole('heading', { name: 'Hand Picked News' })
+    // Document order: chart section -> Model Details -> Hand Picked News.
+    expect(intelHeading.compareDocumentPosition(detailsSummary) & Node.DOCUMENT_POSITION_FOLLOWING).toBeTruthy()
+    expect(detailsSummary.compareDocumentPosition(newsHeading) & Node.DOCUMENT_POSITION_FOLLOWING).toBeTruthy()
+  })
+
+  it('shows the Pareto frontier between news and the historical charts, collapsed by default', () => {
     renderDashboard()
     const paretoHeading = screen.getByRole('heading', { name: 'Pareto frontier' })
     const paretoSection = paretoHeading.closest('section') as HTMLElement
     expect(paretoSection).not.toBeNull()
 
-    // Sits between Hand Picked News and Model Details in document order
+    // Sits between Hand Picked News and the historical charts in document order
     const newsHeading = screen.getByRole('heading', { name: 'Hand Picked News' })
-    expandModelDetails()
-    const detailsTable = screen.getByRole('table', { name: 'Model Details' })
+    const historySummary = screen.getByRole('button', { name: 'Historical Artificial Analysis Intelligence charts' })
     expect(newsHeading.compareDocumentPosition(paretoHeading) & Node.DOCUMENT_POSITION_FOLLOWING).toBeTruthy()
-    expect(paretoHeading.compareDocumentPosition(detailsTable) & Node.DOCUMENT_POSITION_FOLLOWING).toBeTruthy()
+    expect(paretoHeading.compareDocumentPosition(historySummary) & Node.DOCUMENT_POSITION_FOLLOWING).toBeTruthy()
 
     // Collapsed by default: the chart and reference image stay out of the
     // accessibility tree until the summary is clicked.
@@ -485,12 +499,17 @@ describe('Dashboard', () => {
     const detailsHeading = screen.getByRole('button', { name: /Model Details/i })
     expect(detailsHeading.compareDocumentPosition(summary) & Node.DOCUMENT_POSITION_FOLLOWING).toBeTruthy()
 
-    // Collapsed by default; expanding reveals both snapshots (v4.0.2 from
-    // 2026-02-19 first, v3.0 from 2025-12-30 second), each with an index and
-    // a cost capture. URLs stay relative so the host's /benchmarks/ base applies.
+    // Collapsed by default; expanding reveals all three snapshots (v4.1.1
+    // from 2026-08-11 first, then v4.0.2 from 2026-02-19, then v3.0 from
+    // 2025-12-30), each with an index and a cost capture. URLs stay relative
+    // so the host's /benchmarks/ base applies.
     expect(summary).toHaveAttribute('aria-expanded', 'false')
     fireEvent.click(summary)
     expect(summary).toHaveAttribute('aria-expanded', 'true')
+    const v411Index = within(section).getByRole('img', { name: /Intelligence Index v4\.1\.1 bar chart/i })
+    expect(v411Index).toHaveAttribute('src', 'images/2026-08-11-artificial-analysis-index.png')
+    const v411Cost = within(section).getByRole('img', { name: /captured 2026-08-11.*cost to run the Intelligence Index/i })
+    expect(v411Cost).toHaveAttribute('src', 'images/2026-08-11-artificial-analysis-index-eval-cost-usd.png')
     const v402Index = within(section).getByRole('img', { name: /Intelligence Index v4\.0\.2 bar chart/i })
     expect(v402Index).toHaveAttribute('src', 'images/2026-02-19-artificial-analysis-index.png')
     const v402Cost = within(section).getByRole('img', { name: /captured 2026-02-19.*cost to run the Intelligence Index/i })
@@ -500,18 +519,24 @@ describe('Dashboard', () => {
     const v30Cost = within(section).getByRole('img', { name: /captured 2025-12-30.*cost to run the Intelligence Index/i })
     expect(v30Cost).toHaveAttribute('src', 'images/2025-12-30-artificial-analysis-index-eval-cost-usd.png')
     // Newest snapshot first.
+    expect(v411Index.compareDocumentPosition(v402Index) & Node.DOCUMENT_POSITION_FOLLOWING).toBeTruthy()
     expect(v402Index.compareDocumentPosition(v30Index) & Node.DOCUMENT_POSITION_FOLLOWING).toBeTruthy()
+    expect(within(section).getAllByText(/captured 2026-08-11/).length).toBeGreaterThan(0)
     expect(within(section).getAllByText(/captured 2026-02-19/).length).toBeGreaterThan(0)
     expect(within(section).getAllByText(/captured 2025-12-30/).length).toBeGreaterThan(0)
     // Each block credits Artificial Analysis via its version's archived
     // methodology page, newest snapshot first.
     const credits = within(section).getAllByRole('link', { name: 'Artificial Analysis' })
-    expect(credits).toHaveLength(2)
+    expect(credits).toHaveLength(3)
     expect(credits[0]).toHaveAttribute(
+      'href',
+      'https://web.archive.org/web/20260811173412/https://artificialanalysis.ai/methodology/intelligence-benchmarking',
+    )
+    expect(credits[1]).toHaveAttribute(
       'href',
       'https://web.archive.org/web/20260217215328/https://artificialanalysis.ai/methodology/intelligence-benchmarking',
     )
-    expect(credits[1]).toHaveAttribute(
+    expect(credits[2]).toHaveAttribute(
       'href',
       'https://web.archive.org/web/20251229181306/https://artificialanalysis.ai/methodology/intelligence-benchmarking',
     )
