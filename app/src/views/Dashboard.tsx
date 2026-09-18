@@ -1,5 +1,5 @@
 import { useState } from 'react'
-import { Box, Container, Link, ToggleButton, ToggleButtonGroup, Typography } from '@mui/material'
+import { Box, Container, Link, Typography } from '@mui/material'
 import type { GpuEntry, HardwareEntry, MachineEntry, ModelEntry, NewsEntry, SortField, SortState } from '../models'
 import { IntelligenceBarChart } from './IntelligenceBarChart'
 import { ModelTable } from './ModelTable'
@@ -47,8 +47,10 @@ interface DashboardProps {
  * whether the historical-charts expander is open, so the chart's predate
  * note can open it. All data flow stays with the controller (App.tsx).
  *
- * Progressive disclosure per DESIGN.md: a summary chart on top, collapsible
- * news and sortable details below, then sources/credit in the footer.
+ * Progressive disclosure per DESIGN.md: a summary chart on top, the sortable
+ * details table (carrying the index-version selector in its summary)
+ * directly below it, then collapsible news, then sources/credit in the
+ * footer.
  */
 export function Dashboard({
   entries,
@@ -100,25 +102,6 @@ export function Dashboard({
           >
             Source
           </Link>
-          {aaVersions.length > 1 && (
-            <ToggleButtonGroup
-              size="small"
-              exclusive
-              value={aaVersion}
-              onChange={(_, next) => {
-                // MUI emits null when the selected button is clicked again.
-                if (next !== null) onAAVersionChange(next)
-              }}
-              aria-label="Intelligence Index version"
-              sx={{ ml: 'auto' }}
-            >
-              {aaVersions.map((version) => (
-                <ToggleButton key={version} value={version}>
-                  {version}
-                </ToggleButton>
-              ))}
-            </ToggleButtonGroup>
-          )}
         </Box>
         <IntelligenceBarChart
           entries={intelligenceChartEntries}
@@ -134,15 +117,10 @@ export function Dashboard({
         )}
       </Box>
 
-      <Box sx={{ mb: 4 }}>
-        <NewsSection entries={news} />
-      </Box>
-
-      <Box sx={{ mb: 4 }}>
-        <ParetoFrontierSection />
-      </Box>
-
-      <Box component="section" aria-labelledby="details-title" sx={{ mb: 2 }}>
+      {/* Model Details sits directly below the chart and is the control
+          center: its summary carries the only index-version selector, driving
+          both the chart above and the table inside. */}
+      <Box component="section" aria-labelledby="details-title" sx={{ mb: 4 }}>
         <ModelTable
           entries={entries}
           aaVersions={aaVersions}
@@ -156,6 +134,14 @@ export function Dashboard({
           openWeightsOnly={openWeightsOnly}
           onToggleOpenWeights={onToggleOpenWeights}
         />
+      </Box>
+
+      <Box sx={{ mb: 4 }}>
+        <NewsSection entries={news} />
+      </Box>
+
+      <Box sx={{ mb: 4 }}>
+        <ParetoFrontierSection />
       </Box>
 
       <Box sx={{ mb: 5 }}>

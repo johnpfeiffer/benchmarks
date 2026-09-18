@@ -4,6 +4,7 @@ import { mergeHardwareIntelligence, modelMatchKey } from '../merge'
 import { aaVersionsDesc, filterByAAVersion } from '../version'
 import { parseParetoDataset, paretoSnapshotFromModels } from '../pareto'
 import rawIntelligenceData from '../../data/ai.json'
+import rawHistoricalV411Data from '../../data/ai-2026-08-11.json'
 import rawHistoricalV402Data from '../../data/ai-2026-02-19.json'
 import rawHistoricalV30Data from '../../data/ai-2025-12-30.json'
 import rawNewsData from '../../data/news.json'
@@ -88,6 +89,7 @@ describe('embedded data integrity', () => {
   // unique (model, version) pairs, a bar color and a release date on every
   // row, and no (model, version) pair shared with ai.json.
   it.each([
+    ['2026-08-11', 'v4.1.1', rawHistoricalV411Data],
     ['2026-02-19', 'v4.0.2', rawHistoricalV402Data],
     ['2025-12-30', 'v3.0', rawHistoricalV30Data],
   ] as const)('the %s backfill holds only %s rows that meet the ai.json conventions', (_date, version, raw) => {

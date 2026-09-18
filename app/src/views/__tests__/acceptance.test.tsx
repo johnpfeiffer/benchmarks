@@ -12,6 +12,7 @@ import {
   filterByAAVersion,
 } from '../../models'
 import rawIntelligenceData from '../../data/ai.json'
+import rawHistoricalV411Data from '../../data/ai-2026-08-11.json'
 import rawHistoricalV402Data from '../../data/ai-2026-02-19.json'
 import rawHistoricalV30Data from '../../data/ai-2025-12-30.json'
 import rawNewsData from '../../data/news.json'
@@ -26,8 +27,13 @@ import rawMachineData from '../../data/machines.json'
  * that matters is not "does the parser return what the file says" (a
  * tautology) but "does the user actually see every row of the data".
  */
-// Mirror App.tsx: ai.json plus the historical v4.0.2 and v3.0 backfill snapshots.
-const intelligence = parseModelEntries([...rawIntelligenceData, ...rawHistoricalV402Data, ...rawHistoricalV30Data])
+// Mirror App.tsx: ai.json plus the historical v4.1.1, v4.0.2, and v3.0 backfill snapshots.
+const intelligence = parseModelEntries([
+  ...rawIntelligenceData,
+  ...rawHistoricalV411Data,
+  ...rawHistoricalV402Data,
+  ...rawHistoricalV30Data,
+])
 const news = parseNewsEntries(rawNewsData)
 // Mirror App.tsx: the dashboard shows one index version at a time (newest by
 // default), and hardware scores always merge from the newest version's block.
@@ -79,8 +85,8 @@ describe('acceptance: every JSON row appears in the UI', () => {
     const versions = aaVersionsDesc(intelligence)
     const previousVersion = versions[1]
     const previousRows = filterByAAVersion(intelligence, previousVersion)
-    // The version selector appears twice (chart header and table summary);
-    // either drives the same state.
+    // The version selector lives in the Model Details summary and drives the
+    // chart and table.
     const versionButton = (version: string) => screen.getAllByRole('button', { name: version })[0]
     // Claude Sonnet 4.6 (max) was never re-measured under the newest index
     // version, so it only exists in the older snapshot.
@@ -90,6 +96,12 @@ describe('acceptance: every JSON row appears in the UI', () => {
     // Models that first appear under the newly shown version start selected:
     // their rows are not grayed out and they join the chart.
     expect(within(table).getByRole('button', { name: 'Claude Sonnet 4.6 (max)' })).toHaveAttribute('aria-pressed', 'true')
+    // The v4.1.1 backfill snapshot is listed and selectable like any version.
+    const v411Rows = filterByAAVersion(intelligence, 'v4.1.1')
+    fireEvent.click(versionButton('v4.1.1'))
+    expect(within(table).getAllByRole('row')).toHaveLength(v411Rows.length + 1)
+    expect(within(table).getByRole('button', { name: 'Kimi K3 (max)' })).toHaveAttribute('aria-pressed', 'true')
+    expect(within(table).getByRole('button', { name: 'Claude Fable 5 (max)' }).closest('tr')?.textContent).toContain('$5,455')
     // The v4.0.2 backfill snapshot is listed and selectable like any version.
     const v402Rows = filterByAAVersion(intelligence, 'v4.0.2')
     fireEvent.click(versionButton('v4.0.2'))
@@ -106,7 +118,7 @@ describe('acceptance: every JSON row appears in the UI', () => {
     fireEvent.click(versionButton(latestVersion))
     expect(within(table).getAllByRole('row')).toHaveLength(latestIntelligence.length + 1)
     expect(within(table).queryByRole('button', { name: 'Claude Sonnet 4.6 (max)' })).not.toBeInTheDocument()
-    expect(versions).toEqual(['v4.3', 'v4.2', 'v4.0.2', 'v3.0'])
+    expect(versions).toEqual(['v4.3', 'v4.2', 'v4.1.1', 'v4.0.2', 'v3.0'])
   })
 
   it('selects every model of the shown version after mixing the Open Weights preset with version switches', () => {
@@ -142,13 +154,14 @@ describe('acceptance: every JSON row appears in the UI', () => {
     const historySummary = screen.getByRole('button', { name: 'Historical Artificial Analysis Intelligence charts' })
     expect(historySummary).toHaveAttribute('aria-expanded', 'false')
 
-    // v4.0.2 is a historical snapshot: the note links to and opens the
-    // historical section, which holds both snapshots' captures.
-    fireEvent.click(screen.getAllByRole('button', { name: 'v4.0.2' })[0])
+    // v4.1.1 is a historical snapshot: the note links to and opens the
+    // historical section, which holds all three snapshots' captures.
+    fireEvent.click(screen.getAllByRole('button', { name: 'v4.1.1' })[0])
     const note = screen.getByRole('link', { name: 'Scores and costs predate the current index version' })
     expect(note).toHaveAttribute('href', '#historical-aa-title')
     fireEvent.click(note)
     expect(historySummary).toHaveAttribute('aria-expanded', 'true')
+    expect(screen.getByRole('img', { name: /Intelligence Index v4\.1\.1 bar chart/i })).toBeInTheDocument()
     expect(screen.getByRole('img', { name: /Intelligence Index v4\.0\.2 bar chart/i })).toBeInTheDocument()
     expect(screen.getByRole('img', { name: /Intelligence Index v3\.0 bar chart/i })).toBeInTheDocument()
 
