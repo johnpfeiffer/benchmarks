@@ -110,7 +110,10 @@ verified `released` date sourced from the Artificial Analysis leaderboard
 (`benchtool aa-releases`). A row may also carry `cost_usd`: the precise total
 Artificial Analysis charges to run the index on that model, read from the
 same model page under the same index version as the score
-(`benchtool aa-model <slug> --json`). The key is omitted when AA publishes no
+(`benchtool aa-model <slug> --json`; when the page's Comparison Summary
+carries no total — typical of effort variants — benchtool falls back to the
+`intelligenceIndexCost.total` embedded in the page's JSON payload and reports
+`total_cost_source: embedded_payload`). The key is omitted when AA publishes no
 precise total (a $0 total is also omitted — the Pareto log cost axis cannot
 plot it), and `parse.ts` rejects non-positive or non-numeric values
 (`MODEL-COST`). The `cost_usd` column powers the Pareto default snapshot
@@ -273,7 +276,9 @@ All views are pure (props in, callbacks out, no business logic):
   `images/...` URLs (same `<base
   href="/benchmarks/">` contract as the Pareto reference image), with alt
   text and a caption crediting Artificial Analysis with the capture date.
-  Each block's credit links to that version's methodology page archived on
+  Each snapshot block opens with a brief `highlights` summary of that
+  version's story, ahead of its caption and captures. Each block's credit
+  links to that version's methodology page archived on
   the Wayback Machine (AA replaces the live page when a new methodology
   ships). Expansion is controlled by the Dashboard: when the version selector
   shows a version with captures (`HISTORICAL_AA_VERSIONS`: v4.2, v4.1.1,

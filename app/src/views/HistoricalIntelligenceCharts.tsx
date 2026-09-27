@@ -9,6 +9,8 @@ interface HistoricalSnapshot {
   version: string
   /** Capture date (YYYY-MM-DD) of the charts. */
   captured: string
+  /** Brief summary of what changed in this index version, shown first. */
+  highlights: string
   /** Archived AA methodology page describing this index version. */
   methodologyUrl: string
   indexImage: { src: string; alt: string }
@@ -25,6 +27,8 @@ export const HISTORICAL_SNAPSHOTS: readonly HistoricalSnapshot[] = [
   {
     version: 'v4.2',
     captured: '2026-09-04',
+    highlights:
+      'Fable 5.1 and GPT-6 Astra dominate... Nemotron, Mistral, and other weaker models who could not release frequently enough are finally dropped entirely. Full AA Index Eval cost got expensive.',
     // Nearest Wayback capture of the v4.2-era methodology page (2026-09-07).
     methodologyUrl:
       'https://web.archive.org/web/20260907075638/https://artificialanalysis.ai/methodology/intelligence-benchmarking',
@@ -40,6 +44,7 @@ export const HISTORICAL_SNAPSHOTS: readonly HistoricalSnapshot[] = [
   {
     version: 'v4.1.1',
     captured: '2026-08-11',
+    highlights: 'Open weight models close the gap - especially on cost per task',
     methodologyUrl:
       'https://web.archive.org/web/20260811173412/https://artificialanalysis.ai/methodology/intelligence-benchmarking',
     indexImage: {
@@ -54,6 +59,7 @@ export const HISTORICAL_SNAPSHOTS: readonly HistoricalSnapshot[] = [
   {
     version: 'v4.0.2',
     captured: '2026-02-19',
+    highlights: 'Opus 4.6 (max) is the best model in the world',
     methodologyUrl:
       'https://web.archive.org/web/20260217215328/https://artificialanalysis.ai/methodology/intelligence-benchmarking',
     indexImage: {
@@ -68,6 +74,8 @@ export const HISTORICAL_SNAPSHOTS: readonly HistoricalSnapshot[] = [
   {
     version: 'v3.0',
     captured: '2025-12-30',
+    highlights:
+      'Gemini 3 Pro briefly takes the lead from the end of 2025 best models: GPT-5.2 (xhigh) and Opus 4.5 (max)',
     methodologyUrl:
       'https://web.archive.org/web/20251229181306/https://artificialanalysis.ai/methodology/intelligence-benchmarking',
     indexImage: {
@@ -106,7 +114,8 @@ interface HistoricalIntelligenceChartsProps {
  * Collapsed-by-default expander holding the captured Artificial Analysis
  * charts of historical Intelligence Index versions (v4.2 from 2026-09-04,
  * v4.1.1 from 2026-08-11, v4.0.2 from 2026-02-19, v3.0 from 2025-12-30),
- * kept for reference alongside the live version-switched chart above.
+ * kept for reference alongside the live version-switched chart above. Each
+ * version block opens with a brief highlights summary before its charts.
  */
 export function HistoricalIntelligenceCharts({ expanded, onExpandedChange }: HistoricalIntelligenceChartsProps) {
   return (
@@ -126,6 +135,12 @@ export function HistoricalIntelligenceCharts({ expanded, onExpandedChange }: His
           <Box sx={{ display: 'flex', flexDirection: 'column', gap: 4 }}>
             {HISTORICAL_SNAPSHOTS.map((snapshot) => (
               <Box key={snapshot.version}>
+                <Typography variant="body2" sx={{ mb: 1 }}>
+                  <Box component="span" sx={{ fontWeight: 700 }}>
+                    Highlights:
+                  </Box>{' '}
+                  {snapshot.highlights}
+                </Typography>
                 <Typography variant="body2" color="text.secondary" sx={{ mb: 2 }}>
                   Intelligence Index {snapshot.version} charts captured {snapshot.captured} from{' '}
                   <Link href={snapshot.methodologyUrl} target="_blank" rel="noopener noreferrer">

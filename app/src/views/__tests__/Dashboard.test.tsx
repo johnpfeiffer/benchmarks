@@ -550,6 +550,14 @@ describe('Dashboard', () => {
       'href',
       'https://web.archive.org/web/20251229181306/https://artificialanalysis.ai/methodology/intelligence-benchmarking',
     )
+
+    // Each block opens with its version's highlights summary, ahead of the
+    // caption and the captures.
+    const v42Highlights = within(section).getByText(/Fable 5\.1 and GPT-6 Astra dominate/)
+    expect(within(section).getByText(/Open weight models close the gap/)).toBeInTheDocument()
+    expect(within(section).getByText(/Opus 4\.6 \(max\) is the best model in the world/)).toBeInTheDocument()
+    expect(within(section).getByText(/Gemini 3 Pro briefly takes the lead/)).toBeInTheDocument()
+    expect(v42Highlights.compareDocumentPosition(v42Index) & Node.DOCUMENT_POSITION_FOLLOWING).toBeTruthy()
   })
 
   it('sorts by release date when the Released header is clicked', () => {

@@ -48,8 +48,10 @@ Validation rules (`parseParetoDataset`):
   - `provider` — required (INV-001).
   - `intelligence` — number, 0–100.
   - `cost_usd` — positive finite number. Cost is the **total** to run the
-    whole benchmark (AA's Comparison Summary total), not token pricing and
-    not cost per task. Zero is rejected because the x-axis is logarithmic.
+    whole benchmark (AA's Comparison Summary total, or the
+    `intelligenceIndexCost.total` embedded in the model page's JSON payload
+    when the summary has none), not token pricing and not cost per task.
+    Zero is rejected because the x-axis is logarithmic.
   - `color` — optional six-digit hex.
   - `provider` + `model` pairs must be unique.
 
@@ -61,7 +63,10 @@ the ai.json-derived snapshot.
 
 1. From `tools/benchtool/`, run `go run . aa-model <slug> --json` per model.
    It emits the Intelligence Index score, the page's `benchmark_version`, and
-   the precise `total_cost_usd` with its provenance and precision.
+   the precise `total_cost_usd` with its provenance and precision: the
+   Comparison Summary sentence when present (`comparison_summary`), else the
+   page's embedded JSON payload (`embedded_payload`, the fallback that
+   surfaces totals on effort-variant pages).
 2. Insert the refreshed rows with `ai-add --aa-version=<vX.Y> --cost=...` —
    the file keeps one block per index version, so a methodology revision adds
    a new block instead of overwriting the old one. Each new row pairs its
