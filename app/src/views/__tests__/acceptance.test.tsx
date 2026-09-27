@@ -167,6 +167,11 @@ describe('acceptance: every JSON row appears in the UI', () => {
     expect(screen.getByRole('img', { name: /Intelligence Index v4\.1\.1 bar chart/i })).toBeInTheDocument()
     expect(screen.getByRole('img', { name: /Intelligence Index v4\.0\.2 bar chart/i })).toBeInTheDocument()
     expect(screen.getByRole('img', { name: /Intelligence Index v3\.0 bar chart/i })).toBeInTheDocument()
+    // Each snapshot block opens with its version's highlights summary.
+    expect(screen.getByText(/Fable 5\.1 and GPT-6 Astra dominate/)).toBeInTheDocument()
+    expect(screen.getByText(/Open weight models close the gap/)).toBeInTheDocument()
+    expect(screen.getByText(/Opus 4\.6 \(max\) is the best model in the world/)).toBeInTheDocument()
+    expect(screen.getByText(/Gemini 3 Pro briefly takes the lead/)).toBeInTheDocument()
 
     // v3.0 is another historical snapshot: the note shows there too.
     fireEvent.click(screen.getAllByRole('button', { name: 'v3.0' })[0])
