@@ -1,5 +1,17 @@
 [
   {
+    "url": "https://artificialanalysis.ai/articles/claude-opus-5-5",
+    "date": "2026-09-22"
+  },
+  {
+    "url": "https://www.coderabbit.ai/blog/opus-5-5-model-review",
+    "date": "2026-09-22"
+  },
+  {
+    "url": "https://artificialanalysis.ai/articles/gpt-6-sol-and-luna-push-the-cost-efficiency-frontier",
+    "date": "2026-09-22"
+  },
+  {
     "url": "https://www.theregister.com/ai-and-ml/2026/09/11/deepseeks-new-model-sets-a-template-for-powerful-llms-that-run-lean/5295715",
     "date": "2026-09-11"
   },
@@ -96,7 +108,11 @@
     "date": "2026-06-16"
   },
   {
-    "url": "https://www.anthropic.com/news/claude-fable-5-mythos-5",
+    "url": "https://www.endorlabs.com/learn/claude-fable-5-mythos-grade-hype",
+    "date": "2026-06-10"
+  },
+  {
+    "url": "https://simonwillison.net/2026/Jun/9/claude-fable-5/",
     "date": "2026-06-09"
   },
   {

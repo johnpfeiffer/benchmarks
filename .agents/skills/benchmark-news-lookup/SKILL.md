@@ -30,8 +30,8 @@ Tier 2, vendor primary sources, only after critical vetting:
   blog.google Gemini 3.8 Flash launch post was vetted and dropped for
   exactly this.
 - A vendor piece qualifies only when it carries full benchmark tables with
-  real methodology and numbers (e.g. `anthropic.com/news` launch posts with
-  eval suites, `thinkingmachines.ai`, `z.ai/blog`).
+  real methodology and numbers (e.g. `thinkingmachines.ai`, `z.ai/blog`).
+  Exception: Anthropic and OpenAI pieces never qualify (see Avoid).
 - Established press with genuine technical depth (e.g. `theregister.com`,
   whose model coverage links the vendor's technical report and walks
   through the architectural innovations — its DeepSeek V4.1 Flash piece
@@ -42,12 +42,19 @@ Tier 2, vendor primary sources, only after critical vetting:
 
 Avoid:
 
+- Anthropic (`anthropic.com`) and OpenAI (`openai.com`) articles, always.
+  Both orgs are heading for IPOs and their posts carry marketing incentives
+  over real substance; no benchmark table or methodology disclosure
+  overrides this (maintainer rule, 2026-09-24)
 - SEO aggregators and content farms that re-litigate vendor-reported numbers without independent testing
 - Political or geopolitical angles, and AGI or cyber hype without data behind it
 
 Prefer omission over guessing. When an article's credibility is borderline,
 leave it out of `news.json` and list it in the PR body as a candidate for
-human veto instead of silently adding it.
+human veto instead of silently adding it. The maintainer's bar for vendor
+pieces is high: even Xiaomi's unusually substantive MiMo-V2.6 launch post
+(full RL training detail, honest gaps) was removed in review as too
+vendor-adjacent (2026-09-24).
 
 ## Lookup procedure
 
