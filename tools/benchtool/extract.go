@@ -121,6 +121,11 @@ var (
 	reAAOpen         = regexp.MustCompile(`open source\?\s*\n\s*(Yes|No)`)
 	reAAIndexVersion = regexp.MustCompile(`Artificial Analysis Intelligence Index (v\d+(?:\.\d+)*)`)
 	reAATotalCost    = regexp.MustCompile(`(?s)In total,\s+it cost\s+\$([0-9][0-9,]*(?:\.[0-9]+)?)\s+to evaluate\b.*?\bon the Intelligence Index\.`)
+
+	reAAModelPath    = regexp.MustCompile(`/models/([^/?#]+)`)
+	reAACurrentModel = regexp.MustCompile(`"currentModel":\{`)
+	reAANearbySlug   = regexp.MustCompile(`"slug":"((?:[^"\\]|\\.)*)"`)
+	reAAPayloadCost  = regexp.MustCompile(`"intelligenceIndexCost":\{"total":([0-9]+(?:\.[0-9]+)?)`)
 )
 
 func extractAAModel(rawHTML, finalURL string) aaModel {
@@ -148,8 +153,44 @@ func extractAAModel(rawHTML, finalURL string) aaModel {
 		if strings.Contains(s[1], ".") {
 			m.TotalCostPrecision = "precise"
 		}
+	} else if s := reAAModelPath.FindStringSubmatch(finalURL); s != nil {
+		// Effort-variant pages report only a cost per task in the summary, but
+		// the full-precision total is still embedded in the page's JSON payload.
+		normalized := strings.ReplaceAll(rawHTML, `\"`, `"`)
+		if total, ok := extractAAEmbeddedCost(normalized, s[1]); ok {
+			m.TotalCostUSD = total
+			m.TotalCostSource = "embedded_payload"
+			m.TotalCostPrecision = "rounded_or_whole"
+			if strings.Contains(total, ".") {
+				m.TotalCostPrecision = "precise"
+			}
+		}
 	}
 	return m
+}
+
+// extractAAEmbeddedCost pulls the page model's Intelligence Index eval cost
+// from the escape-encoded JSON payload embedded in the model page HTML. The
+// payload carries a whole comparison set, so a cost is only attributed when
+// it follows the "currentModel" block whose slug is the page's own. Nested
+// effort/release objects carry their own slug keys between the anchor and
+// the cost, so the nearest-preceding-slug heuristic misfires here.
+func extractAAEmbeddedCost(normalizedHTML, slug string) (string, bool) {
+	for _, anchor := range reAACurrentModel.FindAllStringIndex(normalizedHTML, -1) {
+		rest := normalizedHTML[anchor[1]:]
+		window := rest
+		if len(window) > 256 {
+			window = window[:256]
+		}
+		owner := reAANearbySlug.FindStringSubmatch(window)
+		if owner == nil || unquoteJSON(owner[1]) != slug {
+			continue
+		}
+		if cost := reAAPayloadCost.FindStringSubmatch(rest); cost != nil {
+			return cost[1], true
+		}
+	}
+	return "", false
 }
 
 // --- Artificial Analysis leaderboard release data ---

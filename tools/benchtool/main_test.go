@@ -69,6 +69,45 @@ func TestExtractAAModelTotalCost(t *testing.T) {
 	}
 }
 
+// Effort-variant pages carry no total in the Comparison Summary (only a
+// cost per task), but the model page embeds the full-precision total in an
+// escape-encoded JSON payload. The page's own model is the "currentModel"
+// block; a decoy comparison-set cost earlier in the payload and the nested
+// effort/release slug keys between the anchor and the cost (regression: the
+// nearest-preceding-slug heuristic misfires on them) must not confuse
+// attribution.
+const aaPayloadFixture = `<html><body>
+<p>GPT-6 Sol (xhigh) scores 44 on the Artificial Analysis Intelligence Index.</p>
+<p>Artificial Analysis Intelligence Index v4.3 incorporates 10 evaluations.</p>
+<p>Evaluating GPT-6 Sol (xhigh) costs $8.65 per task across the Intelligence Index.</p>
+<script>self.__next_f.push(["1:{\"noise\":[{\"slug\":\"gpt-6-sol\",\"intelligenceIndexCost\":{\"total\":1550.082053769398}}],\"currentModel\":{\"id\":\"da2642fe-9f73-4788-b5af-24edcd55b37e\",\"slug\":\"gpt-6-sol-xhigh\",\"name\":\"GPT-6 Sol (xhigh)\",\"effort\":{\"slug\":\"xhigh\",\"label\":\"xhigh\",\"level\":80},\"release\":{\"slug\":\"gpt-6-sol\",\"name\":\"GPT-6 Sol\"},\"intelligenceIndexTimePerTask\":197.15741611243465,\"intelligenceIndexCost\":{\"total\":865.4806440191774,\"input\":100.1}}"])</script>
+</body></html>`
+
+func TestExtractAAModelEmbeddedPayloadCost(t *testing.T) {
+	m := extractAAModel(aaPayloadFixture, "https://artificialanalysis.ai/models/gpt-6-sol-xhigh")
+	if m.TotalCostUSD != "865.4806440191774" || m.TotalCostSource != "embedded_payload" || m.TotalCostPrecision != "precise" {
+		t.Errorf("total cost fields = %q, %q, %q", m.TotalCostUSD, m.TotalCostSource, m.TotalCostPrecision)
+	}
+	// The Comparison Summary total stays authoritative when it exists.
+	withSummary := strings.Replace(aaPayloadFixture, "</body>",
+		"<p>In total, it cost $870 to evaluate GPT-6 Sol (xhigh) on the Intelligence Index.</p></body>", 1)
+	m = extractAAModel(withSummary, "https://artificialanalysis.ai/models/gpt-6-sol-xhigh")
+	if m.TotalCostUSD != "870" || m.TotalCostSource != "comparison_summary" {
+		t.Errorf("summary should win over payload, got %q via %q", m.TotalCostUSD, m.TotalCostSource)
+	}
+	// A currentModel block for a different slug is not the page's model.
+	m = extractAAModel(aaPayloadFixture, "https://artificialanalysis.ai/models/gpt-6-sol")
+	if m.TotalCostUSD != "" || m.TotalCostSource != "" {
+		t.Errorf("slug mismatch should leave cost unfound, got %q via %q", m.TotalCostUSD, m.TotalCostSource)
+	}
+	// A whole-number payload total is labeled rounded_or_whole.
+	whole := strings.Replace(aaPayloadFixture, `\"total\":865.4806440191774`, `\"total\":865`, 1)
+	m = extractAAModel(whole, "https://artificialanalysis.ai/models/gpt-6-sol-xhigh")
+	if m.TotalCostUSD != "865" || m.TotalCostPrecision != "rounded_or_whole" {
+		t.Errorf("whole payload total = %q/%q", m.TotalCostUSD, m.TotalCostPrecision)
+	}
+}
+
 func TestWriteAAModelJSON(t *testing.T) {
 	m := extractAAModel(aaFixture, "https://artificialanalysis.ai/models/claude-fable-5-1")
 	var out bytes.Buffer
