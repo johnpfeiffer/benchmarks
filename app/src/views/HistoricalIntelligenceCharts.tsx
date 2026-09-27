@@ -23,6 +23,21 @@ interface HistoricalSnapshot {
  */
 export const HISTORICAL_SNAPSHOTS: readonly HistoricalSnapshot[] = [
   {
+    version: 'v4.2',
+    captured: '2026-09-04',
+    // Nearest Wayback capture of the v4.2-era methodology page (2026-09-07).
+    methodologyUrl:
+      'https://web.archive.org/web/20260907075638/https://artificialanalysis.ai/methodology/intelligence-benchmarking',
+    indexImage: {
+      src: 'images/2026-09-04-artificial-analysis-index.png',
+      alt: 'Artificial Analysis Intelligence Index v4.2 bar chart captured 2026-09-04, ranking models by intelligence score with Claude Fable 5.1 (max) leading at 57',
+    },
+    costImage: {
+      src: 'images/2026-09-04-artificial-analysis-index-eval-cost-usd.png',
+      alt: 'Artificial Analysis bar chart captured 2026-09-04 of the USD cost to run the Intelligence Index per model, with Claude Fable 5.1 (max) the most expensive at 10816 dollars',
+    },
+  },
+  {
     version: 'v4.1.1',
     captured: '2026-08-11',
     methodologyUrl:
@@ -89,9 +104,9 @@ interface HistoricalIntelligenceChartsProps {
 
 /**
  * Collapsed-by-default expander holding the captured Artificial Analysis
- * charts of historical Intelligence Index versions (v4.1.1 from 2026-08-11,
- * v4.0.2 from 2026-02-19, v3.0 from 2025-12-30), kept for reference
- * alongside the live version-switched chart above.
+ * charts of historical Intelligence Index versions (v4.2 from 2026-09-04,
+ * v4.1.1 from 2026-08-11, v4.0.2 from 2026-02-19, v3.0 from 2025-12-30),
+ * kept for reference alongside the live version-switched chart above.
  */
 export function HistoricalIntelligenceCharts({ expanded, onExpandedChange }: HistoricalIntelligenceChartsProps) {
   return (

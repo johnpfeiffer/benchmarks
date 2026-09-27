@@ -155,23 +155,24 @@ describe('acceptance: every JSON row appears in the UI', () => {
     expect(historySummary).toHaveAttribute('aria-expanded', 'false')
 
     // v4.1.1 is a historical snapshot: the note links to and opens the
-    // historical section, which holds all three snapshots' captures.
+    // historical section, which holds all four snapshots' captures.
     fireEvent.click(screen.getAllByRole('button', { name: 'v4.1.1' })[0])
     const note = screen.getByRole('link', { name: 'Scores and costs predate the current index version' })
     expect(note).toHaveAttribute('href', '#historical-aa-title')
     fireEvent.click(note)
     expect(historySummary).toHaveAttribute('aria-expanded', 'true')
+    expect(screen.getByRole('img', { name: /Intelligence Index v4\.2 bar chart/i })).toBeInTheDocument()
     expect(screen.getByRole('img', { name: /Intelligence Index v4\.1\.1 bar chart/i })).toBeInTheDocument()
     expect(screen.getByRole('img', { name: /Intelligence Index v4\.0\.2 bar chart/i })).toBeInTheDocument()
     expect(screen.getByRole('img', { name: /Intelligence Index v3\.0 bar chart/i })).toBeInTheDocument()
 
-    // v3.0 is the other historical snapshot: the note shows there too.
+    // v3.0 is another historical snapshot: the note shows there too.
     fireEvent.click(screen.getAllByRole('button', { name: 'v3.0' })[0])
     expect(screen.getByRole('link', { name: 'Scores and costs predate the current index version' })).toBeInTheDocument()
 
-    // v4.2 has no captured charts: no note.
+    // v4.2 has captured charts since 2026-09-04: the note shows there too.
     fireEvent.click(screen.getAllByRole('button', { name: 'v4.2' })[0])
-    expect(screen.queryByRole('link', { name: 'Scores and costs predate the current index version' })).not.toBeInTheDocument()
+    expect(screen.getByRole('link', { name: 'Scores and costs predate the current index version' })).toBeInTheDocument()
   })
 
   it('lists every news.json entry in Hand Picked News as a dated link', () => {

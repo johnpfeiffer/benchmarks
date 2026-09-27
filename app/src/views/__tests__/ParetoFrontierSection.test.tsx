@@ -18,7 +18,7 @@ describe('Pareto frontier public asset', () => {
     render(<ParetoFrontierSection />)
 
     // The section is collapsed by default; open it to mount the reference image.
-    fireEvent.click(screen.getByRole('button', { name: 'Pareto frontier' }))
+    fireEvent.click(screen.getByRole('button', { name: 'Pareto Frontier' }))
     const image = screen.getByRole('img', { name: /Intelligence Index versus cost/i }) as HTMLImageElement
     expect(image.src).toBe(`${baseUrl}images/artificial-analysis-pareto-frontier.png`)
   })

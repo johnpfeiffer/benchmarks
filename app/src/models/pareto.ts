@@ -102,6 +102,16 @@ export function paretoFrontier(points: readonly ParetoPoint[]): ParetoPoint[] {
   )).sort((a, b) => a.cost_usd - b.cost_usd)
 }
 
+/**
+ * The dotted trail drawn through the frontier. The cheapest frontier point
+ * sits far left of the price cluster as a stray dot (today gpt-oss), so the
+ * trail starts from the second-cheapest frontier point; the stray dot itself
+ * stays on the chart and keeps its frontier status.
+ */
+export function paretoFrontierTrail(frontier: readonly ParetoPoint[]): ParetoPoint[] {
+  return frontier.slice(1)
+}
+
 export function meetsParetoTarget(point: ParetoPoint, maxCost: number, minIntelligence: number): boolean {
   return point.cost_usd < maxCost && point.intelligence > minIntelligence
 }
