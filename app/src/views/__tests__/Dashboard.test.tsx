@@ -146,8 +146,8 @@ describe('Dashboard', () => {
     // The Pareto section (collapsed by default) credits the AA homepage; the
     // footer credit names the Intelligence Index version it cites and links to
     // that version's article.
-    const paretoSection = screen.getByRole('heading', { name: 'Pareto frontier' }).closest('section') as HTMLElement
-    fireEvent.click(within(paretoSection).getByRole('button', { name: 'Pareto frontier' }))
+    const paretoSection = screen.getByRole('heading', { name: 'Pareto Frontier' }).closest('section') as HTMLElement
+    fireEvent.click(within(paretoSection).getByRole('button', { name: 'Pareto Frontier' }))
     expect(within(paretoSection).getByRole('link', { name: 'Artificial Analysis' })).toHaveAttribute(
       'href',
       'https://artificialanalysis.ai/',
@@ -345,9 +345,9 @@ describe('Dashboard', () => {
     expect(detailsSummary.compareDocumentPosition(newsHeading) & Node.DOCUMENT_POSITION_FOLLOWING).toBeTruthy()
   })
 
-  it('shows the Pareto frontier between news and the historical charts, collapsed by default', () => {
+  it('shows the Pareto Frontier between news and the historical charts, collapsed by default', () => {
     renderDashboard()
-    const paretoHeading = screen.getByRole('heading', { name: 'Pareto frontier' })
+    const paretoHeading = screen.getByRole('heading', { name: 'Pareto Frontier' })
     const paretoSection = paretoHeading.closest('section') as HTMLElement
     expect(paretoSection).not.toBeNull()
 
@@ -359,7 +359,7 @@ describe('Dashboard', () => {
 
     // Collapsed by default: the chart and reference image stay out of the
     // accessibility tree until the summary is clicked.
-    const header = within(paretoSection).getByRole('button', { name: 'Pareto frontier' })
+    const header = within(paretoSection).getByRole('button', { name: 'Pareto Frontier' })
     expect(header).toHaveAttribute('aria-expanded', 'false')
     expect(within(paretoSection).queryByRole('img', { name: /Intelligence Index versus cost/i })).not.toBeInTheDocument()
 
@@ -499,13 +499,17 @@ describe('Dashboard', () => {
     const detailsHeading = screen.getByRole('button', { name: /Model Details/i })
     expect(detailsHeading.compareDocumentPosition(summary) & Node.DOCUMENT_POSITION_FOLLOWING).toBeTruthy()
 
-    // Collapsed by default; expanding reveals all three snapshots (v4.1.1
-    // from 2026-08-11 first, then v4.0.2 from 2026-02-19, then v3.0 from
-    // 2025-12-30), each with an index and a cost capture. URLs stay relative
-    // so the host's /benchmarks/ base applies.
+    // Collapsed by default; expanding reveals all four snapshots (v4.2 from
+    // 2026-09-04 first, then v4.1.1 from 2026-08-11, then v4.0.2 from
+    // 2026-02-19, then v3.0 from 2025-12-30), each with an index and a cost
+    // capture. URLs stay relative so the host's /benchmarks/ base applies.
     expect(summary).toHaveAttribute('aria-expanded', 'false')
     fireEvent.click(summary)
     expect(summary).toHaveAttribute('aria-expanded', 'true')
+    const v42Index = within(section).getByRole('img', { name: /Intelligence Index v4\.2 bar chart/i })
+    expect(v42Index).toHaveAttribute('src', 'images/2026-09-04-artificial-analysis-index.png')
+    const v42Cost = within(section).getByRole('img', { name: /captured 2026-09-04.*cost to run the Intelligence Index/i })
+    expect(v42Cost).toHaveAttribute('src', 'images/2026-09-04-artificial-analysis-index-eval-cost-usd.png')
     const v411Index = within(section).getByRole('img', { name: /Intelligence Index v4\.1\.1 bar chart/i })
     expect(v411Index).toHaveAttribute('src', 'images/2026-08-11-artificial-analysis-index.png')
     const v411Cost = within(section).getByRole('img', { name: /captured 2026-08-11.*cost to run the Intelligence Index/i })
@@ -519,24 +523,30 @@ describe('Dashboard', () => {
     const v30Cost = within(section).getByRole('img', { name: /captured 2025-12-30.*cost to run the Intelligence Index/i })
     expect(v30Cost).toHaveAttribute('src', 'images/2025-12-30-artificial-analysis-index-eval-cost-usd.png')
     // Newest snapshot first.
+    expect(v42Index.compareDocumentPosition(v411Index) & Node.DOCUMENT_POSITION_FOLLOWING).toBeTruthy()
     expect(v411Index.compareDocumentPosition(v402Index) & Node.DOCUMENT_POSITION_FOLLOWING).toBeTruthy()
     expect(v402Index.compareDocumentPosition(v30Index) & Node.DOCUMENT_POSITION_FOLLOWING).toBeTruthy()
+    expect(within(section).getAllByText(/captured 2026-09-04/).length).toBeGreaterThan(0)
     expect(within(section).getAllByText(/captured 2026-08-11/).length).toBeGreaterThan(0)
     expect(within(section).getAllByText(/captured 2026-02-19/).length).toBeGreaterThan(0)
     expect(within(section).getAllByText(/captured 2025-12-30/).length).toBeGreaterThan(0)
     // Each block credits Artificial Analysis via its version's archived
     // methodology page, newest snapshot first.
     const credits = within(section).getAllByRole('link', { name: 'Artificial Analysis' })
-    expect(credits).toHaveLength(3)
+    expect(credits).toHaveLength(4)
     expect(credits[0]).toHaveAttribute(
       'href',
-      'https://web.archive.org/web/20260811173412/https://artificialanalysis.ai/methodology/intelligence-benchmarking',
+      'https://web.archive.org/web/20260907075638/https://artificialanalysis.ai/methodology/intelligence-benchmarking',
     )
     expect(credits[1]).toHaveAttribute(
       'href',
-      'https://web.archive.org/web/20260217215328/https://artificialanalysis.ai/methodology/intelligence-benchmarking',
+      'https://web.archive.org/web/20260811173412/https://artificialanalysis.ai/methodology/intelligence-benchmarking',
     )
     expect(credits[2]).toHaveAttribute(
+      'href',
+      'https://web.archive.org/web/20260217215328/https://artificialanalysis.ai/methodology/intelligence-benchmarking',
+    )
+    expect(credits[3]).toHaveAttribute(
       'href',
       'https://web.archive.org/web/20251229181306/https://artificialanalysis.ai/methodology/intelligence-benchmarking',
     )

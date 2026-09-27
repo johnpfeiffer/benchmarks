@@ -33,7 +33,8 @@ the views. The `App` component is the controller (owns state and data flow).
 
 ```mermaid
 flowchart TD
-    AIJSON["data/ai.json<br/>(embedded)"] --> App["App.tsx<br/>(controller)"]
+    AIJSON["data/ai.json<br/>(embedded current ledger)"] --> App["App.tsx<br/>(controller)"]
+    AIHIST42["data/ai-2026-09-04.json<br/>(embedded v4.2 backfill)"] --> App
     AIHIST411["data/ai-2026-08-11.json<br/>(embedded v4.1.1 backfill)"] --> App
     AIHIST402["data/ai-2026-02-19.json<br/>(embedded v4.0.2 backfill)"] --> App
     AIHIST["data/ai-2025-12-30.json<br/>(embedded v3.0 backfill)"] --> App
@@ -58,7 +59,7 @@ flowchart TD
     ParetoSample["data/pareto.json<br/>(fictional sample)"] -->|"download link: paste-format example"| Pareto
     ParetoPNG["public/images/artificial-analysis-pareto-frontier.png"] -->|"copied unchanged by Vite; app-relative URL"| Pareto
     Dashboard --> Table["ModelTable<br/>(collapsed by default; sortable + selectable)"]
-    Dashboard --> HistAA["HistoricalIntelligenceCharts<br/>(collapsed v4.1.1 + v4.0.2 + v3.0 captures)"]
+    Dashboard --> HistAA["HistoricalIntelligenceCharts<br/>(collapsed v4.2 + v4.1.1 + v4.0.2 + v3.0 captures)"]
     HistAAPNG["public/images/2026-08-11-artificial-analysis-index*.png<br/>public/images/2026-02-19-artificial-analysis-index*.png<br/>public/images/2025-12-30-artificial-analysis-index*.png"] -->|"copied unchanged by Vite; app-relative URLs"| HistAA
     Dashboard --> HWChart["HardwareChart<br/>(dynamic quant sizes)"]
     Dashboard --> HWTable["HardwareTable<br/>(sortable hardware details)"]
@@ -96,12 +97,15 @@ always merge their score
 from the newest block. Entry ids are versionless (`provider:model`), and a
 version switch resets the selection to exactly the shown version's models
 (carrying a selection across snapshots with different model sets produced
-charts showing only a stray shared model). The v4.1.1
+charts showing only a stray shared model). Each superseded index version is
+kept as an immutable point-in-time snapshot file: the v4.2 snapshot is the
+2026-09-04 capture in `data/ai-2026-09-04.json`, the v4.1.1
 snapshot is a 2026-08-11 backfill kept in `data/ai-2026-08-11.json`, the
 v4.0.2 snapshot a 2026-02-19 backfill kept in `data/ai-2026-02-19.json`, and
 the v3.0 snapshot a 2025-12-30 backfill kept in `data/ai-2025-12-30.json`,
-all concatenated with `ai.json` at parse time, so `ai.json` stays the curated
-current ledger while the toggle lists v4.3, v4.2, v4.1.1, v4.0.2, and v3.0. Every row carries a
+all concatenated with `ai.json` at parse time. `ai.json` itself holds only
+the current ledger (the newest index version, today v4.3); snapshot files
+are never merged into it, so the toggle lists v4.3, v4.2, v4.1.1, v4.0.2, and v3.0. Every row carries a
 verified `released` date sourced from the Artificial Analysis leaderboard
 (`benchtool aa-releases`). A row may also carry `cost_usd`: the precise total
 Artificial Analysis charges to run the index on that model, read from the
@@ -121,7 +125,12 @@ All views are pure (props in, callbacks out, no business logic):
   colored by the explicit `color` field each `ai.json` row carries, falling
   back to a provider/model-family lookup when a row carries no color, with
   diagonal
-  x-axis labels. The chart shows each bar's score above the bar in small
+  x-axis labels. Models whose row carries no `cost_usd` for the shown
+  version (AA publishes no data for them there — e.g. Nemotron and Mistral
+  on v4.1.1) get italic x-axis labels, applied as per-index CSS rules on
+  `MuiChartsAxis-tickContainer:nth-of-type(...)` because MUI X
+  `tickLabelStyle` styles every tick label uniformly. The chart shows each
+  bar's score above the bar in small
   secondary-colored text (MUI X `barLabel: 'value'` with
   `barLabelPlacement: 'outside'`, gated by the `barValues` prop) and starts
   the y-axis near the lowest score to cut empty space (`yMin`). The section
@@ -175,7 +184,7 @@ All views are pure (props in, callbacks out, no business logic):
   state.
 - `ParetoFrontierSection` - outlined accordion between the news and the model
   details table, collapsed by default and user-expandable, titled "Pareto
-  frontier". The published snapshot is derived at load from the `ai.json` rows
+  Frontier". The published snapshot is derived at load from the `ai.json` rows
   carrying `cost_usd` (`paretoSnapshotFromModels` in `models/pareto.ts`,
   surfaced through `controllers/useParetoDataset`), so the default chart is
   real measured data (`sample: false`) and stays single-version:
@@ -191,9 +200,15 @@ All views are pure (props in, callbacks out, no business logic):
   intelligence, provider colors, optional labels, and hover/focus/tap details.
   The target inputs start at a $1,000 cost ceiling and an intelligence floor
   of 42. The green area uses strict `cost < X && intelligence > Y` thresholds. The
-  dotted frontier uses all points, independent of thresholds: another point
+  dotted frontier trail is computed from all points, independent of
+  thresholds: another point
   must have no higher cost and no lower intelligence, with at least one strict
   improvement, to dominate a point. Identical tradeoffs remain on the frontier.
+  The trail skips the cheapest frontier point
+  (`paretoFrontierTrail`): that point sits far left of the price cluster as a
+  stray dot (today gpt-oss), so the dotted line starts at the
+  second-cheapest frontier point while the stray dot keeps its frontier
+  status in point labels and details.
   Pasted JSON is validated before replacing the current preview; invalid data
   leaves the previous chart intact. Imports last until refresh. Reload restores
   the ai.json-derived published snapshot. The bundled `data/pareto.json` keeps
@@ -247,7 +262,9 @@ All views are pure (props in, callbacks out, no business logic):
 - `HistoricalIntelligenceCharts` - outlined accordion below the Pareto
   section, collapsed by default, titled "Historical Artificial Analysis
   Intelligence charts". It renders the `HISTORICAL_SNAPSHOTS` list (newest
-  version first): the v4.1.1 captures from 2026-08-11
+  version first): the v4.2 captures from 2026-09-04
+  (`public/images/2026-09-04-artificial-analysis-index.png` and
+  `...-eval-cost-usd.png`), the v4.1.1 captures from 2026-08-11
   (`public/images/2026-08-11-artificial-analysis-index.png` and
   `...-eval-cost-usd.png`), the v4.0.2 captures from 2026-02-19
   (`public/images/2026-02-19-artificial-analysis-index.png` and
@@ -259,26 +276,26 @@ All views are pure (props in, callbacks out, no business logic):
   Each block's credit links to that version's methodology page archived on
   the Wayback Machine (AA replaces the live page when a new methodology
   ships). Expansion is controlled by the Dashboard: when the version selector
-  shows a version with captures (`HISTORICAL_AA_VERSIONS`: v4.1.1, v4.0.2,
-  v3.0), a "Scores and costs predate the current index version" link appears
+  shows a version with captures (`HISTORICAL_AA_VERSIONS`: v4.2, v4.1.1,
+  v4.0.2, v3.0), a "Scores and costs predate the current index version" link appears
   below the chart and opens this section via its `#historical-aa-title`
   anchor.
 - `Dashboard` - layout composing the intelligence chart with the
   collapsed-by-default enriched details table directly below it, then news
-  (collapsed by default with its top 3 links visible), the Pareto frontier,
+  (collapsed by default with its top 3 links visible), the Pareto Frontier,
   and the historical-charts expander, then the HuggingFace estimated
   hardware chart and table ("Unsloth Open Weight Hosting Sizes"), collapsible GPU
   specifications table with source links below, then a Local Hardware section
   ("Local AI Machines") with source links below, then footer. The Model
   Details summary carries the index-version toggle (MUI `ToggleButtonGroup`)
   that swaps the chart and details table between the version blocks of
-  `ai.json` plus the v4.1.1, v4.0.2, and v3.0 backfills
-  (`data/ai-2026-08-11.json`, `data/ai-2026-02-19.json`,
+  `ai.json` plus the v4.2, v4.1.1, v4.0.2, and v3.0 backfills
+  (`data/ai-2026-09-04.json`, `data/ai-2026-08-11.json`, `data/ai-2026-02-19.json`,
   `data/ai-2025-12-30.json`); with the details table directly below the
   chart, a separate chart-header toggle would be duplicative, so this summary
   toggle is the only selector. It renders
   only when the data carries more than one version. When a version with
-  historical captures (v4.1.1, v4.0.2, or v3.0) is shown,
+  historical captures (v4.2, v4.1.1, v4.0.2, or v3.0) is shown,
   a "Scores and costs predate the current index version" link below the chart
   opens the historical charts section (the only local UI state Dashboard
   holds).
@@ -286,7 +303,7 @@ All views are pure (props in, callbacks out, no business logic):
 ### Controller (`App.tsx`)
 
 Parses embedded JSON once (`useMemo`) — `ai.json` concatenated with the
-`ai-2026-08-11.json` v4.1.1, `ai-2026-02-19.json` v4.0.2, and
+`ai-2026-09-04.json` v4.2, `ai-2026-08-11.json` v4.1.1, `ai-2026-02-19.json` v4.0.2, and
 `ai-2025-12-30.json` v3.0 backfills, plus
 validated newest-first news,
 HuggingFace hardware entries, GPU specification entries, and local machine
@@ -383,13 +400,14 @@ journey
     row of every data file appears in its UI listing (models table incl.
     italic release dates, news feed, hardware, GPU,
     local machines). Dashboard behavior tests (sort interactions, selection,
-    toggles, collapse, credits) use small fixtures. The chart label test
-    mocks `<BarChart>` and asserts props, because jsdom has no layout engine
-    and MUI X draws nothing there.
+    toggles, collapse, credits) use small fixtures. The chart label tests
+    mock `<BarChart>` and assert props (score bar labels, no-data italic tick
+    rules), because jsdom has no layout engine and MUI X draws nothing there.
 - `npm run build` - `tsc -b` typecheck + Vite production build.
 - Pareto tests (`models/__tests__/pareto.test.ts` and
   `views/__tests__/ParetoChart.test.tsx`) cover snapshot validation, dominance
-  and ties, strict target boundaries, keyboard details, the ai.json-derived
+  and ties, the frontier trail skipping the cheapest (stray) frontier point,
+  strict target boundaries, keyboard details, the ai.json-derived
   default snapshot (also pinned against the real data in
   `models/__tests__/data.test.ts`), temporary JSON imports, and the
   historical-image fallback on load failure.

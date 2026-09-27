@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest'
-import { paretoFrontier, parseParetoDataset, meetsParetoTarget, paretoSnapshotFromModels, PARETO_SNAPSHOT_DATE, PARETO_SNAPSHOT_VERSION } from '../pareto'
+import { paretoFrontier, paretoFrontierTrail, parseParetoDataset, meetsParetoTarget, paretoSnapshotFromModels, PARETO_SNAPSHOT_DATE, PARETO_SNAPSHOT_VERSION } from '../pareto'
 import type { ModelEntry } from '../types'
 
 const rows = [
@@ -18,6 +18,15 @@ describe('Pareto comparison', () => {
     const before = [...points]
     expect(paretoFrontier(points).map(p => p.model)).toEqual(['Cheap', 'Identical tradeoff', 'Balanced', 'Best'])
     expect(points).toEqual(before)
+  })
+
+  it('drops the cheapest frontier point from the dotted trail only', () => {
+    const frontier = paretoFrontier(parseParetoDataset(dataset).models)
+    expect(frontier.map(p => p.model)).toEqual(['Cheap', 'Balanced', 'Identical tradeoff', 'Best'])
+    // The cheapest frontier point renders as a stray dot far left of the
+    // cluster, so the drawn trail starts from the second point.
+    expect(paretoFrontierTrail(frontier).map(p => p.model)).toEqual(['Balanced', 'Identical tradeoff', 'Best'])
+    expect(paretoFrontierTrail(frontier.slice(0, 1))).toEqual([])
   })
 
   it('uses strict thresholds independently of frontier membership', () => {

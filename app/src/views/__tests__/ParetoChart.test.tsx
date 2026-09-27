@@ -18,6 +18,16 @@ it('defaults to a $1k cost target and intelligence 42', () => {
   expect(screen.getByLabelText('Intelligence above')).toHaveValue(42)
 })
 
+it('starts the dotted frontier trail at the second-cheapest frontier point', () => {
+  render(<ParetoChart dataset={dataset} />)
+  // Both sample points are on the frontier; the cheapest one stays on the
+  // chart as a stray dot, so the trail holds only Powerful's coordinates.
+  const polyline = document.querySelector('polyline')
+  expect(polyline?.getAttribute('points')?.trim().split(/\s+/)).toHaveLength(1)
+  // The stray dot keeps its frontier status in the point details.
+  expect(screen.getByRole('button', { name: /Efficient, A, intelligence 50.*Pareto frontier/ })).toBeInTheDocument()
+})
+
 it('updates targets without changing the frontier and exposes point details to keyboard users', () => {
   render(<ParetoChart dataset={dataset} />)
   expect(screen.getByText('1 of 2 meet your target')).toBeInTheDocument()
@@ -37,7 +47,7 @@ describe('Pareto dataset loading', () => {
   it('loads the ai.json-derived snapshot and rejects invalid imports without losing the chart', async () => {
     render(<ParetoFrontierSection />)
     // Collapsed by default; open the section to reach the chart.
-    fireEvent.click(screen.getByRole('button', { name: 'Pareto frontier' }))
+    fireEvent.click(screen.getByRole('button', { name: 'Pareto Frontier' }))
     // The published default is real measured data: no sample banner.
     await screen.findByText(/Artificial Analysis Intelligence Index v4\.3 · Snapshot/)
     expect(screen.queryByText(/Sample data — fictional models/)).not.toBeInTheDocument()

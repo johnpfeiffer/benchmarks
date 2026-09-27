@@ -63,6 +63,24 @@ export function IntelligenceBarChart({
   // Prefer the explicit per-model color from ai.json; fall back to the
   // provider/model-family lookup when a row carries no color.
   const colors = entries.map((entry) => entry.color ?? benchmarkColor(entry, fallbackColor))
+  // Rows without a measured total cost are models AA has no data for in this
+  // version (e.g. Nemotron and Mistral, which AA stopped re-running): show
+  // their x-axis label in italics. MUI X styles every tick label uniformly
+  // through tickLabelStyle, so target the no-data bars by band index. Each
+  // tick renders as one g.MuiChartsAxis-tickContainer per category in dataset
+  // order, so nth-of-type(index + 1) matches the entry's label.
+  const noDataTickSx = Object.fromEntries(
+    entries.flatMap((entry, index) =>
+      entry.cost_usd == null
+        ? [
+            [
+              `& .MuiChartsAxis-directionX .MuiChartsAxis-tickContainer:nth-of-type(${index + 1}) .MuiChartsAxis-tickLabel`,
+              { fontStyle: 'italic' },
+            ],
+          ]
+        : [],
+    ),
+  )
   // #AIDEV: Cut empty space at the bottom by starting the y-axis near the lowest score
   const minScore = entries.length > 0 ? Math.min(...entries.map((e) => e.score)) : 0
   const yMin = Math.max(0, Math.floor((minScore - 5) / 5) * 5)
@@ -122,6 +140,7 @@ export function IntelligenceBarChart({
                     strokeDasharray: '4 4',
                     strokeOpacity: 0.3,
                   },
+                  ...noDataTickSx,
                 }}
                 xAxis={[
                   {

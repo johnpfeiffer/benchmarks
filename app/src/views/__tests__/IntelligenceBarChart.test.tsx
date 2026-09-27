@@ -53,6 +53,36 @@ describe('IntelligenceBarChart value labels', () => {
   })
 })
 
+describe('IntelligenceBarChart no-data labels', () => {
+  it('italicizes the x-axis labels of entries without a measured cost for the version', () => {
+    // Models AA has no data for in the shown version (no measured total
+    // benchmark cost, e.g. Nemotron and Mistral on v4.2) get italic labels.
+    // MUI X styles tick labels uniformly, so the rules target the no-data
+    // bars by band index: entries 0 and 2 here.
+    render(
+      <ThemeProvider theme={theme}>
+        <IntelligenceBarChart
+          entries={[
+            { id: 'a:alpha', model: 'Alpha', score: 60, aa_version: 'v9.9', provider: 'A', open_weight: false, released: null },
+            { id: 'b:beta', model: 'Beta', score: 50, aa_version: 'v9.9', provider: 'B', open_weight: false, released: null, cost_usd: 123 },
+            { id: 'c:gamma', model: 'Gamma', score: 40, aa_version: 'v9.9', provider: 'C', open_weight: true, released: null },
+          ]}
+          scoreLabel="Score"
+        />
+      </ThemeProvider>,
+    )
+    const sx = lastBarChartProps.current?.sx as Record<string, unknown>
+    const italicRules = Object.keys(sx).filter((key) => key.includes('tickContainer'))
+    expect(italicRules).toEqual([
+      '& .MuiChartsAxis-directionX .MuiChartsAxis-tickContainer:nth-of-type(1) .MuiChartsAxis-tickLabel',
+      '& .MuiChartsAxis-directionX .MuiChartsAxis-tickContainer:nth-of-type(3) .MuiChartsAxis-tickLabel',
+    ])
+    for (const key of italicRules) {
+      expect(sx[key]).toEqual({ fontStyle: 'italic' })
+    }
+  })
+})
+
 describe('IntelligenceBarChart mobile touch scrolling', () => {
   function injectedCss(): string {
     const parts: string[] = []

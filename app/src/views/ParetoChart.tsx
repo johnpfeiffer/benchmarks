@@ -1,6 +1,6 @@
 import { useMemo, useState } from 'react'
 import { Box, Chip, FormControlLabel, Switch, TextField, Typography } from '@mui/material'
-import { meetsParetoTarget, paretoBounds, paretoFrontier, type ParetoDataset, type ParetoPoint } from '../models/pareto'
+import { meetsParetoTarget, paretoBounds, paretoFrontier, paretoFrontierTrail, type ParetoDataset, type ParetoPoint } from '../models/pareto'
 
 const WIDTH = 1100
 const HEIGHT = 490
@@ -16,6 +16,9 @@ export function ParetoChart({ dataset }: { dataset: ParetoDataset }) {
   const points = dataset.models
   const bounds = useMemo(() => paretoBounds(points), [points])
   const frontier = useMemo(() => paretoFrontier(points), [points])
+  // The trail skips the cheapest frontier point: it renders as a stray dot
+  // far left of the cluster, and the dotted line reads better without it.
+  const trail = useMemo(() => paretoFrontierTrail(frontier), [frontier])
   const [maxCost, setMaxCost] = useState('1000')
   const [minScore, setMinScore] = useState('42')
   const [labels, setLabels] = useState(points.length <= 20)
@@ -79,7 +82,7 @@ export function ParetoChart({ dataset }: { dataset: ParetoDataset }) {
             <line x1={regionRight} x2={regionRight} y1={TOP} y2={HEIGHT - BOTTOM} stroke="#6b9d72" strokeDasharray="5 5" />
             <line x1={LEFT} x2={WIDTH - RIGHT} y1={regionBottom} y2={regionBottom} stroke="#6b9d72" strokeDasharray="5 5" />
           </>}
-          <polyline points={frontier.map(p => `${x(p.cost_usd)},${y(p.intelligence)}`).join(' ')} fill="none" stroke="#424242" strokeWidth={2.5} strokeDasharray="1 7" strokeLinecap="round" />
+          <polyline points={trail.map(p => `${x(p.cost_usd)},${y(p.intelligence)}`).join(' ')} fill="none" stroke="#424242" strokeWidth={2.5} strokeDasharray="1 7" strokeLinecap="round" />
           {points.map(point => <g key={`${point.provider}:${point.model}`}>
             <circle cx={x(point.cost_usd)} cy={y(point.intelligence)} r={active === point ? 9 : 7}
               fill={color(point)} stroke="white" strokeWidth={2} tabIndex={0} role="button"

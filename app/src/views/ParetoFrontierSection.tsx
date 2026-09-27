@@ -20,7 +20,7 @@ export function ParetoFrontierSection() {
       <Accordion disableGutters variant="outlined">
         <AccordionSummary expandIcon={<ExpandMoreIcon />} aria-controls="pareto-content" id="pareto-header">
           <Typography id="pareto-title" variant="h6" component="span">
-            Pareto frontier
+            Pareto Frontier
           </Typography>
         </AccordionSummary>
         <AccordionDetails sx={{ pt: 0 }}>
