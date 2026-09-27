@@ -1,26 +1,21 @@
 import { useState } from 'react'
-import { parseModelEntries } from '../models/parse'
-import { parseParetoDataset, paretoSnapshotFromModels, type ParetoDataset } from '../models/pareto'
-import rawModels from '../data/ai.json'
+import { parseParetoDataset, type ParetoDataset } from '../models/pareto'
 
 /**
- * The published snapshot derives from ai.json rows carrying a measured
- * benchmark run cost (see models/pareto.paretoSnapshotFromModels). Running it
- * through parseParetoDataset holds it to the same contract as pasted data.
+ * The published snapshot comes from the controller, derived from the
+ * selected index version's costed rows (models/pareto.paretoSnapshotFromModels;
+ * the real data's per-version validity is pinned in data.test.ts). Pasted
+ * data overrides it for the browser session — including across version
+ * switches — until Reload restores the selected version's published
+ * snapshot.
  */
-function defaultDataset(): ParetoDataset {
-  return parseParetoDataset(paretoSnapshotFromModels(parseModelEntries(rawModels)))
-}
-
-/** Loads the ai.json-derived snapshot; pasted data stays in this browser session. */
-export function useParetoDataset() {
-  const [dataset, setDataset] = useState<ParetoDataset>(defaultDataset)
+export function useParetoDataset(published: ParetoDataset) {
+  const [pasted, setPasted] = useState<ParetoDataset | null>(null)
   const [error, setError] = useState('')
 
   function importJson(text: string) {
     try {
-      const parsed = parseParetoDataset(JSON.parse(text))
-      setDataset(parsed)
+      setPasted(parseParetoDataset(JSON.parse(text)))
       setError('')
       return true
     } catch (error) {
@@ -30,9 +25,9 @@ export function useParetoDataset() {
   }
 
   function reload() {
-    setDataset(defaultDataset())
+    setPasted(null)
     setError('')
   }
 
-  return { dataset, loading: false, error, importJson, reload }
+  return { dataset: pasted ?? published, error, importJson, reload }
 }

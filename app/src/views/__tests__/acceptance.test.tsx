@@ -182,6 +182,23 @@ describe('acceptance: every JSON row appears in the UI', () => {
     expect(screen.getByRole('link', { name: 'Scores and costs predate the current index version' })).toBeInTheDocument()
   })
 
+  it('shows the selected index version’s snapshot in the Pareto Frontier section', () => {
+    render(<App />)
+    expandSection(/Pareto Frontier/)
+    const section = screen.getByRole('heading', { name: 'Pareto Frontier' }).closest('section') as HTMLElement
+    // Newest version by default: the current ledger dated by its page reads.
+    expect(within(section).getByText(/Intelligence Index v4\.3 · Snapshot 2026-09-13/)).toBeInTheDocument()
+    // Historical versions are dated by their chart capture.
+    fireEvent.click(screen.getAllByRole('button', { name: 'v4.2' })[0])
+    expect(within(section).getByText(/Intelligence Index v4\.2 · Snapshot 2026-09-04/)).toBeInTheDocument()
+    fireEvent.click(screen.getAllByRole('button', { name: 'v4.1.1' })[0])
+    expect(within(section).getByText(/Intelligence Index v4\.1\.1 · Snapshot 2026-08-11/)).toBeInTheDocument()
+    fireEvent.click(screen.getAllByRole('button', { name: 'v4.0.2' })[0])
+    expect(within(section).getByText(/Intelligence Index v4\.0\.2 · Snapshot 2026-02-19/)).toBeInTheDocument()
+    fireEvent.click(screen.getAllByRole('button', { name: 'v3.0' })[0])
+    expect(within(section).getByText(/Intelligence Index v3\.0 · Snapshot 2025-12-30/)).toBeInTheDocument()
+  })
+
   it('lists every news.json entry in Hand Picked News as a dated link', () => {
     render(<App />)
     // Hand Picked News starts collapsed with a top-3 preview; open it so the

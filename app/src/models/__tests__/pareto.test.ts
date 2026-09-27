@@ -66,6 +66,20 @@ describe('paretoSnapshotFromModels', () => {
     expect(snapshot.models[0]).toEqual({ model: 'X', provider: 'A', intelligence: 50, cost_usd: 300, color: '#112233' })
   })
 
+  it('derives a snapshot for any requested version with its own label and date', () => {
+    const snapshot = paretoSnapshotFromModels(entries, 'v4.2', '2026-09-04')
+    expect(snapshot.benchmark_version).toBe('Artificial Analysis Intelligence Index v4.2')
+    expect(snapshot.date).toBe('2026-09-04')
+    expect(snapshot.models).toEqual([{ model: 'X', provider: 'A', intelligence: 55, cost_usd: 250 }])
+  })
+
+  it('yields an empty models list for a version with no costed rows', () => {
+    // The section renders a notice for this; the import contract's nonempty
+    // rule only applies to pasted data.
+    const snapshot = paretoSnapshotFromModels(entries, 'v3.0', '2025-12-30')
+    expect(snapshot.models).toEqual([])
+  })
+
   it('produces a snapshot that satisfies the import contract', () => {
     expect(() => parseParetoDataset(paretoSnapshotFromModels(entries))).not.toThrow()
   })

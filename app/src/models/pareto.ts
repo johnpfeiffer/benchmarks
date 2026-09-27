@@ -18,25 +18,34 @@ export interface ParetoDataset {
 }
 
 /**
- * Metadata for the bundled default snapshot: which aa_version block of
- * ai.json feeds the chart, and the date the per-model pages were read.
- * Bump both whenever the default snapshot moves to a newer index version.
+ * Metadata for the current ledger's snapshot: which aa_version block feeds
+ * the chart by default, and the date its per-model pages were read. Bump
+ * both when a new index version becomes the current ledger. Historical
+ * versions derive their snapshot from the same function, dated by the
+ * capture date of their backfill (see HISTORICAL_SNAPSHOTS).
  */
 export const PARETO_SNAPSHOT_AA_VERSION = 'v4.3'
 export const PARETO_SNAPSHOT_VERSION = `Artificial Analysis Intelligence Index ${PARETO_SNAPSHOT_AA_VERSION}`
 export const PARETO_SNAPSHOT_DATE = '2026-09-13'
 
 /**
- * Build the default snapshot from ai.json rows of the snapshot version that
- * carry a measured total benchmark cost. Every point pairs the score and
- * cost read from the same model page under the same index version, so the
- * snapshot stays single-version even though ai.json keeps older versions
- * around. Rows without a cost are skipped: the log cost axis needs a real
- * positive cost and omitting a row beats inventing one.
+ * Build the published snapshot for one index version from the rows carrying
+ * a measured total benchmark cost. Every point pairs the score and cost read
+ * from the same model page under the same index version, so the snapshot
+ * stays single-version even though the data keeps older versions around.
+ * Rows without a cost are skipped: the log cost axis needs a real positive
+ * cost and omitting a row beats inventing one. A version with no costed rows
+ * yields an empty models list (the section shows a notice instead of a
+ * chart), so this output is NOT guaranteed to satisfy parseParetoDataset —
+ * the real data's per-version validity is pinned in data.test.ts.
  */
-export function paretoSnapshotFromModels(entries: readonly ModelEntry[]): ParetoDataset {
+export function paretoSnapshotFromModels(
+  entries: readonly ModelEntry[],
+  aaVersion: string = PARETO_SNAPSHOT_AA_VERSION,
+  date: string = PARETO_SNAPSHOT_DATE,
+): ParetoDataset {
   const models = entries
-    .filter((entry) => entry.aa_version === PARETO_SNAPSHOT_AA_VERSION && typeof entry.cost_usd === 'number')
+    .filter((entry) => entry.aa_version === aaVersion && typeof entry.cost_usd === 'number')
     .map((entry) => ({
       model: entry.model,
       provider: entry.provider,
@@ -44,7 +53,7 @@ export function paretoSnapshotFromModels(entries: readonly ModelEntry[]): Pareto
       cost_usd: entry.cost_usd as number,
       ...(entry.color ? { color: entry.color } : {}),
     }))
-  return { benchmark_version: PARETO_SNAPSHOT_VERSION, date: PARETO_SNAPSHOT_DATE, sample: false, models }
+  return { benchmark_version: `Artificial Analysis Intelligence Index ${aaVersion}`, date, sample: false, models }
 }
 
 function record(value: unknown): Record<string, unknown> {

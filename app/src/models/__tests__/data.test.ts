@@ -94,7 +94,7 @@ describe('embedded data integrity', () => {
     ['2026-08-11', 'v4.1.1', rawHistoricalV411Data],
     ['2026-02-19', 'v4.0.2', rawHistoricalV402Data],
     ['2025-12-30', 'v3.0', rawHistoricalV30Data],
-  ] as const)('the %s backfill holds only %s rows that meet the ai.json conventions', (_date, version, raw) => {
+  ] as const)('the %s backfill holds only %s rows that meet the ai.json conventions', (date, version, raw) => {
     const backfill = parseModelEntries(raw)
     expect(backfill.length).toBeGreaterThan(0)
     const keys = backfill.map((entry) => `${entry.aa_version}:${entry.model}`)
@@ -108,6 +108,11 @@ describe('embedded data integrity', () => {
     // No (model, version) pair may exist in both files.
     const mainKeys = new Set(intelligence.map((entry) => `${entry.aa_version}:${entry.model}`))
     for (const key of keys) expect(mainKeys.has(key)).toBe(false)
+    // The Pareto Frontier follows the version selector, so every backfilled
+    // version must yield a usable snapshot (at least two costed rows).
+    const snapshot = paretoSnapshotFromModels(backfill, version, date)
+    expect(snapshot.models.length).toBeGreaterThanOrEqual(2)
+    expect(() => parseParetoDataset(snapshot)).not.toThrow()
   })
 
   it('machines stay ordered by VRAM descending, one row per machine', () => {

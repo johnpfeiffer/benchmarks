@@ -1,6 +1,7 @@
 import { useState } from 'react'
 import { Box, Container, Link, Typography } from '@mui/material'
 import type { GpuEntry, HardwareEntry, MachineEntry, ModelEntry, NewsEntry, SortField, SortState } from '../models'
+import type { ParetoDataset } from '../models/pareto'
 import { IntelligenceBarChart } from './IntelligenceBarChart'
 import { ModelTable } from './ModelTable'
 import { HISTORICAL_AA_VERSIONS, HistoricalIntelligenceCharts } from './HistoricalIntelligenceCharts'
@@ -25,6 +26,8 @@ interface DashboardProps {
   /** The version currently shown in the chart and details table. */
   aaVersion: string
   onAAVersionChange: (version: string) => void
+  /** Published Pareto snapshot derived from the selected version's costed rows. */
+  paretoDataset: ParetoDataset
   sort: SortState
   selectedIds: ReadonlySet<string>
   onSortChange: (field: SortField) => void
@@ -58,6 +61,7 @@ export function Dashboard({
   aaVersions,
   aaVersion,
   onAAVersionChange,
+  paretoDataset,
   sort,
   selectedIds,
   onSortChange,
@@ -141,7 +145,7 @@ export function Dashboard({
       </Box>
 
       <Box sx={{ mb: 4 }}>
-        <ParetoFrontierSection />
+        <ParetoFrontierSection publishedDataset={paretoDataset} />
       </Box>
 
       <Box sx={{ mb: 5 }}>

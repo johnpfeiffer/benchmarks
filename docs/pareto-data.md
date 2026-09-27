@@ -56,8 +56,9 @@ Validation rules (`parseParetoDataset`):
   - `provider` + `model` pairs must be unique.
 
 Pasted data is validated before it replaces the chart, lives only in the
-browser session, and is cleared on refresh. "Reload published data" restores
-the ai.json-derived snapshot.
+browser session (it stays shown across index-version switches), and is
+cleared on refresh. "Reload published data" restores the selected version's
+snapshot derived from the costed `ai.json`/backfill rows.
 
 ## Refreshing the real data
 
@@ -74,8 +75,12 @@ the ai.json-derived snapshot.
    score). Omit `cost_usd` when AA publishes no precise total or reports $0.
    Between blocks of the same version, update rows in place so the pairing
    stays atomic.
-3. If the index version changed, bump the snapshot constants
-   (`PARETO_SNAPSHOT_AA_VERSION` to the new tag), update the
+3. If the index version changed, bump the current-ledger snapshot constants
+   (`PARETO_SNAPSHOT_AA_VERSION` and `PARETO_SNAPSHOT_DATE` — the Pareto
+   chart derives per-version snapshots automatically from the selected
+   version's costed rows, so only the default's metadata needs the bump; a
+   superseded version's snapshot is dated by its `HISTORICAL_SNAPSHOTS`
+   capture entry), update the
    footer credit (`sources[0]` in `App.tsx`) to the new version article, and
    note the version in `architecture.md`.
 4. `npm test` covers the rest: `data.test.ts` pins the derived snapshot
