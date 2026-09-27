@@ -33,7 +33,8 @@ the views. The `App` component is the controller (owns state and data flow).
 
 ```mermaid
 flowchart TD
-    AIJSON["data/ai.json<br/>(embedded)"] --> App["App.tsx<br/>(controller)"]
+    AIJSON["data/ai.json<br/>(embedded current ledger)"] --> App["App.tsx<br/>(controller)"]
+    AIHIST42["data/ai-2026-09-04.json<br/>(embedded v4.2 backfill)"] --> App
     AIHIST411["data/ai-2026-08-11.json<br/>(embedded v4.1.1 backfill)"] --> App
     AIHIST402["data/ai-2026-02-19.json<br/>(embedded v4.0.2 backfill)"] --> App
     AIHIST["data/ai-2025-12-30.json<br/>(embedded v3.0 backfill)"] --> App
@@ -96,12 +97,15 @@ always merge their score
 from the newest block. Entry ids are versionless (`provider:model`), and a
 version switch resets the selection to exactly the shown version's models
 (carrying a selection across snapshots with different model sets produced
-charts showing only a stray shared model). The v4.1.1
+charts showing only a stray shared model). Each superseded index version is
+kept as an immutable point-in-time snapshot file: the v4.2 snapshot is the
+2026-09-04 capture in `data/ai-2026-09-04.json`, the v4.1.1
 snapshot is a 2026-08-11 backfill kept in `data/ai-2026-08-11.json`, the
 v4.0.2 snapshot a 2026-02-19 backfill kept in `data/ai-2026-02-19.json`, and
 the v3.0 snapshot a 2025-12-30 backfill kept in `data/ai-2025-12-30.json`,
-all concatenated with `ai.json` at parse time, so `ai.json` stays the curated
-current ledger while the toggle lists v4.3, v4.2, v4.1.1, v4.0.2, and v3.0. Every row carries a
+all concatenated with `ai.json` at parse time. `ai.json` itself holds only
+the current ledger (the newest index version, today v4.3); snapshot files
+are never merged into it, so the toggle lists v4.3, v4.2, v4.1.1, v4.0.2, and v3.0. Every row carries a
 verified `released` date sourced from the Artificial Analysis leaderboard
 (`benchtool aa-releases`). A row may also carry `cost_usd`: the precise total
 Artificial Analysis charges to run the index on that model, read from the
@@ -123,7 +127,7 @@ All views are pure (props in, callbacks out, no business logic):
   diagonal
   x-axis labels. Models whose row carries no `cost_usd` for the shown
   version (AA publishes no data for them there — e.g. Nemotron and Mistral
-  on v4.2) get italic x-axis labels, applied as per-index CSS rules on
+  on v4.1.1) get italic x-axis labels, applied as per-index CSS rules on
   `MuiChartsAxis-tickContainer:nth-of-type(...)` because MUI X
   `tickLabelStyle` styles every tick label uniformly. The chart shows each
   bar's score above the bar in small
@@ -285,8 +289,8 @@ All views are pure (props in, callbacks out, no business logic):
   ("Local AI Machines") with source links below, then footer. The Model
   Details summary carries the index-version toggle (MUI `ToggleButtonGroup`)
   that swaps the chart and details table between the version blocks of
-  `ai.json` plus the v4.1.1, v4.0.2, and v3.0 backfills
-  (`data/ai-2026-08-11.json`, `data/ai-2026-02-19.json`,
+  `ai.json` plus the v4.2, v4.1.1, v4.0.2, and v3.0 backfills
+  (`data/ai-2026-09-04.json`, `data/ai-2026-08-11.json`, `data/ai-2026-02-19.json`,
   `data/ai-2025-12-30.json`); with the details table directly below the
   chart, a separate chart-header toggle would be duplicative, so this summary
   toggle is the only selector. It renders
@@ -299,7 +303,7 @@ All views are pure (props in, callbacks out, no business logic):
 ### Controller (`App.tsx`)
 
 Parses embedded JSON once (`useMemo`) — `ai.json` concatenated with the
-`ai-2026-08-11.json` v4.1.1, `ai-2026-02-19.json` v4.0.2, and
+`ai-2026-09-04.json` v4.2, `ai-2026-08-11.json` v4.1.1, `ai-2026-02-19.json` v4.0.2, and
 `ai-2025-12-30.json` v3.0 backfills, plus
 validated newest-first news,
 HuggingFace hardware entries, GPU specification entries, and local machine
