@@ -23,7 +23,11 @@ fails because the repo root has no go.mod.
   index version, precise total evaluation cost, and cost provenance/precision.
   JSON mode emits numbers and booleans with their native types for easier
   Pareto snapshot authoring. The command exits non-zero when no score is found
-  (wrong slug or estimate-only); unavailable cost fields are missing/null.
+  (wrong slug or estimate-only). The total comes from the Comparison Summary
+  sentence when present, else from the page's embedded JSON payload
+  (`total_cost_source: "embedded_payload"`, full precision — round to cents
+  for `cost_usd`; step 3 of the extraction section below documents the
+  technique and its manual fallback); null means AA publishes neither.
 - `go run . aa-releases` prints every AA leaderboard
   variant's release date as TSV (one fetch; includes deprecated models) for
   filling or checking the `released` field across ai.json.
@@ -158,19 +162,38 @@ count; that metric uses evaluation weights.
    expose a precise total in the sentence describing the cost to evaluate the
    model on the Intelligence Index, even when chart values are absent from
    text extraction. Read only the relevant summary and index-version text.
-3. For chart inspection, go to **Cost**, then **Intelligence Index Total Cost**
+3. When the summary reports only a cost per task (observed for effort-variant
+   pages such as `(xhigh)`), the precise total is still embedded in the model
+   page's HTML payload. `aa-model` extracts it automatically
+   (`total_cost_source: "embedded_payload"`); the manual path — for verifying
+   the tool or working around markup drift — is: fetch the page
+   (`curl -sSL https://artificialanalysis.ai/models/<slug>`) and search the
+   escape-encoded JSON for `intelligenceIndexCost\":{\"total\":<number>`.
+   The payload carries a whole comparison set, not just the page's model, so
+   attribution matters: anchor on the `\"currentModel\":{...}` block (the
+   page's own model — its `\"slug\"` matches the page slug) and take the
+   first total inside it. Do NOT trust the nearest preceding `\"slug\"` or
+   `\"name\"`: nested effort/release objects carry their own slug keys
+   between the model's slug and its cost (verified 2026-09-27: the naive
+   rule attributes `gpt-6-sol-xhigh`'s total 865.480644… to `gpt-6-sol`).
+   As a cross-check, find a model whose total you already trust in the same
+   payload (`gpt-6-sol`'s known $1,550.08). Keep the full precision in
+   research notes; `cost_usd` gets the cent-rounded value (→ `$865.48`).
+   Comparison/leaderboard URLs do not embed this per-model block — use the
+   model's own page.
+4. For chart inspection, go to **Cost**, then **Intelligence Index Total Cost**
    for the stacked bar chart, or **Intelligence Index vs. Total Cost** for the
    Pareto chart. Confirm the title/axis says total cost, not cost per task.
    Use the table toggle if available, otherwise hover the exact bar or point
    in a rendered browser. Check model selections and Model Comparison versus
    API Provider Benchmarks; endpoint-specific runs must retain that identity.
-4. Prefer a precise displayed total (summary, table, Pareto tooltip, or an
+5. Prefer a precise displayed total (summary, table, Pareto tooltip, or an
    authorized export) over rounded bar labels. Preserve USD decimals; do not
    estimate from bar height or the logarithmic x-axis. If only a rounded
    value is available, label it rounded rather than inventing cents. If a
    download requires paid access, use public displayed values or ask for the
    user's export; do not bypass the gate.
-5. Capture source URL, retrieval date, index version, exact variant/provider,
+6. Capture source URL, retrieval date, index version, exact variant/provider,
    intelligence score, total USD cost, and whether the value is rounded.
    Pair scores and costs from the same index version/snapshot; never silently
    combine current costs with older `ai.json` scores. If the version or total
