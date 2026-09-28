@@ -1,5 +1,5 @@
 import { describe, it, expect } from 'vitest'
-import { openWeightIds } from '../filter'
+import { openWeightIds, presetSelectionIds } from '../filter'
 import type { ModelEntry } from '../types'
 
 const entries: ModelEntry[] = [
@@ -27,5 +27,43 @@ describe('openWeightIds', () => {
     const input = [...entries]
     openWeightIds(input)
     expect(input).toEqual(entries)
+  })
+})
+
+describe('presetSelectionIds', () => {
+  it('returns every id when no provider is chosen and open weights is off', () => {
+    expect(presetSelectionIds(entries, new Set(), false)).toEqual(
+      new Set(['anthropic:alpha', 'openai:beta', 'google:gamma', 'xai:delta']),
+    )
+  })
+
+  it('returns one provider’s ids for a single chosen provider', () => {
+    expect(presetSelectionIds(entries, new Set(['Google']), false)).toEqual(new Set(['google:gamma']))
+  })
+
+  it('unions multiple chosen providers (additive)', () => {
+    expect(presetSelectionIds(entries, new Set(['Google', 'xAI']), false)).toEqual(
+      new Set(['google:gamma', 'xai:delta']),
+    )
+  })
+
+  it('intersects chosen providers with the open-weights preset', () => {
+    expect(presetSelectionIds(entries, new Set(['Google', 'xAI']), true)).toEqual(new Set(['google:gamma']))
+  })
+
+  it('applies the open-weights preset alone when no provider is chosen', () => {
+    expect(presetSelectionIds(entries, new Set(), true)).toEqual(new Set(['anthropic:alpha', 'google:gamma']))
+  })
+
+  it('returns an empty set when a chosen provider has no rows', () => {
+    expect(presetSelectionIds(entries, new Set(['Meta']), false)).toEqual(new Set())
+  })
+
+  it('does not mutate the inputs', () => {
+    const input = [...entries]
+    const providers = new Set(['Google'])
+    presetSelectionIds(input, providers, false)
+    expect(input).toEqual(entries)
+    expect(providers).toEqual(new Set(['Google']))
   })
 })

@@ -11,7 +11,7 @@ import {
   mergeHardwareIntelligence,
   sortModels,
   nextSortState,
-  openWeightIds,
+  presetSelectionIds,
   aaVersionsDesc,
   filterByAAVersion,
   DEFAULT_SORT,
@@ -121,30 +121,46 @@ function DashboardPage() {
   // charts showing only a stray shared model.
   const table = useBenchmarkState(intelligenceEntries)
   const [openWeightsOnly, setOpenWeightsOnly] = useState(false)
+  const [providerFilters, setProviderFilters] = useState<ReadonlySet<string>>(new Set())
 
-  // "Open Weights Only" is a selection preset: turning it on sets the selection
-  // to exactly the open-weight models; turning it off re-selects every model.
-  // Because the table grays deselected rows and every chart renders only the
-  // selected models, the preset is reflected in the table and the charts.
-  const allIds = useMemo(() => new Set(intelligenceEntries.map((entry) => entry.id)), [intelligenceEntries])
-  const openIds = useMemo(() => openWeightIds(intelligenceEntries), [intelligenceEntries])
+  // "Open Weights" and the per-provider buttons are composable selection
+  // presets: the provider buttons toggle additively/subtractively (union of
+  // the chosen providers' rows, every row when none are chosen), and Open
+  // Weights narrows the result to open-weight models. Because the table grays
+  // deselected rows and every chart renders only the selected models, the
+  // presets are reflected in the table and the charts.
+  const providers = useMemo(
+    () => [...new Set(intelligenceEntries.map((entry) => entry.provider))].sort(),
+    [intelligenceEntries],
+  )
 
   const handleToggleOpenWeights = () => {
-    if (openWeightsOnly) {
-      table.replaceSelection(allIds)
-      setOpenWeightsOnly(false)
-    } else {
-      table.replaceSelection(openIds)
-      setOpenWeightsOnly(true)
-    }
+    const next = !openWeightsOnly
+    setOpenWeightsOnly(next)
+    table.replaceSelection(presetSelectionIds(intelligenceEntries, providerFilters, next))
+  }
+
+  const handleToggleProvider = (provider: string) => {
+    setProviderFilters((current) => {
+      const next = new Set(current)
+      if (next.has(provider)) {
+        next.delete(provider)
+      } else {
+        next.add(provider)
+      }
+      table.replaceSelection(presetSelectionIds(intelligenceEntries, next, openWeightsOnly))
+      return next
+    })
   }
 
   // A version switch resets the selection to the shown version's full model
-  // set and clears the Open Weights preset, so the table and chart always
-  // reflect the chosen snapshot with no leftover state from another version.
+  // set and clears the Open Weights and provider presets, so the table and
+  // chart always reflect the chosen snapshot with no leftover state from
+  // another version (provider sets differ between snapshots).
   const handleAAVersionChange = (version: string) => {
     setAaVersion(version)
     setOpenWeightsOnly(false)
+    setProviderFilters(new Set())
     table.replaceSelection(new Set(filterByAAVersion(allIntelligence, version).map((entry) => entry.id)))
   }
 
@@ -198,6 +214,9 @@ function DashboardPage() {
       onToggleEntry={table.handleToggleEntry}
       openWeightsOnly={openWeightsOnly}
       onToggleOpenWeights={handleToggleOpenWeights}
+      providers={providers}
+      providerFilters={providerFilters}
+      onToggleProvider={handleToggleProvider}
       news={news}
       hardware={hardware}
       hardwareSource={hardwareSource}

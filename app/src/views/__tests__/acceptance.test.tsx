@@ -149,6 +149,36 @@ describe('acceptance: every JSON row appears in the UI', () => {
     expect(screen.queryByText('No models selected')).not.toBeInTheDocument()
   })
 
+  it('filters the Model Details table by vendor with additive provider buttons', () => {
+    render(<App />)
+    expandSection(/Model Details/)
+    const table = screen.getByRole('table', { name: 'Model Details' })
+    const section = table.closest('section') as HTMLElement
+    const vendor = (name: string) => within(section).getByRole('button', { name })
+    const assertSelection = (keep: (entry: (typeof latestIntelligence)[number]) => boolean) => {
+      for (const entry of latestIntelligence) {
+        expect(within(table).getByRole('button', { name: entry.model }), entry.model).toHaveAttribute(
+          'aria-pressed',
+          String(keep(entry)),
+        )
+      }
+    }
+
+    // A single vendor button selects exactly that vendor's rows; the others
+    // gray out, like the Open Weights preset.
+    fireEvent.click(vendor('Alibaba'))
+    assertSelection((entry) => entry.provider === 'Alibaba')
+
+    // Additive: Google joins Alibaba. Subtractive: removing Alibaba leaves Google.
+    fireEvent.click(vendor('Google'))
+    fireEvent.click(vendor('Alibaba'))
+    assertSelection((entry) => entry.provider === 'Google')
+
+    // Toggling the last provider off restores the full selection.
+    fireEvent.click(vendor('Google'))
+    assertSelection(() => true)
+  })
+
   it('shows the predate note on versions with historical chart captures and expands the section when clicked', () => {
     render(<App />)
     // Newest version: no note, historical section collapsed.

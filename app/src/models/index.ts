@@ -2,5 +2,5 @@ export type { GpuEntry, HardwareEntry, MachineEntry, ModelEntry, NewsEntry, RawG
 export { parseModelEntries, parseNewsEntries, parseHardwareEntries, parseGpuEntries, parseMachineEntries, InvariantError } from './parse'
 export { sortModels, nextSortState, DEFAULT_SORT } from './sort'
 export { mergeHardwareIntelligence, modelMatchKey } from './merge'
-export { openWeightIds } from './filter'
+export { openWeightIds, presetSelectionIds } from './filter'
 export { compareAAVersions, aaVersionsDesc, filterByAAVersion } from './version'

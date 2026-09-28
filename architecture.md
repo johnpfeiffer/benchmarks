@@ -6,7 +6,8 @@ for dynamic quants (UD-IQ1_M, UD-Q2_K_XL, UD-Q4_K_XL), NVIDIA GPU specifications
 unified-memory local-AI machines (Mac, DGX Spark, Strix Halo). It
 currently renders Artificial Analysis scores. Models can be toggled
 in/out of the chart
-individually, or restricted to open-weight models via the "Open Weights"
+individually, filtered by vendor via the provider preset buttons, or
+restricted to open-weight models via the "Open Weights"
 preset. Derived from the immutable
 [`/KERNEL/`](./KERNEL/); if anything here conflicts with the kernel, the kernel
 wins.
@@ -79,7 +80,7 @@ flowchart TD
 | `merge.ts` | `mergeHardwareIntelligence`, `modelMatchKey`; attaches each hardware row's intelligence score via a normalized model-name match with a unique-prefix fallback. `modelMatchKey` ignores parenthetical effort suffixes and "preview". Callers pass the newest version's block only (see `App.tsx`), since a hardware row carries a single score |
 | `version.ts` | `compareAAVersions`, `aaVersionsDesc`, `filterByAAVersion`; numeric newest-first ordering of the `aa_version` tags present in a row set, and the per-version row slice the dashboard renders |
 | `sort.ts` | `sortModels`, `nextSortState`, `DEFAULT_SORT` (score desc) |
-| `filter.ts` | `openWeightIds`; the id set used by the "Open Weights" preset |
+| `filter.ts` | `openWeightIds`, `presetSelectionIds`; the id sets behind the "Open Weights" and provider presets (the union of the chosen providers' rows, intersected with the open-weight rows when that preset is on) |
 | `index.ts` | Public re-exports |
 
 `data/ai.json` tracks the Artificial Analysis Intelligence Index, keeping one
@@ -162,9 +163,12 @@ All views are pure (props in, callbacks out, no business logic):
   viewports. Model names are buttons; clicking toggles the
   model's inclusion in the chart while the row remains visible when
   deselected, with a gray background and faded text. An "Open Weights" toggle
-  sits immediately to the right of the title in the accordion summary;
-  clicking it does not toggle the accordion. Turning it on sets the selection
-  to the open-weight models, turning it off re-selects every model.
+  sits immediately to the right of the title in the accordion summary,
+  followed by one toggle button per provider present in the shown version
+  (alphabetical, grouped as "Provider filter"); clicking them does not toggle
+  the accordion. The provider buttons are additive/subtractive: the selection
+  becomes the union of the chosen vendors' rows (every row when none are
+  chosen), and Open Weights narrows that to open-weight models.
 - `Footer` - credits the non-GPU data sources,
   [Artificial Analysis Intelligence Index v4.3](https://artificialanalysis.ai/articles/artificial-analysis-intelligence-index-v4-3)
   (the label names the newest index version present in `ai.json`; bump both
@@ -328,11 +332,11 @@ intelligence score from the newest version's block only, regardless of the
 selected view version. Deselected models are
 filtered out of the chart while their rows stay visible in the table. A
 version switch resets the selection to exactly the shown version's models and
-clears the "Open Weights" preset flag, so the table and chart always reflect
-the chosen snapshot with no leftover state from another version. The
-"Open Weights"
-preset is a selection: on ->
-`replaceSelection(openWeightIds(...))`; off -> `replaceSelection(allIds)`, so the
+clears the "Open Weights" and provider preset flags, so the table and chart
+always reflect
+the chosen snapshot with no leftover state from another version. The presets
+are one composed selection —
+`replaceSelection(presetSelectionIds(entries, providerFilters, openWeightsOnly))` — so the
 table graying/fading and the chart follow the selection. The Pareto
 Frontier's published snapshot is derived per selected version
 (`paretoSnapshotFromModels(allIntelligence, aaVersion, capture date)`), so it

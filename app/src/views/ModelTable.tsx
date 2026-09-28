@@ -36,6 +36,11 @@ interface ModelTableProps {
   title: string
   openWeightsOnly: boolean
   onToggleOpenWeights: () => void
+  /** Providers present in the shown version, alphabetical. */
+  providers: readonly string[]
+  /** Providers currently toggled on (empty = no provider filter). */
+  providerFilters: ReadonlySet<string>
+  onToggleProvider: (provider: string) => void
 }
 
 /** Column config: header label -> domain sort field + cell accessor. */
@@ -59,9 +64,10 @@ const formatCost = (value: number) =>
  * Pure presentation: renders the given (already-sorted) rows and emits header
  * clicks. All sort logic lives in the controller / models layer. The "Open
  * Weights" toggle sits immediately to the right of the title in the accordion
- * summary; clicking it does not toggle the accordion.
+ * summary, followed by one additive/subtractive toggle button per provider
+ * present in the shown version; clicking them does not toggle the accordion.
  */
-export function ModelTable({ entries, aaVersions, aaVersion, onAAVersionChange, sort, onSortChange, selectedIds, onToggleEntry, title, openWeightsOnly, onToggleOpenWeights }: ModelTableProps) {
+export function ModelTable({ entries, aaVersions, aaVersion, onAAVersionChange, sort, onSortChange, selectedIds, onToggleEntry, title, openWeightsOnly, onToggleOpenWeights, providers, providerFilters, onToggleProvider }: ModelTableProps) {
   return (
     <Box>
       <Accordion disableGutters variant="outlined">
@@ -101,6 +107,24 @@ export function ModelTable({ entries, aaVersions, aaVersion, onAAVersionChange, 
             >
               Open Weights
             </Button>
+            {providers.length > 0 && (
+              // One additive/subtractive toggle per provider in the shown
+              // version; clicks stay local so the accordion does not toggle.
+              <Box role="group" aria-label="Provider filter" sx={{ display: 'flex', gap: 0.5, flexWrap: 'wrap' }}>
+                {providers.map((provider) => (
+                  <ToggleButton
+                    key={provider}
+                    size="small"
+                    value={provider}
+                    selected={providerFilters.has(provider)}
+                    onClick={(e) => { e.stopPropagation(); onToggleProvider(provider) }}
+                    sx={{ textTransform: 'none' }}
+                  >
+                    {provider}
+                  </ToggleButton>
+                ))}
+              </Box>
+            )}
           </Box>
         </AccordionSummary>
         <AccordionDetails id="details-content" sx={{ p: 0 }}>
