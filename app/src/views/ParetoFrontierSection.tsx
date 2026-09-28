@@ -2,18 +2,26 @@ import ExpandMoreIcon from '@mui/icons-material/ExpandMore'
 import { useState } from 'react'
 import { Accordion, AccordionDetails, AccordionSummary, Alert, Box, Button, Link, TextField, Typography } from '@mui/material'
 import { useParetoDataset } from '../controllers/useParetoDataset'
+import type { ParetoDataset } from '../models/pareto'
 import paretoDatasetUrl from '../data/pareto.json?url'
 import { ParetoChart } from './ParetoChart'
 // Public asset, relative to the host-injected <base href="/benchmarks/">.
 // A leading slash would bypass that base and request the wrong app's root.
 const paretoFrontierUrl = 'images/artificial-analysis-pareto-frontier.png'
 
+interface ParetoFrontierSectionProps {
+  /** Published snapshot for the currently selected index version. */
+  publishedDataset: ParetoDataset
+}
+
 /**
- * Interactive comparison with an optional historical reference image.
- * Data loading and validation are handled by the controller/domain layers.
+ * Interactive comparison with an optional historical reference image. The
+ * chart follows the Model Details version selector via the published
+ * snapshot prop; pasted data overrides it until Reload. Data loading and
+ * validation are handled by the controller/domain layers.
  */
-export function ParetoFrontierSection() {
-  const { dataset, loading, error, importJson, reload } = useParetoDataset()
+export function ParetoFrontierSection({ publishedDataset }: ParetoFrontierSectionProps) {
+  const { dataset, error, importJson, reload } = useParetoDataset(publishedDataset)
   const [json, setJson] = useState('')
   return (
     <Box component="section" aria-labelledby="pareto-title">
@@ -27,9 +35,12 @@ export function ParetoFrontierSection() {
           <Typography variant="body2" color="text.secondary">
             Compare intelligence with total benchmark cost. Set your targets to highlight high-intelligence, low-cost models.
           </Typography>
-          {loading && <Typography role="status" sx={{ my: 2 }}>Loading chart data…</Typography>}
           {error && <Alert severity="error" sx={{ my: 2 }}>{error}</Alert>}
-          {dataset && <>
+          {dataset.models.length === 0 ? (
+            <Typography variant="body2" color="text.secondary" sx={{ my: 2 }}>
+              No total eval costs are published for {dataset.benchmark_version} models yet, so there is nothing to plot.
+            </Typography>
+          ) : <>
             {dataset.sample && <Alert severity="info" role="status" sx={{ mt: 2 }}>Sample data — fictional models and values for demonstrating the chart. These are not Artificial Analysis results.</Alert>}
             <Typography variant="body2" color="text.secondary" sx={{ mt: 1 }}>{dataset.benchmark_version} · Snapshot {dataset.date}</Typography>
             <ParetoChart key={`${dataset.date}:${dataset.benchmark_version}:${JSON.stringify(dataset.models)}`} dataset={dataset} />
@@ -43,12 +54,12 @@ export function ParetoFrontierSection() {
             <TextField label="Chart JSON" multiline minRows={4} maxRows={12} fullWidth value={json}
               onChange={event => setJson(event.target.value)} sx={{ my: 2 }} />
             <Box sx={{ display: 'flex', gap: 1 }}>
-              <Button variant="outlined" disabled={loading || !json.trim()} onClick={() => importJson(json)}>Apply JSON</Button>
-              <Button disabled={loading} onClick={reload}>Reload published data</Button>
+              <Button variant="outlined" disabled={!json.trim()} onClick={() => importJson(json)}>Apply JSON</Button>
+              <Button onClick={reload}>Reload published data</Button>
             </Box>
-            <Typography variant="caption" component="p" sx={{ mt: 1 }}>Pasted data is a temporary preview, cleared on page refresh. Reload published data to restore the saved snapshot.</Typography>
+            <Typography variant="caption" component="p" sx={{ mt: 1 }}>Pasted data is a temporary preview, cleared on page refresh. Reload published data to restore the selected version's snapshot.</Typography>
           </Box>
-          <Box component="details" open={dataset ? undefined : true} sx={{ mt: 2 }}>
+          <Box component="details" sx={{ mt: 2 }}>
           <Box component="summary" sx={{ cursor: 'pointer', mb: 1 }}>Historical reference image</Box>
           <Box
             component="img"

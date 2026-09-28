@@ -4,6 +4,8 @@ import { useState } from 'react'
 import { ThemeProvider, CssBaseline } from '@mui/material'
 import { theme } from '../../theme'
 import { Dashboard } from '../Dashboard'
+import { HISTORICAL_SNAPSHOTS } from '../HistoricalIntelligenceCharts'
+import { PARETO_SNAPSHOT_DATE, paretoSnapshotFromModels } from '../../models/pareto'
 import { sortModels, nextSortState, openWeightIds, aaVersionsDesc, DEFAULT_SORT, type ModelEntry, type HardwareEntry, type GpuEntry, type MachineEntry, type SortField, type SortState } from '../../models'
 
 const entries: ModelEntry[] = [
@@ -76,6 +78,13 @@ function DashboardController({ initialSort = DEFAULT_SORT, allEntries = entries 
     setOpenWeightsOnly(false)
     setSelectedIds(new Set(allEntries.filter((entry) => entry.aa_version === version).map((entry) => entry.id)))
   }
+  // Mirror App.tsx: the Pareto published snapshot derives from the selected
+  // version's costed rows, dated by the version's chart capture.
+  const paretoDataset = paretoSnapshotFromModels(
+    allEntries,
+    aaVersion,
+    HISTORICAL_SNAPSHOTS.find((snapshot) => snapshot.version === aaVersion)?.captured ?? PARETO_SNAPSHOT_DATE,
+  )
   return (
     <Dashboard
       entries={sorted}
@@ -83,6 +92,7 @@ function DashboardController({ initialSort = DEFAULT_SORT, allEntries = entries 
       aaVersions={aaVersions}
       aaVersion={aaVersion}
       onAAVersionChange={handleAAVersionChange}
+      paretoDataset={paretoDataset}
       sort={sort}
       selectedIds={selectedIds}
       onSortChange={handleSortChange}
@@ -377,6 +387,28 @@ describe('Dashboard', () => {
     // Collapses again on click
     fireEvent.click(header)
     expect(header).toHaveAttribute('aria-expanded', 'false')
+  })
+
+  it('feeds the Pareto Frontier the selected version’s published snapshot', () => {
+    const twoVersions: ModelEntry[] = [
+      { id: 'a:apex', model: 'Apex', score: 60, aa_version: 'v9.9', provider: 'A', open_weight: false, released: '2026-07-01', cost_usd: 950 },
+      { id: 'b:base', model: 'Base', score: 55, aa_version: 'v9.9', provider: 'B', open_weight: false, released: '2026-06-01', cost_usd: 400 },
+      { id: 'a:apex-old', model: 'Apex', score: 55, aa_version: 'v9.8', provider: 'A', open_weight: false, released: '2026-07-01', cost_usd: 700 },
+      { id: 'b:base-old', model: 'Base', score: 50, aa_version: 'v9.8', provider: 'B', open_weight: false, released: '2026-06-01', cost_usd: 300 },
+    ]
+    render(
+      <ThemeProvider theme={theme}>
+        <CssBaseline />
+        <DashboardController allEntries={twoVersions} />
+      </ThemeProvider>,
+    )
+    fireEvent.click(screen.getByRole('button', { name: 'Pareto Frontier' }))
+    const section = screen.getByRole('heading', { name: 'Pareto Frontier' }).closest('section') as HTMLElement
+    expect(within(section).getByText(/Intelligence Index v9\.9 · Snapshot/)).toBeInTheDocument()
+
+    fireEvent.click(screen.getAllByRole('button', { name: 'v9.8' })[0])
+    expect(within(section).getByText(/Intelligence Index v9\.8 · Snapshot/)).toBeInTheDocument()
+    expect(within(section).queryByText(/Intelligence Index v9\.9 · Snapshot/)).not.toBeInTheDocument()
   })
 
   it('sorts news by date desc by default and toggles to asc when the sort label is clicked', () => {

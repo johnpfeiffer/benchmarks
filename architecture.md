@@ -50,9 +50,10 @@ flowchart TD
     Dashboard --> Pareto["ParetoFrontierSection<br/>(collapsed by default)"]
     AA["Artificial Analysis<br/>/models page"] -->|"one model per request"| Benchtool["benchtool aa-model<br/>text or JSON"]
     Benchtool -->|"score + precise total cost, same index version"| AIJSON
-    AIJSON -->|"rows carrying cost_usd"| ParetoMath["models/pareto<br/>(paretoSnapshotFromModels,<br/>frontier and target predicates)"]
-    ParetoMath -->|"default snapshot (sample:false)"| ParetoController["controllers/useParetoDataset"]
-    ParetoController -->|"parseParetoDataset; INV-001"| ParetoData["Validated snapshot"]
+    App -->|"selected version + all rows"| ParetoMath["models/pareto<br/>(paretoSnapshotFromModels,<br/>frontier and target predicates)"]
+    ParetoMath -->|"published snapshot for the selected version (sample:false)"| Dashboard
+    Pareto --> ParetoController["controllers/useParetoDataset<br/>(pasted preview overrides published until reload)"]
+    ParetoController -->|"parseParetoDataset; INV-001"| ParetoData["Validated pasted snapshot"]
     ParetoData --> Pareto
     Pareto --> InteractivePareto["ParetoChart<br/>(log cost, linear intelligence)"]
     ParetoMath --> InteractivePareto
@@ -187,18 +188,24 @@ All views are pure (props in, callbacks out, no business logic):
   state.
 - `ParetoFrontierSection` - outlined accordion between the news and the model
   details table, collapsed by default and user-expandable, titled "Pareto
-  Frontier". The published snapshot is derived at load from the `ai.json` rows
-  carrying `cost_usd` (`paretoSnapshotFromModels` in `models/pareto.ts`,
-  surfaced through `controllers/useParetoDataset`), so the default chart is
-  real measured data (`sample: false`) and stays single-version:
-  `PARETO_SNAPSHOT_AA_VERSION` pins which `aa_version` block the points are
-  drawn from, and each point pairs the score and cost read from the same AA
-  model page under that index version. The snapshot's version/date constants
-  (`PARETO_SNAPSHOT_AA_VERSION`, `PARETO_SNAPSHOT_VERSION`,
-  `PARETO_SNAPSHOT_DATE`) are bumped with each
-  `ai.json` re-snapshot. `models/pareto.ts` validates provider
-  (INV-001), unique model variants, positive finite cost, intelligence 0–100,
-  snapshot date, benchmark version, and explicit sample status.
+  Frontier". The chart follows the Model Details version selector: the
+  controller derives the published snapshot from the selected version's rows
+  carrying `cost_usd` (`paretoSnapshotFromModels(entries, version, date)` in
+  `models/pareto.ts`), dated by the version's chart capture
+  (`HISTORICAL_SNAPSHOTS`; the current ledger uses `PARETO_SNAPSHOT_DATE`,
+  the date its model pages were last read), so the chart is real measured
+  data (`sample: false`) and stays single-version: each point pairs the score
+  and cost read from the same AA model page under that index version. A
+  version with no costed rows shows a notice instead of a chart (the real
+  data's per-version cost coverage is pinned in `data.test.ts`). Pasted data
+  overrides the published snapshot for the browser session, including across
+  version switches, until "Reload published data" restores the selected
+  version's snapshot. `models/pareto.ts` validates pasted imports (provider
+  INV-001, unique model variants, positive finite cost, intelligence 0–100,
+  snapshot date, benchmark version, explicit sample status) via
+  `controllers/useParetoDataset`. The constants `PARETO_SNAPSHOT_AA_VERSION`,
+  `PARETO_SNAPSHOT_VERSION`, and `PARETO_SNAPSHOT_DATE` describe the current
+  ledger default and are bumped with each `ai.json` re-snapshot.
   `ParetoChart` renders an SVG scatter plot with logarithmic USD cost, linear
   intelligence, provider colors, optional labels, and hover/focus/tap details.
   The target inputs start at a $1,000 cost ceiling and an intelligence floor
@@ -326,7 +333,10 @@ the chosen snapshot with no leftover state from another version. The
 "Open Weights"
 preset is a selection: on ->
 `replaceSelection(openWeightIds(...))`; off -> `replaceSelection(allIds)`, so the
-table graying/fading and the chart follow the selection. Mounted at the router
+table graying/fading and the chart follow the selection. The Pareto
+Frontier's published snapshot is derived per selected version
+(`paretoSnapshotFromModels(allIntelligence, aaVersion, capture date)`), so it
+tracks the same toggle as the chart and table. Mounted at the router
 index route (react-router retained).
 
 ## Invariants

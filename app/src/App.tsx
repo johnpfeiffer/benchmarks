@@ -20,6 +20,8 @@ import {
   type SortState,
 } from './models'
 import { Dashboard, type DataSourceCredit } from './views/Dashboard'
+import { HISTORICAL_SNAPSHOTS } from './views/HistoricalIntelligenceCharts'
+import { PARETO_SNAPSHOT_DATE, paretoSnapshotFromModels } from './models/pareto'
 import rawIntelligenceData from './data/ai.json'
 // Historical snapshots: the 2026-09-04 backfill of Intelligence Index v4.2
 // rows, the 2026-08-11 backfill of v4.1.1 rows, the 2026-02-19 backfill of
@@ -146,6 +148,14 @@ function DashboardPage() {
     table.replaceSelection(new Set(filterByAAVersion(allIntelligence, version).map((entry) => entry.id)))
   }
 
+  // The Pareto Frontier follows the selected version: its published snapshot
+  // derives from that version's costed rows, dated by the version's chart
+  // capture (the current ledger uses the date its model pages were last read).
+  const paretoDataset = useMemo(() => {
+    const captured = HISTORICAL_SNAPSHOTS.find((snapshot) => snapshot.version === aaVersion)?.captured
+    return paretoSnapshotFromModels(allIntelligence, aaVersion, captured ?? PARETO_SNAPSHOT_DATE)
+  }, [allIntelligence, aaVersion])
+
   const sources: DataSourceCredit[] = [
     { label: 'Artificial Analysis Intelligence Index v4.3', href: 'https://artificialanalysis.ai/articles/artificial-analysis-intelligence-index-v4-3' },
     { label: 'HuggingFace and Unsloth', href: 'https://huggingface.co/unsloth' },
@@ -181,6 +191,7 @@ function DashboardPage() {
       aaVersions={aaVersions}
       aaVersion={aaVersion}
       onAAVersionChange={handleAAVersionChange}
+      paretoDataset={paretoDataset}
       sort={table.sort}
       selectedIds={table.selectedIds}
       onSortChange={table.handleSortChange}

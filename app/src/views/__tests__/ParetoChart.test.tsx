@@ -2,7 +2,9 @@ import { describe, it, expect } from 'vitest'
 import { fireEvent, render, screen } from '@testing-library/react'
 import { ParetoChart } from '../ParetoChart'
 import { ParetoFrontierSection } from '../ParetoFrontierSection'
-import type { ParetoDataset } from '../../models/pareto'
+import { paretoSnapshotFromModels, type ParetoDataset } from '../../models/pareto'
+import { parseModelEntries } from '../../models'
+import rawIntelligenceData from '../../data/ai.json'
 
 const dataset: ParetoDataset = {
   benchmark_version: 'Example version', date: '2026-09-06', sample: true,
@@ -45,7 +47,9 @@ it('updates targets without changing the frontier and exposes point details to k
 
 describe('Pareto dataset loading', () => {
   it('loads the ai.json-derived snapshot and rejects invalid imports without losing the chart', async () => {
-    render(<ParetoFrontierSection />)
+    // Mirrors App.tsx: the controller derives the published snapshot for the
+    // current ledger version and hands it to the section.
+    render(<ParetoFrontierSection publishedDataset={paretoSnapshotFromModels(parseModelEntries(rawIntelligenceData))} />)
     // Collapsed by default; open the section to reach the chart.
     fireEvent.click(screen.getByRole('button', { name: 'Pareto Frontier' }))
     // The published default is real measured data: no sample banner.
