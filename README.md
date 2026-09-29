@@ -73,7 +73,7 @@ https://web.archive.org/web/20251230102900/https://artificialanalysis.ai/evaluat
 The chart's default snapshot is derived at load time from the
 `app/src/data/ai.json` rows carrying a `cost_usd` field, so it always shows
 real measured data from a single Artificial Analysis Intelligence Index
-version (currently v4.3). `app/src/data/pareto.json` keeps a fictional,
+version (currently v4.3.2). `app/src/data/pareto.json` keeps a fictional,
 clearly labeled sample purely as the paste-format example behind the
 section's download link. The full format and the refresh procedure are
 documented in [docs/pareto-data.md](docs/pareto-data.md).

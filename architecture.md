@@ -106,8 +106,8 @@ snapshot is a 2026-08-11 backfill kept in `data/ai-2026-08-11.json`, the
 v4.0.2 snapshot a 2026-02-19 backfill kept in `data/ai-2026-02-19.json`, and
 the v3.0 snapshot a 2025-12-30 backfill kept in `data/ai-2025-12-30.json`,
 all concatenated with `ai.json` at parse time. `ai.json` itself holds only
-the current ledger (the newest index version, today v4.3); snapshot files
-are never merged into it, so the toggle lists v4.3, v4.2, v4.1.1, v4.0.2, and v3.0. Every row carries a
+the current ledger (the newest index version, today v4.3.2); snapshot files
+are never merged into it, so the toggle lists v4.3.2, v4.2, v4.1.1, v4.0.2, and v3.0. Every row carries a
 verified `released` date sourced from the Artificial Analysis leaderboard
 (`benchtool aa-releases`). A row may also carry `cost_usd`: the precise total
 Artificial Analysis charges to run the index on that model, read from the
@@ -170,7 +170,7 @@ All views are pure (props in, callbacks out, no business logic):
   becomes the union of the chosen vendors' rows (every row when none are
   chosen), and Open Weights narrows that to open-weight models.
 - `Footer` - credits the non-GPU data sources,
-  [Artificial Analysis Intelligence Index v4.3](https://artificialanalysis.ai/articles/artificial-analysis-intelligence-index-v4-3)
+  [Artificial Analysis Intelligence Index v4.3.2](https://artificialanalysis.ai/methodology/intelligence-benchmarking)
   (the label names the newest index version present in `ai.json`; bump both
   the label and the article URL when a new version block lands) and
   [HuggingFace](https://huggingface.co/unsloth), and links to the

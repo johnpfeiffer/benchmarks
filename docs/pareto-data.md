@@ -27,8 +27,8 @@ of the format (the section links to it as a download).
 
 ```json
 {
-  "benchmark_version": "Artificial Analysis Intelligence Index v4.3",
-  "date": "2026-09-13",
+  "benchmark_version": "Artificial Analysis Intelligence Index v4.3.2",
+  "date": "2026-09-29",
   "sample": false,
   "models": [
     { "model": "GLM-5.3 Flash", "provider": "Z AI", "intelligence": 42, "cost_usd": 280.28, "color": "#1c7ff8" }
