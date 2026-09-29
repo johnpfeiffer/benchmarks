@@ -6,7 +6,7 @@ import { theme } from '../../theme'
 import { Dashboard } from '../Dashboard'
 import { HISTORICAL_SNAPSHOTS } from '../HistoricalIntelligenceCharts'
 import { PARETO_SNAPSHOT_DATE, paretoSnapshotFromModels } from '../../models/pareto'
-import { sortModels, nextSortState, openWeightIds, aaVersionsDesc, DEFAULT_SORT, type ModelEntry, type HardwareEntry, type GpuEntry, type MachineEntry, type SortField, type SortState } from '../../models'
+import { sortModels, nextSortState, presetSelectionIds, aaVersionsDesc, DEFAULT_SORT, type ModelEntry, type HardwareEntry, type GpuEntry, type MachineEntry, type SortField, type SortState } from '../../models'
 
 const entries: ModelEntry[] = [
   {
@@ -62,20 +62,30 @@ function DashboardController({ initialSort = DEFAULT_SORT, allEntries = entries 
       return next
     })
   }
+  // Mirror App.tsx: Open Weights and the provider buttons are composable
+  // selection presets (provider union, narrowed by Open Weights).
+  const [providerFilters, setProviderFilters] = useState<ReadonlySet<string>>(new Set())
+  const providers = [...new Set(visible.map((entry) => entry.provider))].sort()
   const handleToggleOpenWeights = () => {
-    if (openWeightsOnly) {
-      setSelectedIds(new Set(visible.map((entry) => entry.id)))
-      setOpenWeightsOnly(false)
-    } else {
-      setSelectedIds(openWeightIds(visible))
-      setOpenWeightsOnly(true)
-    }
+    const next = !openWeightsOnly
+    setOpenWeightsOnly(next)
+    setSelectedIds(presetSelectionIds(visible, providerFilters, next))
+  }
+  const handleToggleProvider = (provider: string) => {
+    setProviderFilters((current) => {
+      const next = new Set(current)
+      if (next.has(provider)) next.delete(provider)
+      else next.add(provider)
+      setSelectedIds(presetSelectionIds(visible, next, openWeightsOnly))
+      return next
+    })
   }
   // Mirror App.tsx: a version switch resets the selection to the shown
-  // version's models and clears the Open Weights preset.
+  // version's models and clears the Open Weights and provider presets.
   const handleAAVersionChange = (version: string) => {
     setAaVersion(version)
     setOpenWeightsOnly(false)
+    setProviderFilters(new Set())
     setSelectedIds(new Set(allEntries.filter((entry) => entry.aa_version === version).map((entry) => entry.id)))
   }
   // Mirror App.tsx: the Pareto published snapshot derives from the selected
@@ -99,6 +109,9 @@ function DashboardController({ initialSort = DEFAULT_SORT, allEntries = entries 
       onToggleEntry={handleToggleEntry}
       openWeightsOnly={openWeightsOnly}
       onToggleOpenWeights={handleToggleOpenWeights}
+      providers={providers}
+      providerFilters={providerFilters}
+      onToggleProvider={handleToggleProvider}
       intelligenceSource={{ label: 'Artificial Analysis', href: 'https://artificialanalysis.ai/' }}
       news={[
         { url: 'https://example.com/newest', date: '2026-07-26' },
@@ -694,6 +707,92 @@ describe('Dashboard', () => {
     expect(screen.getByRole('button', { name: 'Alpha' })).toHaveAttribute('aria-pressed', 'true')
     expect(screen.getByRole('button', { name: 'Beta' })).toHaveAttribute('aria-pressed', 'true')
     expect(screen.getByRole('button', { name: 'Gamma' })).toHaveAttribute('aria-pressed', 'true')
+  })
+
+  it('filters rows by provider with additive and subtractive toggle buttons', () => {
+    renderDashboard()
+    expandModelDetails()
+    const section = intelligenceTable().closest('section') as HTMLElement
+    // One button per provider present in the shown version, alphabetical.
+    const group = within(section).getByRole('group', { name: 'Provider filter' })
+    expect(within(group).getAllByRole('button').map((button) => button.textContent)).toEqual(['Anthropic', 'Google', 'OpenAI'])
+    const provider = (name: string) => within(group).getByRole('button', { name })
+    const pressed = (model: string) =>
+      within(intelligenceTable()).getByRole('button', { name: model }).getAttribute('aria-pressed')
+
+    // Single provider: only its rows stay selected (and in the chart).
+    fireEvent.click(provider('Google'))
+    expect(provider('Google')).toHaveAttribute('aria-pressed', 'true')
+    expect([pressed('Alpha'), pressed('Beta'), pressed('Gamma')]).toEqual(['false', 'false', 'true'])
+
+    // Additive: Anthropic joins Google.
+    fireEvent.click(provider('Anthropic'))
+    expect([pressed('Alpha'), pressed('Beta'), pressed('Gamma')]).toEqual(['true', 'false', 'true'])
+
+    // Subtractive: removing Google leaves Anthropic.
+    fireEvent.click(provider('Google'))
+    expect([pressed('Alpha'), pressed('Beta'), pressed('Gamma')]).toEqual(['true', 'false', 'false'])
+
+    // Toggling the last provider off restores the full selection.
+    fireEvent.click(provider('Anthropic'))
+    expect(provider('Anthropic')).toHaveAttribute('aria-pressed', 'false')
+    expect([pressed('Alpha'), pressed('Beta'), pressed('Gamma')]).toEqual(['true', 'true', 'true'])
+  })
+
+  it('composes the provider filter with the Open Weights preset', () => {
+    renderDashboard()
+    expandModelDetails()
+    const section = intelligenceTable().closest('section') as HTMLElement
+    const provider = (name: string) => within(section).getByRole('button', { name })
+    const pressed = (model: string) =>
+      within(intelligenceTable()).getByRole('button', { name: model }).getAttribute('aria-pressed')
+
+    fireEvent.click(provider('Anthropic'))
+    fireEvent.click(provider('OpenAI'))
+    expect([pressed('Alpha'), pressed('Beta'), pressed('Gamma')]).toEqual(['true', 'true', 'false'])
+
+    // Open Weights narrows the chosen providers to their open-weight rows
+    // (Alpha is the fixture's only open-weight model).
+    fireEvent.click(provider('Open Weights'))
+    expect([pressed('Alpha'), pressed('Beta'), pressed('Gamma')]).toEqual(['true', 'false', 'false'])
+
+    // Toggling Open Weights back off keeps the provider filter intact.
+    fireEvent.click(provider('Open Weights'))
+    expect([pressed('Alpha'), pressed('Beta'), pressed('Gamma')]).toEqual(['true', 'true', 'false'])
+  })
+
+  it('keeps the accordion collapsed when a provider button is clicked and clears providers on version switch', () => {
+    const twoVersions: ModelEntry[] = [
+      { id: 'a:apex', model: 'Apex', score: 60, aa_version: 'v9.9', provider: 'A', open_weight: false, released: '2026-07-01' },
+      { id: 'b:base', model: 'Base', score: 55, aa_version: 'v9.9', provider: 'B', open_weight: false, released: '2026-06-01' },
+      { id: 'a:apex-old', model: 'Apex', score: 55, aa_version: 'v9.8', provider: 'A', open_weight: false, released: '2026-07-01' },
+      { id: 'b:base-old', model: 'Base', score: 50, aa_version: 'v9.8', provider: 'B', open_weight: false, released: '2026-06-01' },
+    ]
+    render(
+      <ThemeProvider theme={theme}>
+        <CssBaseline />
+        <DashboardController allEntries={twoVersions} />
+      </ThemeProvider>,
+    )
+    const summary = screen.getByRole('button', { name: /Model Details/i })
+    const provider = (name: string) => screen.getByRole('button', { name })
+
+    // The summary's provider buttons work without expanding the accordion.
+    expect(summary).toHaveAttribute('aria-expanded', 'false')
+    fireEvent.click(provider('A'))
+    expect(summary).toHaveAttribute('aria-expanded', 'false')
+    expect(provider('A')).toHaveAttribute('aria-pressed', 'true')
+
+    expandModelDetails()
+    expect([within(intelligenceTable()).getByRole('button', { name: 'Apex' }).getAttribute('aria-pressed'),
+      within(intelligenceTable()).getByRole('button', { name: 'Base' }).getAttribute('aria-pressed')]).toEqual(['true', 'false'])
+
+    // A version switch clears the provider preset and selects the full shown
+    // version (same rule as the Open Weights preset).
+    fireEvent.click(screen.getAllByRole('button', { name: 'v9.8' })[0])
+    expect(provider('A')).toHaveAttribute('aria-pressed', 'false')
+    expect([within(intelligenceTable()).getByRole('button', { name: 'Apex' }).getAttribute('aria-pressed'),
+      within(intelligenceTable()).getByRole('button', { name: 'Base' }).getAttribute('aria-pressed')]).toEqual(['true', 'true'])
   })
 
   it('renders the HuggingFace Estimated Hardware section with chart and table', () => {

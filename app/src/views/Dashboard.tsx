@@ -34,6 +34,11 @@ interface DashboardProps {
   onToggleEntry: (id: string) => void
   openWeightsOnly: boolean
   onToggleOpenWeights: () => void
+  /** Providers present in the shown version, alphabetical. */
+  providers: readonly string[]
+  /** Providers whose rows are selected (empty = no provider filter). */
+  providerFilters: ReadonlySet<string>
+  onToggleProvider: (provider: string) => void
   news: readonly NewsEntry[]
   hardware: readonly HardwareEntry[]
   hardwareSource: DataSourceCredit
@@ -68,6 +73,9 @@ export function Dashboard({
   onToggleEntry,
   openWeightsOnly,
   onToggleOpenWeights,
+  providers,
+  providerFilters,
+  onToggleProvider,
   news,
   hardware,
   hardwareSource,
@@ -137,6 +145,9 @@ export function Dashboard({
           title="Model Details"
           openWeightsOnly={openWeightsOnly}
           onToggleOpenWeights={onToggleOpenWeights}
+          providers={providers}
+          providerFilters={providerFilters}
+          onToggleProvider={onToggleProvider}
         />
       </Box>
 
