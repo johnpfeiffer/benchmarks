@@ -44,6 +44,7 @@
   {"model": "Qwen3.6 27B", "intelligence_score": 21, "aa_version": "v4.3.2", "cost_usd": 1145.36, "provider": "Alibaba", "open_weight": true, "color": "#ff7018", "released": "2026-04-22"},
   {"model": "Qwen3.5 397B A17B", "intelligence_score": 18, "aa_version": "v4.3.2", "cost_usd": 940.97, "provider": "Alibaba", "open_weight": true, "color": "#F54F35", "released": "2026-02-16"},
   {"model": "Claude 4.5 Haiku", "intelligence_score": 15, "aa_version": "v4.3.2", "provider": "Anthropic", "open_weight": false, "color": "#cc785c", "released": "2025-10-15"},
+  {"model": "Gemma 4 31B", "intelligence_score": 15, "aa_version": "v4.3.2", "provider": "Google", "open_weight": true, "color": "#34A853", "released": "2026-04-02"},
   {"model": "Mistral Medium 3.5", "intelligence_score": 14, "aa_version": "v4.3.2", "cost_usd": 1263.8, "provider": "Mistral", "open_weight": true, "color": "#FF7000", "released": "2026-04-29"},
   {"model": "gpt-oss-120b (high)", "intelligence_score": 12, "aa_version": "v4.3.2", "cost_usd": 122.29, "provider": "Cerebras", "open_weight": true, "color": "#1f1f1f", "released": "2025-08-05"}
 ]
