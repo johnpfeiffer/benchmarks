@@ -120,7 +120,7 @@ describe('acceptance: every JSON row appears in the UI', () => {
     fireEvent.click(versionButton(latestVersion))
     expect(within(table).getAllByRole('row')).toHaveLength(latestIntelligence.length + 1)
     expect(within(table).queryByRole('button', { name: 'Claude Opus 4.6 (max)' })).not.toBeInTheDocument()
-    expect(versions).toEqual(['v4.3', 'v4.2', 'v4.1.1', 'v4.0.2', 'v3.0'])
+    expect(versions).toEqual(['v4.3.2', 'v4.2', 'v4.1.1', 'v4.0.2', 'v3.0'])
   })
 
   it('selects every model of the shown version after mixing the Open Weights preset with version switches', () => {
@@ -134,7 +134,7 @@ describe('acceptance: every JSON row appears in the UI', () => {
     const openWeights = () => within(section).getByRole('button', { name: 'Open Weights' })
     const versionButton = (version: string) => screen.getAllByRole('button', { name: version })[0]
 
-    fireEvent.click(openWeights()) // preset on: only open-weight v4.3 models
+    fireEvent.click(openWeights()) // preset on: only open-weight v4.3.2 models
     fireEvent.click(versionButton('v3.0'))
     fireEvent.click(openWeights()) // preset on for v3.0
     fireEvent.click(versionButton('v4.2'))
@@ -177,7 +177,9 @@ describe('acceptance: every JSON row appears in the UI', () => {
     // Toggling the last provider off restores the full selection.
     fireEvent.click(vendor('Google'))
     assertSelection(() => true)
-  })
+    // ~140 row assertions over a full App render: exceeds the 5s default
+    // under parallel-suite load, so this test carries an explicit budget.
+  }, 15000)
 
   it('shows the predate note on versions with historical chart captures and expands the section when clicked', () => {
     render(<App />)
@@ -217,7 +219,7 @@ describe('acceptance: every JSON row appears in the UI', () => {
     expandSection(/Pareto Frontier/)
     const section = screen.getByRole('heading', { name: 'Pareto Frontier' }).closest('section') as HTMLElement
     // Newest version by default: the current ledger dated by its page reads.
-    expect(within(section).getByText(/Intelligence Index v4\.3 · Snapshot 2026-09-13/)).toBeInTheDocument()
+    expect(within(section).getByText(/Intelligence Index v4\.3\.2 · Snapshot 2026-09-29/)).toBeInTheDocument()
     // Historical versions are dated by their chart capture.
     fireEvent.click(screen.getAllByRole('button', { name: 'v4.2' })[0])
     expect(within(section).getByText(/Intelligence Index v4\.2 · Snapshot 2026-09-04/)).toBeInTheDocument()
@@ -297,7 +299,7 @@ describe('acceptance: every JSON row appears in the UI', () => {
   it('credits the Artificial Analysis Intelligence Index with its version number in the footer', () => {
     render(<App />)
     const footer = screen.getByRole('contentinfo')
-    const credit = within(footer).getByRole('link', { name: 'Artificial Analysis Intelligence Index v4.3' })
-    expect(credit).toHaveAttribute('href', 'https://artificialanalysis.ai/articles/artificial-analysis-intelligence-index-v4-3')
+    const credit = within(footer).getByRole('link', { name: 'Artificial Analysis Intelligence Index v4.3.2' })
+    expect(credit).toHaveAttribute('href', 'https://artificialanalysis.ai/methodology/intelligence-benchmarking')
   })
 })

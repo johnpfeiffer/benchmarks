@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest'
-import { paretoFrontier, paretoFrontierTrail, parseParetoDataset, meetsParetoTarget, paretoSnapshotFromModels, PARETO_SNAPSHOT_DATE, PARETO_SNAPSHOT_VERSION } from '../pareto'
+import { paretoFrontier, paretoFrontierTrail, parseParetoDataset, meetsParetoTarget, paretoSnapshotFromModels, PARETO_SNAPSHOT_AA_VERSION, PARETO_SNAPSHOT_DATE, PARETO_SNAPSHOT_VERSION } from '../pareto'
 import type { ModelEntry } from '../types'
 
 const rows = [
@@ -51,8 +51,8 @@ describe('Pareto comparison', () => {
 
 describe('paretoSnapshotFromModels', () => {
   const entries: ModelEntry[] = [
-    { id: 'a:x', model: 'X', score: 50, aa_version: 'v4.3', provider: 'A', open_weight: true, released: null, cost_usd: 300, color: '#112233' },
-    { id: 'a:y', model: 'Y', score: 60, aa_version: 'v4.3', provider: 'A', open_weight: false, released: null },
+    { id: 'a:x', model: 'X', score: 50, aa_version: PARETO_SNAPSHOT_AA_VERSION, provider: 'A', open_weight: true, released: null, cost_usd: 300, color: '#112233' },
+    { id: 'a:y', model: 'Y', score: 60, aa_version: PARETO_SNAPSHOT_AA_VERSION, provider: 'A', open_weight: false, released: null },
     { id: 'a:x-old', model: 'X', score: 55, aa_version: 'v4.2', provider: 'A', open_weight: true, released: null, cost_usd: 250 },
   ]
 
