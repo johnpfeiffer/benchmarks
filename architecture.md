@@ -68,7 +68,7 @@ flowchart TD
     Dashboard --> HWTable["HardwareTable<br/>(sortable hardware details)"]
     Dashboard --> GPUTable["GpuTable<br/>(collapsible + sortable GPU specs)"]
     Dashboard --> LocalHW["LocalHardwareTable<br/>(sortable local machines)"]
-    Dashboard --> Footer["Footer (source credits)"]
+    Dashboard --> Footer["Footer (source credits + shared SiteFooter from johnutilsjs/ui)"]
     Table -->|onSortChange / onToggleEntry| App
 ```
 
@@ -174,7 +174,7 @@ All views are pure (props in, callbacks out, no business logic):
   (`providerColorMap`), so the buttons double as the chart's color key; the
   outline is an inline style so MUI's selected/hover styles never override
   it.
-- `Footer` - credits the non-GPU data sources,
+- `Footer` - composes the shared `SiteFooter` (`johnutilsjs/ui`, `repo="benchmarks"`, centered built-by line + source links) with the credits for the non-GPU data sources,
   [Artificial Analysis Intelligence Index v4.3.2](https://artificialanalysis.ai/methodology/intelligence-benchmarking)
   (the label names the newest index version present in `ai.json`; bump both
   the label and the article URL when a new version block lands) and
