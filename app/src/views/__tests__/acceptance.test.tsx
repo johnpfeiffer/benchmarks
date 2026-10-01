@@ -164,6 +164,11 @@ describe('acceptance: every JSON row appears in the UI', () => {
       }
     }
 
+    // Each button's outline is its provider's bar color (the chart color
+    // key), independent of toggle state.
+    expect(vendor('Alibaba')).toHaveStyle({ borderColor: '#F54F35' })
+    expect(vendor('Google')).toHaveStyle({ borderColor: '#34A853' })
+
     // A single vendor button selects exactly that vendor's rows; the others
     // gray out, like the Open Weights preset.
     fireEvent.click(vendor('Alibaba'))
@@ -293,6 +298,32 @@ describe('acceptance: every JSON row appears in the UI', () => {
       if (m.price_usd !== null) {
         expect(row.textContent).toContain(`$${m.price_usd.toLocaleString('en-US')}`)
       }
+    }
+  })
+
+  it('navigates via a fixed section menu whose anchor links all resolve on the page', () => {
+    render(<App />)
+    fireEvent.click(screen.getByRole('button', { name: 'Section menu' }))
+    const menu = screen.getByRole('menu')
+    // MUI Menu assigns role="menuitem" to its items even though they render
+    // as <a href="#..."> anchors.
+    const links = within(menu).getAllByRole('menuitem')
+    expect(links.map((link) => link.textContent)).toEqual([
+      'Intelligence chart',
+      'Model Details',
+      'Hand Picked News',
+      'Pareto Frontier',
+      'Historical charts',
+      'Estimated Hardware',
+      'GPU Hardware',
+      'Local Hardware',
+      'Sources',
+    ])
+    // Every menu entry must target a section id that actually exists.
+    for (const link of links) {
+      const href = link.getAttribute('href') ?? ''
+      expect(href.startsWith('#')).toBe(true)
+      expect(document.querySelector(href), `${link.textContent} -> ${href}`).not.toBeNull()
     }
   })
 

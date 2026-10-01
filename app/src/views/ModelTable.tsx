@@ -1,3 +1,4 @@
+import { useMemo } from 'react'
 import ExpandMoreIcon from '@mui/icons-material/ExpandMore'
 import {
   Accordion,
@@ -16,6 +17,7 @@ import {
   ToggleButtonGroup,
   Typography,
 } from '@mui/material'
+import { providerColorMap } from '../models'
 import type { SortField, SortState } from '../models'
 import type { ModelEntry } from '../models'
 
@@ -66,8 +68,11 @@ const formatCost = (value: number) =>
  * Weights" toggle sits immediately to the right of the title in the accordion
  * summary, followed by one additive/subtractive toggle button per provider
  * present in the shown version; clicking them does not toggle the accordion.
+ * Each provider button's outline carries the provider's chart bar color, so
+ * the buttons double as the color key for the bar chart above.
  */
 export function ModelTable({ entries, aaVersions, aaVersion, onAAVersionChange, sort, onSortChange, selectedIds, onToggleEntry, title, openWeightsOnly, onToggleOpenWeights, providers, providerFilters, onToggleProvider }: ModelTableProps) {
+  const providerColors = useMemo(() => providerColorMap(entries), [entries])
   return (
     <Box>
       <Accordion disableGutters variant="outlined">
@@ -118,6 +123,10 @@ export function ModelTable({ entries, aaVersions, aaVersion, onAAVersionChange, 
                     value={provider}
                     selected={providerFilters.has(provider)}
                     onClick={(e) => { e.stopPropagation(); onToggleProvider(provider) }}
+                    // The outline is the provider's bar color: an inline
+                    // style, not sx, so MUI's selected/hover class styles
+                    // never override the color key.
+                    style={{ borderColor: providerColors.get(provider) }}
                     sx={{ textTransform: 'none' }}
                   >
                     {provider}

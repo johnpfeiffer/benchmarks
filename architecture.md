@@ -47,6 +47,7 @@ flowchart TD
     Models -->|INV-001 gate| Validated["ModelEntry[] per source"]
     App -->|sorted table rows + selected ids| Dashboard["views/Dashboard"]
     Dashboard --> ChartA["IntelligenceBarChart<br/>(Artificial Analysis)"]
+    Dashboard --> Menu["SectionMenu<br/>(fixed hamburger, top right; anchor link per section)"]
     Dashboard --> News["NewsSection<br/>(collapsed; top-3 preview always visible)"]
     Dashboard --> Pareto["ParetoFrontierSection<br/>(collapsed by default)"]
     AA["Artificial Analysis<br/>/models page"] -->|"one model per request"| Benchtool["benchtool aa-model<br/>text or JSON"]
@@ -80,7 +81,7 @@ flowchart TD
 | `merge.ts` | `mergeHardwareIntelligence`, `modelMatchKey`; attaches each hardware row's intelligence score via a normalized model-name match with a unique-prefix fallback. `modelMatchKey` ignores parenthetical effort suffixes and "preview". Callers pass the newest version's block only (see `App.tsx`), since a hardware row carries a single score |
 | `version.ts` | `compareAAVersions`, `aaVersionsDesc`, `filterByAAVersion`; numeric newest-first ordering of the `aa_version` tags present in a row set, and the per-version row slice the dashboard renders |
 | `sort.ts` | `sortModels`, `nextSortState`, `DEFAULT_SORT` (score desc) |
-| `filter.ts` | `openWeightIds`, `presetSelectionIds`; the id sets behind the "Open Weights" and provider presets (the union of the chosen providers' rows, intersected with the open-weight rows when that preset is on) |
+| `filter.ts` | `openWeightIds`, `presetSelectionIds`; the id sets behind the "Open Weights" and provider presets (the union of the chosen providers' rows, intersected with the open-weight rows when that preset is on). `providerColorMap` maps each provider to its chart bar color (first row with a color wins) for the provider buttons' outlines |
 | `index.ts` | Public re-exports |
 
 `data/ai.json` tracks the Artificial Analysis Intelligence Index, keeping one
@@ -168,7 +169,11 @@ All views are pure (props in, callbacks out, no business logic):
   (alphabetical, grouped as "Provider filter"); clicking them does not toggle
   the accordion. The provider buttons are additive/subtractive: the selection
   becomes the union of the chosen vendors' rows (every row when none are
-  chosen), and Open Weights narrows that to open-weight models.
+  chosen), and Open Weights narrows that to open-weight models. Each
+  provider button's outline is the provider's chart bar color
+  (`providerColorMap`), so the buttons double as the chart's color key; the
+  outline is an inline style so MUI's selected/hover styles never override
+  it.
 - `Footer` - credits the non-GPU data sources,
   [Artificial Analysis Intelligence Index v4.3.2](https://artificialanalysis.ai/methodology/intelligence-benchmarking)
   (the label names the newest index version present in `ai.json`; bump both
@@ -245,7 +250,9 @@ All views are pure (props in, callbacks out, no business logic):
   across models, sourced from Unsloth GGUF releases on HuggingFace. Entries
   are sorted by total params descending (largest first, left to right).
   Models without a given quant appear on the x-axis but their bars are
-  omitted. Includes a source chip linking to HuggingFace.
+  omitted. The size axis is capped at 1,500 GB so the trillion-param giants
+  do not flatten the smaller models' bars. Includes a source chip linking
+  to HuggingFace.
 - `HardwareTable` - sortable table of hardware details titled "Unsloth Open
   Weight Hosting Sizes"; headers `Model`,
   `Provider`, `Intelligence`, `Total Params`, `UD-IQ1_M (GB)`,
@@ -286,12 +293,11 @@ All views are pure (props in, callbacks out, no business logic):
   (`public/images/2025-12-30-artificial-analysis-index*.png`), via relative
   `images/...` URLs (same `<base
   href="/benchmarks/">` contract as the Pareto reference image), with alt
-  text and a caption crediting Artificial Analysis with the capture date.
-  Each snapshot block opens with a brief `highlights` summary of that
-  version's story, ahead of its caption and captures. Each block's credit
-  links to that version's methodology page archived on
-  the Wayback Machine (AA replaces the live page when a new methodology
-  ships). Expansion is controlled by the Dashboard: when the version selector
+  text. Each snapshot block opens with one bold header — the capture date,
+  the version, and "Artificial Analysis Highlights:" — linking to that
+  version's methodology page archived on the Wayback Machine (AA replaces
+  the live page when a new methodology ships), followed by the `highlights`
+  summary text and the captures. Expansion is controlled by the Dashboard: when the version selector
   shows a version with captures (`HISTORICAL_AA_VERSIONS`: v4.2, v4.1.1,
   v4.0.2, v3.0), a "Scores and costs predate the current index version" link appears
   below the chart and opens this section via its `#historical-aa-title`

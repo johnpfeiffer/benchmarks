@@ -22,6 +22,8 @@ export function Footer({ sources }: FooterProps) {
   return (
     <Box
       component="footer"
+      // The section menu's "Sources" entry anchors here.
+      id="sources-footer"
       sx={{
         mt: 4,
         py: 2,
