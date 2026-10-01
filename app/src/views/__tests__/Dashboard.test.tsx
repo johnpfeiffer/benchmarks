@@ -182,7 +182,8 @@ describe('Dashboard', () => {
       'https://artificialanalysis.ai/articles/artificial-analysis-intelligence-index-v4-3',
     )
     expect(footerCredit).toHaveTextContent('Intelligence Index v4.3')
-    const githubLink = screen.getByRole('link', { name: /GitHub repository/i })
+    expect(within(screen.getByRole('contentinfo')).getByText(/Built by John Pfeiffer/i)).toBeInTheDocument()
+    const githubLink = screen.getByRole('link', { name: /Source code on GitHub/i })
     expect(githubLink).toHaveAttribute('href', 'https://github.com/johnpfeiffer/benchmarks')
     expect(githubLink.querySelector('svg')).toBeInTheDocument()
   })
