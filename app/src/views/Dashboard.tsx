@@ -12,6 +12,7 @@ import { HardwareChart } from './HardwareChart'
 import { HardwareTable } from './HardwareTable'
 import { GpuTable } from './GpuTable'
 import { LocalHardwareTable } from './LocalHardwareTable'
+import { SectionMenu } from './SectionMenu'
 
 export interface DataSourceCredit {
   label: string
@@ -91,6 +92,8 @@ export function Dashboard({
   const [historicalExpanded, setHistoricalExpanded] = useState(false)
   return (
     <Container maxWidth={false} sx={{ py: 3, px: { xs: 2, md: 3 } }}>
+      {/* The page is long; the fixed hamburger is its only navigation. */}
+      <SectionMenu />
       <Box sx={{ mb: 3 }}>
         <Typography variant="h4" component="h1">
           AI Model Benchmarks

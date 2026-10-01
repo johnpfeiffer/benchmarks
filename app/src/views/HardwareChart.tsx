@@ -79,7 +79,10 @@ export function HardwareChart({ entries, source }: HardwareChartProps) {
                 height: 110,
               },
             ]}
-            yAxis={[{ label: 'Size (GB)' }]}
+            // Cap the axis at 1,500 GB: the few trillion-param models tower
+            // over everything else, and the smaller models' bars vanished
+            // into the baseline when they set the scale.
+            yAxis={[{ label: 'Size (GB)', max: 1500 }]}
             margin={{ left: 60, right: 24, top: source ? 48 : 24, bottom: 8 }}
             grid={{ horizontal: true }}
             borderRadius={2}

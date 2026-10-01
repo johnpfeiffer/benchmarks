@@ -18,10 +18,11 @@ const entries: ModelEntry[] = [
     open_weight: true,
     released: '2026-07-01',
     cost_usd: 950,
+    color: '#cc785c',
   },
   // Beta has no measured benchmark cost: its cost cell renders "*".
-  { id: 'openai:beta', model: 'Beta', score: 50, aa_version: 'v9.9', provider: 'OpenAI', open_weight: false, released: null },
-  { id: 'google:gamma', model: 'Gamma', score: 55, aa_version: 'v9.9', provider: 'Google', open_weight: false, released: '2026-03-15', cost_usd: 1200 },
+  { id: 'openai:beta', model: 'Beta', score: 50, aa_version: 'v9.9', provider: 'OpenAI', open_weight: false, released: null, color: '#1f1f1f' },
+  { id: 'google:gamma', model: 'Gamma', score: 55, aa_version: 'v9.9', provider: 'Google', open_weight: false, released: '2026-03-15', cost_usd: 1200, color: '#34A853' },
 ]
 
 const hardwareEntries: HardwareEntry[] = [
@@ -571,33 +572,37 @@ describe('Dashboard', () => {
     expect(v42Index.compareDocumentPosition(v411Index) & Node.DOCUMENT_POSITION_FOLLOWING).toBeTruthy()
     expect(v411Index.compareDocumentPosition(v402Index) & Node.DOCUMENT_POSITION_FOLLOWING).toBeTruthy()
     expect(v402Index.compareDocumentPosition(v30Index) & Node.DOCUMENT_POSITION_FOLLOWING).toBeTruthy()
-    expect(within(section).getAllByText(/captured 2026-09-04/).length).toBeGreaterThan(0)
-    expect(within(section).getAllByText(/captured 2026-08-11/).length).toBeGreaterThan(0)
-    expect(within(section).getAllByText(/captured 2026-02-19/).length).toBeGreaterThan(0)
-    expect(within(section).getAllByText(/captured 2025-12-30/).length).toBeGreaterThan(0)
-    // Each block credits Artificial Analysis via its version's archived
-    // methodology page, newest snapshot first.
-    const credits = within(section).getAllByRole('link', { name: 'Artificial Analysis' })
-    expect(credits).toHaveLength(4)
-    expect(credits[0]).toHaveAttribute(
+    // Each block opens with one bold header carrying capture date, version,
+    // and source, linking to that version's archived methodology page,
+    // newest snapshot first. The redundant caption sentence was removed.
+    const headers = [
+      within(section).getByRole('link', { name: '2026-09-04 v4.2 Artificial Analysis Highlights:' }),
+      within(section).getByRole('link', { name: '2026-08-11 v4.1.1 Artificial Analysis Highlights:' }),
+      within(section).getByRole('link', { name: '2026-02-19 v4.0.2 Artificial Analysis Highlights:' }),
+      within(section).getByRole('link', { name: '2025-12-30 v3.0 Artificial Analysis Highlights:' }),
+    ]
+    expect(headers[0]).toHaveAttribute(
       'href',
       'https://web.archive.org/web/20260907075638/https://artificialanalysis.ai/methodology/intelligence-benchmarking',
     )
-    expect(credits[1]).toHaveAttribute(
+    expect(headers[1]).toHaveAttribute(
       'href',
       'https://web.archive.org/web/20260811173412/https://artificialanalysis.ai/methodology/intelligence-benchmarking',
     )
-    expect(credits[2]).toHaveAttribute(
+    expect(headers[2]).toHaveAttribute(
       'href',
       'https://web.archive.org/web/20260217215328/https://artificialanalysis.ai/methodology/intelligence-benchmarking',
     )
-    expect(credits[3]).toHaveAttribute(
+    expect(headers[3]).toHaveAttribute(
       'href',
       'https://web.archive.org/web/20251229181306/https://artificialanalysis.ai/methodology/intelligence-benchmarking',
     )
+    expect(headers[0].compareDocumentPosition(headers[1]) & Node.DOCUMENT_POSITION_FOLLOWING).toBeTruthy()
+    expect(headers[1].compareDocumentPosition(headers[2]) & Node.DOCUMENT_POSITION_FOLLOWING).toBeTruthy()
+    expect(headers[2].compareDocumentPosition(headers[3]) & Node.DOCUMENT_POSITION_FOLLOWING).toBeTruthy()
 
     // Each block opens with its version's highlights summary, ahead of the
-    // caption and the captures.
+    // captures.
     const v42Highlights = within(section).getByText(/Fable 5\.1 and GPT-6 Astra dominate/)
     expect(within(section).getByText(/Open weight models close the gap/)).toBeInTheDocument()
     expect(within(section).getByText(/Opus 4\.6 \(max\) is the best model in the world/)).toBeInTheDocument()
@@ -719,6 +724,12 @@ describe('Dashboard', () => {
     const provider = (name: string) => within(group).getByRole('button', { name })
     const pressed = (model: string) =>
       within(intelligenceTable()).getByRole('button', { name: model }).getAttribute('aria-pressed')
+
+    // Each button's outline is its provider's bar color: the buttons double
+    // as the chart's color key, in any toggle state.
+    expect(provider('Anthropic')).toHaveStyle({ borderColor: '#cc785c' })
+    expect(provider('Google')).toHaveStyle({ borderColor: '#34A853' })
+    expect(provider('OpenAI')).toHaveStyle({ borderColor: '#1f1f1f' })
 
     // Single provider: only its rows stay selected (and in the chart).
     fireEvent.click(provider('Google'))

@@ -27,3 +27,16 @@ export function presetSelectionIds(
       .map((entry) => entry.id),
   )
 }
+
+/**
+ * The chart bar color per provider, first row with a color wins. Used by the
+ * Model Details provider filter buttons, whose outlines carry the provider's
+ * color as a color key for the chart bars.
+ */
+export function providerColorMap(entries: readonly ModelEntry[]): ReadonlyMap<string, string> {
+  const map = new Map<string, string>()
+  for (const entry of entries) {
+    if (entry.color && !map.has(entry.provider)) map.set(entry.provider, entry.color)
+  }
+  return map
+}

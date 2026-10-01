@@ -135,19 +135,19 @@ export function HistoricalIntelligenceCharts({ expanded, onExpandedChange }: His
           <Box sx={{ display: 'flex', flexDirection: 'column', gap: 4 }}>
             {HISTORICAL_SNAPSHOTS.map((snapshot) => (
               <Box key={snapshot.version}>
-                <Typography variant="body2" sx={{ mb: 1 }}>
-                  <Box component="span" sx={{ fontWeight: 700 }}>
-                    Highlights:
-                  </Box>{' '}
+                <Typography variant="body2" sx={{ mb: 2 }}>
+                  {/* One bold header carries capture date, version, and
+                      source, linking to that version's archived methodology
+                      page; the caption sentence it replaced was redundant. */}
+                  <Link
+                    href={snapshot.methodologyUrl}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    sx={{ fontWeight: 700 }}
+                  >
+                    {snapshot.captured} {snapshot.version} Artificial Analysis Highlights:
+                  </Link>{' '}
                   {snapshot.highlights}
-                </Typography>
-                <Typography variant="body2" color="text.secondary" sx={{ mb: 2 }}>
-                  Intelligence Index {snapshot.version} charts captured {snapshot.captured} from{' '}
-                  <Link href={snapshot.methodologyUrl} target="_blank" rel="noopener noreferrer">
-                    Artificial Analysis
-                  </Link>
-                  . Scores and costs predate the current index version; use the version toggle in the
-                  Model Details section for the {snapshot.version} numbers in interactive form.
                 </Typography>
                 <Box sx={{ display: 'flex', flexDirection: 'column', gap: 2 }}>
                   <Box

@@ -1,5 +1,5 @@
 import { describe, it, expect } from 'vitest'
-import { openWeightIds, presetSelectionIds } from '../filter'
+import { openWeightIds, presetSelectionIds, providerColorMap } from '../filter'
 import type { ModelEntry } from '../types'
 
 const entries: ModelEntry[] = [
@@ -65,5 +65,25 @@ describe('presetSelectionIds', () => {
     presetSelectionIds(input, providers, false)
     expect(input).toEqual(entries)
     expect(providers).toEqual(new Set(['Google']))
+  })
+})
+
+describe('providerColorMap', () => {
+  const colored: ModelEntry[] = [
+    { id: 'a:1', model: 'One', score: 60, aa_version: 'v9.9', provider: 'Anthropic', open_weight: true, released: null, color: '#cc785c' },
+    { id: 'a:2', model: 'Two', score: 50, aa_version: 'v9.9', provider: 'Anthropic', open_weight: false, released: null, color: '#ffffff' },
+    { id: 'o:1', model: 'Three', score: 55, aa_version: 'v9.9', provider: 'OpenAI', open_weight: false, released: null, color: '#1f1f1f' },
+    { id: 'g:1', model: 'Four', score: 40, aa_version: 'v9.9', provider: 'Google', open_weight: true, released: null },
+  ]
+
+  it('maps each provider to its bar color, first row with a color wins', () => {
+    expect(providerColorMap(colored)).toEqual(new Map([
+      ['Anthropic', '#cc785c'],
+      ['OpenAI', '#1f1f1f'],
+    ]))
+  })
+
+  it('returns an empty map when no rows carry a color', () => {
+    expect(providerColorMap(entries)).toEqual(new Map())
   })
 })
