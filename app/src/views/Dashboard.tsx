@@ -1,6 +1,6 @@
 import { useState } from 'react'
 import { Box, Container, Link, Typography } from '@mui/material'
-import type { GpuEntry, HardwareEntry, MachineEntry, ModelEntry, NewsEntry, SortField, SortState } from '../models'
+import type { DecisionEntry, GpuEntry, HardwareEntry, MachineEntry, ModelEntry, NewsEntry, SortField, SortState } from '../models'
 import type { ParetoDataset } from '../models/pareto'
 import { IntelligenceBarChart } from './IntelligenceBarChart'
 import { ModelTable } from './ModelTable'
@@ -22,6 +22,9 @@ export interface DataSourceCredit {
 interface DashboardProps {
   entries: readonly ModelEntry[]
   intelligenceChartEntries: readonly ModelEntry[]
+  /** Decision Index rows, highest score first (parser's canonical order). */
+  decisionEntries: readonly DecisionEntry[]
+  decisionSource: DataSourceCredit
   /** Index versions present in ai.json, newest first. */
   aaVersions: readonly string[]
   /** The version currently shown in the chart and details table. */
@@ -64,6 +67,8 @@ interface DashboardProps {
 export function Dashboard({
   entries,
   intelligenceChartEntries,
+  decisionEntries,
+  decisionSource,
   aaVersions,
   aaVersion,
   onAAVersionChange,
@@ -101,6 +106,30 @@ export function Dashboard({
         <Typography variant="body2" color="text.secondary" sx={{ fontStyle: 'italic' }}>
           Best effort on a moving target - your own use cases and evals may differ
         </Typography>
+      </Box>
+
+      {/* Decision models lead the page: the newest index, chart only. */}
+      <Box component="section" aria-labelledby="decision-index-title" sx={{ mb: 4 }}>
+        <Box sx={{ display: 'flex', alignItems: 'center', gap: 1, mb: 1, flexWrap: 'wrap' }}>
+          <Typography id="decision-index-title" variant="h5" component="h2">
+            Artificial Analysis Decision Index
+          </Typography>
+          <Link
+            href={decisionSource.href}
+            target="_blank"
+            rel="noopener noreferrer"
+            variant="body2"
+            color="text.secondary"
+          >
+            Source
+          </Link>
+        </Box>
+        <IntelligenceBarChart
+          entries={decisionEntries}
+          scoreLabel="Decision Index"
+          barValues
+          italicsForMissingCost={false}
+        />
       </Box>
 
       <Box component="section" aria-labelledby="intelligence-title" sx={{ mb: 4 }}>

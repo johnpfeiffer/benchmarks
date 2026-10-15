@@ -37,6 +37,24 @@ export interface RawModelEntry {
   released?: string | null
 }
 
+/** A decision-model row as embedded in decision.json (AA Decision Index). */
+export interface RawDecisionEntry {
+  model: string
+  provider: string
+  /** Decision Index score as AA displays it (rounded integer). */
+  score: number
+  /** Explicit bar color (hex), matching AA's creator color. */
+  color?: string
+}
+
+/** A validated decision-model entry. Exists only when INV-001 holds. */
+export interface DecisionEntry {
+  model: string
+  provider: string
+  score: number
+  color?: string
+}
+
 /** A news link as embedded in news.json. */
 export interface RawNewsEntry {
   url: string

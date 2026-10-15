@@ -1,0 +1,18 @@
+{
+  "source": "https://artificialanalysis.ai/evaluations/artificial-analysis-decision-index",
+  "methodology": "https://artificialanalysis.ai/articles/artificial-analysis-decision-index",
+  "aa_version": "v1.0",
+  "captured": "2026-10-15",
+  "note": "Artificial Analysis Decision Index v1.0 (launched 2026-10-13): a composite index testing decision models across classification, tool calling, knowledge and reasoning. Scores are the rounded integers AA displays (Jev 1.13 57.50 -> 58). The nine rows mirror the page's chart legend; the payload's language-model comparison rows (Claude Opus 5.5, GPT-6.1 Sol, ...) and Clef-Flash/Clef-Omni are not part of the decision-model chart. Clef-Flash (46) and Clef-Omni (44) appear in the payload but not in AA's chart legend.",
+  "rows": [
+    { "model": "Jev 1.13", "provider": "TypeSafe", "score": 58, "color": "#E650BA" },
+    { "model": "GLiDE", "provider": "Fastino", "score": 54, "color": "#000000" },
+    { "model": "Microsoft-Decision-1", "provider": "Microsoft", "score": 54, "color": "#0078D5" },
+    { "model": "Decider v1.1 27B", "provider": "Perplexity", "score": 53, "color": "#1B818E" },
+    { "model": "Mercury Decide", "provider": "Inception", "score": 53, "color": "#021B30" },
+    { "model": "Celeris-1 Decision", "provider": "Celeris", "score": 52, "color": "#ff8a75" },
+    { "model": "d1", "provider": "Liquid AI", "score": 50, "color": "#000000" },
+    { "model": "Clef", "provider": "Cloudflare", "score": 49, "color": "#f18322" },
+    { "model": "GPT-6 Luna (Decisions)", "provider": "OpenAI", "score": 48, "color": "#1f1f1f" }
+  ]
+}

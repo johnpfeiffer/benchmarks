@@ -6,7 +6,14 @@ import { theme } from '../../theme'
 import { Dashboard } from '../Dashboard'
 import { HISTORICAL_SNAPSHOTS } from '../HistoricalIntelligenceCharts'
 import { PARETO_SNAPSHOT_DATE, paretoSnapshotFromModels } from '../../models/pareto'
-import { sortModels, nextSortState, presetSelectionIds, aaVersionsDesc, DEFAULT_SORT, type ModelEntry, type HardwareEntry, type GpuEntry, type MachineEntry, type SortField, type SortState } from '../../models'
+import { pinChartCanvas } from '../../test/pinChartCanvas'
+import { sortModels, nextSortState, presetSelectionIds, aaVersionsDesc, DEFAULT_SORT, type DecisionEntry, type ModelEntry, type HardwareEntry, type GpuEntry, type MachineEntry, type SortField, type SortState } from '../../models'
+
+// Decision Index fixture: small, sorted desc as the parser delivers.
+const decisionEntries: DecisionEntry[] = [
+  { model: 'Jev 9.99', provider: 'TypeSafe', score: 58, color: '#E650BA' },
+  { model: 'Clef-Test', provider: 'Cloudflare', score: 49, color: '#f18322' },
+]
 
 const entries: ModelEntry[] = [
   {
@@ -100,6 +107,8 @@ function DashboardController({ initialSort = DEFAULT_SORT, allEntries = entries 
     <Dashboard
       entries={sorted}
       intelligenceChartEntries={chartEntries}
+      decisionEntries={decisionEntries}
+      decisionSource={{ label: 'Artificial Analysis Decision Index', href: 'https://artificialanalysis.ai/articles/artificial-analysis-decision-index' }}
       aaVersions={aaVersions}
       aaVersion={aaVersion}
       onAAVersionChange={handleAAVersionChange}
@@ -186,6 +195,32 @@ describe('Dashboard', () => {
     const githubLink = screen.getByRole('link', { name: /Source code on GitHub/i })
     expect(githubLink).toHaveAttribute('href', 'https://github.com/johnpfeiffer/benchmarks')
     expect(githubLink.querySelector('svg')).toBeInTheDocument()
+  })
+
+  it('leads with the Decision Index section: heading, source link, and chart above Intelligence', () => {
+    // Pin a concrete canvas so MUI X draws the chart in jsdom (no layout engine).
+    const restoreCanvas = pinChartCanvas()
+    try {
+      renderDashboard()
+      const decisionHeading = screen.getByRole('heading', { name: 'Artificial Analysis Decision Index' })
+      const intelligenceHeading = screen.getByRole('heading', { name: 'Artificial Analysis Intelligence' })
+      // The decision section is the top of the page, ahead of the intelligence chart.
+      expect(decisionHeading.compareDocumentPosition(intelligenceHeading)).toBe(Node.DOCUMENT_POSITION_FOLLOWING)
+      const decisionSection = decisionHeading.closest('section') as HTMLElement
+      expect(within(decisionSection).getByRole('link', { name: 'Source' })).toHaveAttribute(
+        'href',
+        'https://artificialanalysis.ai/articles/artificial-analysis-decision-index',
+      )
+      // A labeled bar per decision entry, scores shown above the bars.
+      expect(within(decisionSection).getAllByText('Jev 9.99').length).toBeGreaterThan(0)
+      expect(within(decisionSection).getAllByText('Clef-Test').length).toBeGreaterThan(0)
+      expect(decisionSection.querySelectorAll('.MuiBarChart-element')).toHaveLength(decisionEntries.length)
+      // No table, no toggles: just the chart.
+      expect(within(decisionSection).queryByRole('table')).not.toBeInTheDocument()
+      expect(within(decisionSection).queryByRole('button')).not.toBeInTheDocument()
+    } finally {
+      restoreCanvas()
+    }
   })
 
   it('swaps the chart and table between Intelligence Index versions via the toggle', () => {
