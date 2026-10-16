@@ -40,12 +40,14 @@ flowchart TD
     AIHIST402["data/ai-2026-02-19.json<br/>(embedded v4.0.2 backfill)"] --> App
     AIHIST["data/ai-2025-12-30.json<br/>(embedded v3.0 backfill)"] --> App
     NEWSJSON["data/news.json<br/>(embedded)"] --> App
+    DECISIONJSON["data/decision.json<br/>(embedded AA Decision Index v1.0)"] --> App
     HWJSON["data/hardware.json<br/>(embedded)"] --> App
     GPUJSON["data/gpu.json<br/>(embedded)"] --> App
     MACHINEJSON["data/machines.json<br/>(embedded)"] --> App
     App -->|parse + validate| Models["models/<br/>parse, sort, types"]
     Models -->|INV-001 gate| Validated["ModelEntry[] per source"]
     App -->|sorted table rows + selected ids| Dashboard["views/Dashboard"]
+    Dashboard --> DecisionChart["IntelligenceBarChart<br/>(Decision Index; top section, chart only)"]
     Dashboard --> ChartA["IntelligenceBarChart<br/>(Artificial Analysis)"]
     Dashboard --> Menu["SectionMenu<br/>(fixed hamburger, top right; anchor link per section)"]
     Dashboard --> News["NewsSection<br/>(collapsed; top-3 preview always visible)"]
@@ -76,8 +78,8 @@ flowchart TD
 
 | File | Responsibility |
 | --- | --- |
-| `types.ts` | `ModelEntry`, `NewsEntry`, `HardwareEntry`, `GpuEntry`, `MachineEntry`, their raw JSON shapes, and benchmark sort types; `ModelEntry.open_weight` is always present after parse; `ModelEntry.color` is the explicit bar color carried from `ai.json`; `ModelEntry.released` is the release date (`YYYY-MM-DD` or null); `ModelEntry.aa_version` is the required Intelligence Index version tag carried from `ai.json` (`ModelEntry.id` stays versionless so selections survive version switches); `ModelEntry.cost_usd` is the optional total benchmark run cost carried from `ai.json` |
-| `parse.ts` | `parseModelEntries`, `parseNewsEntries`, `parseHardwareEntries`, `parseGpuEntries`, `parseMachineEntries`, and `InvariantError`; upholds **INV-001** (every model has a provider) and structural guards at the single gate. News URLs and ISO dates are validated, copied, and sorted newest first before reaching the view; model release dates share the same strict calendar-date guard (`MODEL-RELEASED`), and index version tags are shape-checked (`MODEL-AA-VERSION`). Hardware entries are validated (provider, model, total_params, url required; quant sizes nullable). GPU entries are validated (model, date required; memory, memory_type, memory_bandwidth_gbs, fp16_tflops nullable). Machine entries are validated (machine, chip, vram_gb, url required; memory_bandwidth_gbs, price_usd nullable) |
+| `types.ts` | `ModelEntry`, `DecisionEntry`, `NewsEntry`, `HardwareEntry`, `GpuEntry`, `MachineEntry`, their raw JSON shapes, and benchmark sort types; `ModelEntry.open_weight` is always present after parse; `ModelEntry.color` is the explicit bar color carried from `ai.json`; `ModelEntry.released` is the release date (`YYYY-MM-DD` or null); `ModelEntry.aa_version` is the required Intelligence Index version tag carried from `ai.json` (`ModelEntry.id` stays versionless so selections survive version switches); `ModelEntry.cost_usd` is the optional total benchmark run cost carried from `ai.json` |
+| `parse.ts` | `parseModelEntries`, `parseDecisionEntries`, `parseNewsEntries`, `parseHardwareEntries`, `parseGpuEntries`, `parseMachineEntries`, and `InvariantError`; upholds **INV-001** (every model has a provider) and structural guards at the single gate. Decision entries (model, provider, score, color) are validated and sorted score-descending before reaching the view. News URLs and ISO dates are validated, copied, and sorted newest first before reaching the view; model release dates share the same strict calendar-date guard (`MODEL-RELEASED`), and index version tags are shape-checked (`MODEL-AA-VERSION`). Hardware entries are validated (provider, model, total_params, url required; quant sizes nullable). GPU entries are validated (model, date required; memory, memory_type, memory_bandwidth_gbs, fp16_tflops nullable). Machine entries are validated (machine, chip, vram_gb, url required; memory_bandwidth_gbs, price_usd nullable) |
 | `merge.ts` | `mergeHardwareIntelligence`, `modelMatchKey`; attaches each hardware row's intelligence score via a normalized model-name match with a unique-prefix fallback. `modelMatchKey` ignores parenthetical effort suffixes and "preview". Callers pass the newest version's block only (see `App.tsx`), since a hardware row carries a single score |
 | `version.ts` | `compareAAVersions`, `aaVersionsDesc`, `filterByAAVersion`; numeric newest-first ordering of the `aa_version` tags present in a row set, and the per-version row slice the dashboard renders |
 | `sort.ts` | `sortModels`, `nextSortState`, `DEFAULT_SORT` (score desc) |
@@ -122,6 +124,17 @@ plot it), and `parse.ts` rejects non-positive or non-numeric values
 (`MODEL-COST`). The `cost_usd` column powers the Pareto default snapshot
 (see `ParetoFrontierSection` below).
 
+`data/decision.json` tracks the Artificial Analysis Decision Index (v1.0,
+launched 2026-10-13), a composite index testing decision models across
+classification, tool calling, knowledge and reasoning. One row per decision
+model (model, provider, score, color); scores are the rounded integers AA
+displays, colors mirror AA's per-creator colors, and the rows mirror the
+chart legend on AA's evaluations page (the payload's language-model
+comparison rows and Clef-Flash/Clef-Omni, absent from that legend, are
+excluded). The file carries `source`, `methodology`, `aa_version`, and
+`captured` metadata; a refresh re-verifies against the evaluations page and
+replaces the rows in place.
+
 ### Presentation (`views/`)
 
 All views are pure (props in, callbacks out, no business logic):
@@ -135,7 +148,13 @@ All views are pure (props in, callbacks out, no business logic):
   version (AA publishes no data for them there — e.g. Nemotron and Mistral
   on v4.1.1) get italic x-axis labels, applied as per-index CSS rules on
   `MuiChartsAxis-tickContainer:nth-of-type(...)` because MUI X
-  `tickLabelStyle` styles every tick label uniformly. The chart shows each
+  `tickLabelStyle` styles every tick label uniformly; indexes with no cost
+  column at all (the Decision Index) pass `italicsForMissingCost={false}` so
+  nothing renders italic. The row contract is the minimal `BarChartEntry`
+  (model, provider, score, optional color and cost), which both `ModelEntry`
+  and `DecisionEntry` satisfy; the Decision Index section at the very top of
+  the page reuses this chart (bars colored by AA's creator colors from
+  `data/decision.json`, no table and no toggles). The chart shows each
   bar's score above the bar in small
   secondary-colored text (MUI X `barLabel: 'value'` with
   `barLabelPlacement: 'outside'`, gated by the `barValues` prop) and starts
@@ -182,7 +201,7 @@ All views are pure (props in, callbacks out, no business logic):
   [GitHub repository](https://github.com/johnpfeiffer/benchmarks) with an inline
   GitHub SVG mark. GPU-specific source links are rendered uniquely below the
   GPU specifications table rather than duplicated here.
-- `NewsSection` - outlined collapsible panel immediately below the lead chart,
+- `NewsSection` - outlined collapsible panel immediately below the lead chart (the intelligence chart; the Decision Index section above it is chart-only),
   collapsed by default and user-expandable, titled "Hand Picked News" with a
   small fresh-tomato SVG mark. The top 3 links of the current sort stay
   visible below the header; clicking the header expands the panel to reveal
@@ -302,7 +321,9 @@ All views are pure (props in, callbacks out, no business logic):
   v4.0.2, v3.0), a "Scores and costs predate the current index version" link appears
   below the chart and opens this section via its `#historical-aa-title`
   anchor.
-- `Dashboard` - layout composing the intelligence chart with the
+- `Dashboard` - layout opening with the Decision Index section (chart only,
+  sourced from `data/decision.json` with a Source link to AA's Decision Index
+  article), then the intelligence chart with the
   collapsed-by-default enriched details table directly below it, then news
   (collapsed by default with its top 3 links visible), the Pareto Frontier,
   and the historical-charts expander, then the HuggingFace estimated
@@ -422,12 +443,16 @@ journey
   - **Acceptance tests** (`views/__tests__/acceptance.test.tsx` +
     `Dashboard.test.tsx` + `IntelligenceBarChart.test.tsx`): the acceptance
     suite renders the real app with the real embedded JSON and asserts every
-    row of every data file appears in its UI listing (models table incl.
+    row of every data file appears in its UI listing (decision chart, models
+    table incl.
     italic release dates, news feed, hardware, GPU,
     local machines). Dashboard behavior tests (sort interactions, selection,
     toggles, collapse, credits) use small fixtures. The chart label tests
     mock `<BarChart>` and assert props (score bar labels, no-data italic tick
-    rules), because jsdom has no layout engine and MUI X draws nothing there.
+    rules); tests that need real chart SVG (decision chart bars, hardware
+    axis cap) instead pin a concrete canvas via `test/pinChartCanvas.ts` on
+    top of the ResizeObserver mock in `test/setup.ts`, because jsdom has no
+    layout engine and MUI X otherwise draws nothing there.
 - `npm run build` - `tsc -b` typecheck + Vite production build.
 - Pareto tests (`models/__tests__/pareto.test.ts` and
   `views/__tests__/ParetoChart.test.tsx`) cover snapshot validation, dominance

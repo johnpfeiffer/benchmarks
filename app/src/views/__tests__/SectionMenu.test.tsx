@@ -16,6 +16,7 @@ describe('SectionMenu', () => {
     // though they render as <a href="#..."> anchors.
     const links = within(menu).getAllByRole('menuitem')
     expect(links.map((link) => link.textContent)).toEqual([
+      'Decision Index',
       'Intelligence chart',
       'Model Details',
       'Hand Picked News',

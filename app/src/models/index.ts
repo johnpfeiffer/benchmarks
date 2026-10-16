@@ -1,5 +1,5 @@
-export type { GpuEntry, HardwareEntry, MachineEntry, ModelEntry, NewsEntry, RawGpuEntry, RawHardwareEntry, RawMachineEntry, RawModelEntry, RawNewsEntry, SortField, SortDirection, SortState } from './types'
-export { parseModelEntries, parseNewsEntries, parseHardwareEntries, parseGpuEntries, parseMachineEntries, InvariantError } from './parse'
+export type { DecisionEntry, GpuEntry, HardwareEntry, MachineEntry, ModelEntry, NewsEntry, RawDecisionEntry, RawGpuEntry, RawHardwareEntry, RawMachineEntry, RawModelEntry, RawNewsEntry, SortField, SortDirection, SortState } from './types'
+export { parseDecisionEntries, parseModelEntries, parseNewsEntries, parseHardwareEntries, parseGpuEntries, parseMachineEntries, InvariantError } from './parse'
 export { sortModels, nextSortState, DEFAULT_SORT } from './sort'
 export { mergeHardwareIntelligence, modelMatchKey } from './merge'
 export { openWeightIds, presetSelectionIds, providerColorMap } from './filter'

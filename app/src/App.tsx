@@ -3,6 +3,7 @@ import { RouterProvider, createBrowserRouter, Outlet, useParams } from 'react-ro
 import { CssBaseline, ThemeProvider } from '@mui/material'
 import { theme } from './theme'
 import {
+  parseDecisionEntries,
   parseModelEntries,
   parseNewsEntries,
   parseHardwareEntries,
@@ -32,6 +33,7 @@ import rawHistoricalV411Data from './data/ai-2026-08-11.json'
 import rawHistoricalV402Data from './data/ai-2026-02-19.json'
 import rawHistoricalV30Data from './data/ai-2025-12-30.json'
 import rawNewsData from './data/news.json'
+import rawDecisionData from './data/decision.json'
 import rawHardwareData from './data/hardware.json'
 import rawGpuData from './data/gpu.json'
 import rawMachineData from './data/machines.json'
@@ -103,6 +105,9 @@ function DashboardPage() {
     [allIntelligence, aaVersion],
   )
   const news = useMemo(() => parseNewsEntries(rawNewsData), [])
+  // Decision Index rows arrive highest-score-first from the parser; the
+  // decision chart renders them as-is (no toggles, no table).
+  const decisionEntries = useMemo(() => parseDecisionEntries(rawDecisionData.rows), [])
   // Hardware rows carry a single score per model: always the newest version's.
   const latestIntelligence = useMemo(
     () => filterByAAVersion(allIntelligence, aaVersions[0]),
@@ -193,6 +198,10 @@ function DashboardPage() {
   // per-version article for patches like v4.3.2, so it links the methodology
   // page whose version history documents the current patch.
   const intelligenceSource: DataSourceCredit = { label: 'Artificial Analysis', href: 'https://artificialanalysis.ai/' }
+  const decisionSource: DataSourceCredit = {
+    label: 'Artificial Analysis Decision Index',
+    href: 'https://artificialanalysis.ai/articles/artificial-analysis-decision-index',
+  }
   const hardwareSource = sources[1]
   const gpuSources: DataSourceCredit[] = sources.slice(2)
   const footerSources: DataSourceCredit[] = sources.slice(0, 2)
@@ -206,6 +215,8 @@ function DashboardPage() {
     <Dashboard
       entries={table.sorted}
       intelligenceChartEntries={table.chartEntries}
+      decisionEntries={decisionEntries}
+      decisionSource={decisionSource}
       aaVersions={aaVersions}
       aaVersion={aaVersion}
       onAAVersionChange={handleAAVersionChange}

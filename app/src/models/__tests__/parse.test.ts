@@ -1,6 +1,6 @@
 import { describe, it, expect } from 'vitest'
-import { parseModelEntries, parseMachineEntries, InvariantError } from '../parse'
-import type { RawMachineEntry, RawModelEntry } from '../types'
+import { parseDecisionEntries, parseModelEntries, parseMachineEntries, InvariantError } from '../parse'
+import type { RawDecisionEntry, RawMachineEntry, RawModelEntry } from '../types'
 
 const valid: RawModelEntry[] = [
   { model: 'Alpha', intelligence_score: 60, aa_version: 'v4.3', provider: 'Anthropic', open_weight: true },
@@ -258,5 +258,44 @@ describe('parseMachineEntries', () => {
     const input = [...validMachines]
     parseMachineEntries(input)
     expect(input).toEqual(validMachines)
+  })
+})
+
+describe('parseDecisionEntries', () => {
+  const validDecision: RawDecisionEntry[] = [
+    { model: 'Decider', provider: 'Perplexity', score: 53 },
+    { model: 'Jev 1.13', provider: 'TypeSafe', score: 58, color: '#E650BA' },
+  ]
+
+  it('normalizes valid entries and sorts score descending', () => {
+    const out = parseDecisionEntries(validDecision)
+    expect(out.map((entry) => entry.model)).toEqual(['Jev 1.13', 'Decider'])
+    expect(out[0]).toEqual({ model: 'Jev 1.13', provider: 'TypeSafe', score: 58, color: '#E650BA' })
+    expect(out[1]).toEqual({ model: 'Decider', provider: 'Perplexity', score: 53 })
+  })
+
+  it.each([
+    { name: 'missing provider', row: { model: 'X', score: 1 }, inv: 'INV-001' },
+    { name: 'empty provider', row: { model: 'X', provider: ' ', score: 1 }, inv: 'INV-001' },
+    { name: 'missing model', row: { provider: 'P', score: 1 }, inv: 'MODEL-NAME' },
+    { name: 'non-numeric score', row: { model: 'X', provider: 'P', score: '58' }, inv: 'SCORE-NUMBER' },
+  ])('rejects a row with $name', ({ row, inv }) => {
+    try {
+      parseDecisionEntries([row as unknown as RawDecisionEntry])
+      throw new Error('should have thrown')
+    } catch (e) {
+      expect(e).toBeInstanceOf(InvariantError)
+      expect((e as InvariantError).invariant).toBe(inv)
+    }
+  })
+
+  it('rejects a non-array input', () => {
+    expect(() => parseDecisionEntries({} as unknown as RawDecisionEntry[])).toThrow(InvariantError)
+  })
+
+  it('does not mutate the input array', () => {
+    const input = [...validDecision]
+    parseDecisionEntries(input)
+    expect(input).toEqual(validDecision)
   })
 })

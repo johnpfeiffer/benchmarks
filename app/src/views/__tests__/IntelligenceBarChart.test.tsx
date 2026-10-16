@@ -59,16 +59,14 @@ describe('IntelligenceBarChart no-data labels', () => {
     // benchmark cost, e.g. Nemotron and Mistral on v4.2) get italic labels.
     // MUI X styles tick labels uniformly, so the rules target the no-data
     // bars by band index: entries 0 and 2 here.
+    const mixed: ModelEntry[] = [
+      { id: 'a:alpha', model: 'Alpha', score: 60, aa_version: 'v9.9', provider: 'A', open_weight: false, released: null },
+      { id: 'b:beta', model: 'Beta', score: 50, aa_version: 'v9.9', provider: 'B', open_weight: false, released: null, cost_usd: 123 },
+      { id: 'c:gamma', model: 'Gamma', score: 40, aa_version: 'v9.9', provider: 'C', open_weight: true, released: null },
+    ]
     render(
       <ThemeProvider theme={theme}>
-        <IntelligenceBarChart
-          entries={[
-            { id: 'a:alpha', model: 'Alpha', score: 60, aa_version: 'v9.9', provider: 'A', open_weight: false, released: null },
-            { id: 'b:beta', model: 'Beta', score: 50, aa_version: 'v9.9', provider: 'B', open_weight: false, released: null, cost_usd: 123 },
-            { id: 'c:gamma', model: 'Gamma', score: 40, aa_version: 'v9.9', provider: 'C', open_weight: true, released: null },
-          ]}
-          scoreLabel="Score"
-        />
+        <IntelligenceBarChart entries={mixed} scoreLabel="Score" />
       </ThemeProvider>,
     )
     const sx = lastBarChartProps.current?.sx as Record<string, unknown>
@@ -80,6 +78,25 @@ describe('IntelligenceBarChart no-data labels', () => {
     for (const key of italicRules) {
       expect(sx[key]).toEqual({ fontStyle: 'italic' })
     }
+  })
+
+  it('skips the italic no-data styling entirely when italicsForMissingCost is off', () => {
+    // Indexes with no cost column at all (the Decision Index) would otherwise
+    // render every label italic.
+    render(
+      <ThemeProvider theme={theme}>
+        <IntelligenceBarChart
+          entries={[
+            { model: 'Jev 1.13', provider: 'TypeSafe', score: 58, color: '#E650BA' },
+            { model: 'Clef', provider: 'Cloudflare', score: 49, color: '#f18322' },
+          ]}
+          scoreLabel="Decision Index"
+          italicsForMissingCost={false}
+        />
+      </ThemeProvider>,
+    )
+    const sx = lastBarChartProps.current?.sx as Record<string, unknown>
+    expect(Object.keys(sx).filter((key) => key.includes('tickContainer'))).toEqual([])
   })
 })
 

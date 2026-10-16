@@ -1,5 +1,5 @@
 import { describe, it, expect } from 'vitest'
-import { parseModelEntries, parseNewsEntries, parseHardwareEntries, parseMachineEntries } from '../parse'
+import { parseDecisionEntries, parseModelEntries, parseNewsEntries, parseHardwareEntries, parseMachineEntries } from '../parse'
 import { mergeHardwareIntelligence, modelMatchKey } from '../merge'
 import { aaVersionsDesc, filterByAAVersion } from '../version'
 import { parseParetoDataset, paretoSnapshotFromModels } from '../pareto'
@@ -11,6 +11,7 @@ import rawHistoricalV30Data from '../../data/ai-2025-12-30.json'
 import rawNewsData from '../../data/news.json'
 import rawHardwareData from '../../data/hardware.json'
 import rawMachineData from '../../data/machines.json'
+import rawDecisionData from '../../data/decision.json'
 
 /**
  * Data-integrity invariants only. This suite used to assert each JSON row's
@@ -122,6 +123,17 @@ describe('embedded data integrity', () => {
     }
     const names = machines.map((entry) => entry.machine)
     expect(new Set(names).size).toBe(names.length)
+  })
+
+  it('decision.json carries one unique, hex-colored row per decision model', () => {
+    const decision = parseDecisionEntries(rawDecisionData.rows)
+    const names = decision.map((entry) => entry.model)
+    expect(new Set(names).size).toBe(names.length)
+    for (const entry of decision) {
+      // decision.json mirrors AA's creator colors; every row is expected to
+      // carry one so the chart never falls back to a provider guess.
+      expect(entry.color).toMatch(/^#[0-9A-Fa-f]{6}$/)
+    }
   })
 
   it('hardware rows with an AI namesake carry that row\'s intelligence score', () => {

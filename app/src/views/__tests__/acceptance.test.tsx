@@ -2,6 +2,7 @@ import { describe, it, expect } from 'vitest'
 import { render, screen, fireEvent, within } from '@testing-library/react'
 import App from '../../App'
 import {
+  parseDecisionEntries,
   parseModelEntries,
   parseNewsEntries,
   parseHardwareEntries,
@@ -17,9 +18,11 @@ import rawHistoricalV411Data from '../../data/ai-2026-08-11.json'
 import rawHistoricalV402Data from '../../data/ai-2026-02-19.json'
 import rawHistoricalV30Data from '../../data/ai-2025-12-30.json'
 import rawNewsData from '../../data/news.json'
+import rawDecisionData from '../../data/decision.json'
 import rawHardwareData from '../../data/hardware.json'
 import rawGpuData from '../../data/gpu.json'
 import rawMachineData from '../../data/machines.json'
+import { pinChartCanvas } from '../../test/pinChartCanvas'
 
 /**
  * Acceptance suite: renders the real app with the real embedded JSON and
@@ -37,6 +40,7 @@ const intelligence = parseModelEntries([
   ...rawHistoricalV30Data,
 ])
 const news = parseNewsEntries(rawNewsData)
+const decision = parseDecisionEntries(rawDecisionData.rows)
 // Mirror App.tsx: the dashboard shows one index version at a time (newest by
 // default), and hardware scores always merge from the newest version's block.
 const latestVersion = aaVersionsDesc(intelligence)[0]
@@ -301,6 +305,26 @@ describe('acceptance: every JSON row appears in the UI', () => {
     }
   })
 
+  it('shows every decision.json row as a labeled bar in the top Decision Index section', () => {
+    // Pin a concrete canvas so MUI X draws the chart in jsdom (no layout engine).
+    const restoreCanvas = pinChartCanvas()
+    try {
+      render(<App />)
+      const section = screen.getByRole('heading', { name: 'Artificial Analysis Decision Index' }).closest('section') as HTMLElement
+      expect(within(section).getByRole('link', { name: 'Source' })).toHaveAttribute(
+        'href',
+        'https://artificialanalysis.ai/articles/artificial-analysis-decision-index',
+      )
+      for (const entry of decision) {
+        expect(within(section).getAllByText(entry.model).length).toBeGreaterThan(0)
+      }
+      // One bar per row (MUI X v9 renders .MuiBarChart-element per bar).
+      expect(section.querySelectorAll('.MuiBarChart-element')).toHaveLength(decision.length)
+    } finally {
+      restoreCanvas()
+    }
+  })
+
   it('navigates via a fixed section menu whose anchor links all resolve on the page', () => {
     render(<App />)
     fireEvent.click(screen.getByRole('button', { name: 'Section menu' }))
@@ -309,6 +333,7 @@ describe('acceptance: every JSON row appears in the UI', () => {
     // as <a href="#..."> anchors.
     const links = within(menu).getAllByRole('menuitem')
     expect(links.map((link) => link.textContent)).toEqual([
+      'Decision Index',
       'Intelligence chart',
       'Model Details',
       'Hand Picked News',

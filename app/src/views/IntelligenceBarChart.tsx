@@ -1,13 +1,30 @@
 import { Box, Typography, useTheme } from '@mui/material'
 import { BarChart } from '@mui/x-charts/BarChart'
-import type { ModelEntry } from '../models'
+
+/**
+ * Minimal row shape the chart needs. ModelEntry (Intelligence Index) and
+ * DecisionEntry (Decision Index) both satisfy it structurally.
+ */
+export interface BarChartEntry {
+  model: string
+  provider: string
+  score: number
+  color?: string
+  cost_usd?: number
+}
 
 interface IntelligenceBarChartProps {
   /** Entries already sorted by the controller (default: score desc). */
-  entries: readonly ModelEntry[]
+  entries: readonly BarChartEntry[]
   scoreLabel: string
   /** Show each bar's score above the bar. */
   barValues?: boolean
+  /**
+   * Italicize x-axis labels of rows without a measured cost (AA has no data
+   * for them in this version). Default true; indexes with no cost column at
+   * all (e.g. the Decision Index) pass false so nothing renders italic.
+   */
+  italicsForMissingCost?: boolean
 }
 
 const PROVIDER_COLORS = {
@@ -23,7 +40,7 @@ const PROVIDER_COLORS = {
   cerebras: '#F15929',
 } as const
 
-function benchmarkColor(entry: ModelEntry, fallback: string): string {
+function benchmarkColor(entry: BarChartEntry, fallback: string): string {
   const provider = entry.provider.toLowerCase()
   const model = entry.model.toLowerCase()
   if (provider.includes('anthropic') || model.startsWith('claude')) return PROVIDER_COLORS.anthropic
@@ -53,6 +70,7 @@ export function IntelligenceBarChart({
   entries,
   scoreLabel,
   barValues = false,
+  italicsForMissingCost = true,
 }: IntelligenceBarChartProps) {
   const theme = useTheme()
   const fallbackColor = theme.palette.grey[500]
@@ -71,7 +89,7 @@ export function IntelligenceBarChart({
   // order, so nth-of-type(index + 1) matches the entry's label.
   const noDataTickSx = Object.fromEntries(
     entries.flatMap((entry, index) =>
-      entry.cost_usd == null
+      italicsForMissingCost && entry.cost_usd == null
         ? [
             [
               `& .MuiChartsAxis-directionX .MuiChartsAxis-tickContainer:nth-of-type(${index + 1}) .MuiChartsAxis-tickLabel`,

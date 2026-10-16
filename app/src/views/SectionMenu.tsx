@@ -8,6 +8,7 @@ import { IconButton, Menu, MenuItem, Paper } from '@mui/material'
  * acceptance suite asserts every target id exists in the rendered page.
  */
 const SECTIONS = [
+  { label: 'Decision Index', href: '#decision-index-title' },
   { label: 'Intelligence chart', href: '#intelligence-title' },
   { label: 'Model Details', href: '#details-header' },
   { label: 'Hand Picked News', href: '#news-title' },

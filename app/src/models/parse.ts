@@ -1,4 +1,4 @@
-import type { GpuEntry, HardwareEntry, MachineEntry, ModelEntry, NewsEntry, RawGpuEntry, RawHardwareEntry, RawMachineEntry, RawModelEntry, RawNewsEntry } from './types'
+import type { DecisionEntry, GpuEntry, HardwareEntry, MachineEntry, ModelEntry, NewsEntry, RawDecisionEntry, RawGpuEntry, RawHardwareEntry, RawMachineEntry, RawModelEntry, RawNewsEntry } from './types'
 
 /**
  * Error raised when raw data violates a kernel invariant.
@@ -123,6 +123,33 @@ export function parseModelEntries(raw: readonly RawModelEntry[]): ModelEntry[] {
     throw new InvariantError('Expected an array of model entries', -1, 'SHAPE')
   }
   return raw.map((entry, index) => normalize(entry, index))
+}
+
+function normalizeDecision(raw: RawDecisionEntry, index: number): DecisionEntry {
+  const provider = raw?.provider
+  if (typeof provider !== 'string' || provider.trim() === '') {
+    throw new InvariantError(
+      `INV-001 violated at index ${index}: model "${raw?.model ?? '?'}" has no provider`,
+      index,
+      'INV-001',
+    )
+  }
+  const model = assertModelName(raw?.model, index)
+  const score = assertScore(raw?.score, index, model, 'score')
+  const color = typeof raw?.color === 'string' && raw.color.trim() !== '' ? raw.color : undefined
+
+  return { model, provider, score, ...(color ? { color } : {}) }
+}
+
+/**
+ * Validate embedded Decision Index entries, returned highest score first
+ * (the chart's canonical order, like parseNewsEntries returning newest first).
+ */
+export function parseDecisionEntries(raw: readonly RawDecisionEntry[]): DecisionEntry[] {
+  if (!Array.isArray(raw)) {
+    throw new InvariantError('Expected an array of decision entries', -1, 'SHAPE')
+  }
+  return raw.map((entry, index) => normalizeDecision(entry, index)).sort((a, b) => b.score - a.score)
 }
 
 function normalizeNews(raw: RawNewsEntry, index: number): NewsEntry {
