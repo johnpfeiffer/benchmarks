@@ -129,9 +129,11 @@ launched 2026-10-13), a composite index testing decision models across
 classification, tool calling, knowledge and reasoning. One row per decision
 model (model, provider, score, color); scores are the rounded integers AA
 displays, colors mirror AA's per-creator colors, and the rows mirror the
-chart legend on AA's evaluations page (the payload's language-model
-comparison rows and Clef-Flash/Clef-Omni, absent from that legend, are
-excluded). The file carries `source`, `methodology`, `aa_version`, and
+default chart legend on AA's evaluations page (the payload's language-model
+comparison rows and payload-only models like Clef-Flash, absent from the
+default legend, are excluded; superseded versions AA keeps but unselects —
+e.g. Jev 1.13 when 1.14 shipped — leave the file with the legend). The file
+carries `source`, `methodology`, `aa_version`, and
 `captured` metadata; a refresh re-verifies against the evaluations page and
 replaces the rows in place.
 

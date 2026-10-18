@@ -1,6 +1,6 @@
 ---
 name: research-ai-models
-description: Research and update AI model benchmark data on the dashboard (app/src/data/ai.json Artificial Analysis intelligence scores). Use when asked to add a model, refresh scores for a new Artificial Analysis Intelligence Index version, verify a model's provider, open-weight status, release date, or bar color, or extract total Intelligence Index evaluation costs for a Pareto chart.
+description: Research and update AI model benchmark data on the dashboard (app/src/data/ai.json Artificial Analysis intelligence scores; app/src/data/decision.json AA Decision Index rows). Use when asked to add a model, refresh scores for a new Artificial Analysis Intelligence Index version, verify a model's provider, open-weight status, release date, or bar color, or extract total Intelligence Index evaluation costs for a Pareto chart.
 ---
 
 # Research AI Models
@@ -225,6 +225,42 @@ version article, and
 the retrieval date. Keep provenance (source URL, retrieval date, precision)
 in the PR body or accompanying research notes. A skill-only request does not
 authorize changing benchmark data.
+
+## Decision Index (decision.json)
+
+`app/src/data/decision.json` tracks AA's Decision Index (a separate index
+from the Intelligence Index, with its own conventions):
+
+- Data source is the evaluations page
+  (`https://artificialanalysis.ai/evaluations/artificial-analysis-decision-index`),
+  not `/models/<slug>` pages — `benchtool aa-model` is Intelligence Index
+  only. Fetch the page (`curl -sSL ... -o /tmp/aa-decision.html`) and read
+  the escape-encoded payload (normalize `\"` first): each model object
+  carries `"indexScore"` (float), `creatorName`, and `creatorColor`.
+- **The row set is the page's default chart legend**, not the full payload.
+  The payload also embeds the language-model comparison rows (a separate
+  "how decision models compare with LLMs" section — Claude, GPT, Gemma
+  variants) and payload-only decision models the default chart hides
+  (observed: Clef-Flash). Extract the legend from the rendered legend
+  buttons (circle `fill` + following `<span>` label) and mirror exactly
+  that set; list the exclusions in the PR body.
+- Scores: payload floats, AA displays rounded integers ("Jev 1.13 leads
+  with 58" = indexScore 57.50). Store the rounded integer; cross-check the
+  top rows against the launch article's prose.
+- Colors: store AA's `creatorColor` per row (every row carries one).
+- No per-model version field exists here; infer methodology stability from
+  unchanged existing rows. If established scores move, suspect an index
+  version bump and update the file's `aa_version` metadata.
+- Superseded model versions persist in the payload unselected (observed:
+  Jev 1.13 stayed at 57.50 when Jev 1.14 shipped at 57.07). Mirror AA's
+  default legend: when AA unselects the predecessor, drop it from the file
+  and record the swap in the file's `note` field and the PR body.
+- There is no cost data on this index; the chart renders with
+  `italicsForMissingCost={false}`. Never invent costs for decision rows.
+- File metadata (`source`, `methodology`, `aa_version`, `captured`, `note`)
+  rides at the top of the JSON; bump `captured` on every refresh. Rows are
+  validated and sorted score-descending by `parseDecisionEntries`; the
+  acceptance suite renders the file and expects one labeled bar per row.
 
 ## Validation and PR workflow
 
