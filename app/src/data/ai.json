@@ -14,6 +14,7 @@
   {"model": "MiMo-V2.6-Pro", "intelligence_score": 46, "aa_version": "v4.3.2", "cost_usd": 206.66, "provider": "Xiaomi", "open_weight": true, "color": "#9E9E9E", "released": "2026-09-21"},
   {"model": "GLM-5.3 (max)", "intelligence_score": 45, "aa_version": "v4.3.2", "cost_usd": 2503.48, "provider": "Z AI", "open_weight": true, "color": "#1c7ff8", "released": "2026-08-18"},
   {"model": "Qwen3.8 Max 0902", "intelligence_score": 45, "aa_version": "v4.3.2", "cost_usd": 4934.79, "provider": "Alibaba", "open_weight": false, "color": "#F54F35", "released": "2026-09-02"},
+  {"model": "DeepSeek V4.1 Flash 1017 (max)", "intelligence_score": 45, "aa_version": "v4.3.2", "cost_usd": 444.6, "provider": "DeepSeek", "open_weight": true, "color": "#2243e6", "released": "2026-10-17"},
   {"model": "Grok 4.6 (high)", "intelligence_score": 44, "aa_version": "v4.3.2", "cost_usd": 2351.83, "provider": "xAI", "open_weight": false, "color": "#736cd3", "released": "2026-08-12"},
   {"model": "Kimi K3", "intelligence_score": 44, "aa_version": "v4.3.2", "cost_usd": 3658.07, "provider": "Moonshot AI", "open_weight": true, "color": "#00B4D8", "released": "2026-07-16"},
   {"model": "GPT-6 Sol (xhigh)", "intelligence_score": 44, "aa_version": "v4.3.2", "cost_usd": 865.48, "provider": "OpenAI", "open_weight": false, "color": "#1f1f1f", "released": "2026-09-22"},
