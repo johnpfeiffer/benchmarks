@@ -26,7 +26,7 @@ export interface ParetoDataset {
  */
 export const PARETO_SNAPSHOT_AA_VERSION = 'v4.3.2'
 export const PARETO_SNAPSHOT_VERSION = `Artificial Analysis Intelligence Index ${PARETO_SNAPSHOT_AA_VERSION}`
-export const PARETO_SNAPSHOT_DATE = '2026-10-20'
+export const PARETO_SNAPSHOT_DATE = '2026-10-27'
 
 /**
  * Build the published snapshot for one index version from the rows carrying

@@ -228,7 +228,7 @@ describe('acceptance: every JSON row appears in the UI', () => {
     expandSection(/Pareto Frontier/)
     const section = screen.getByRole('heading', { name: 'Pareto Frontier' }).closest('section') as HTMLElement
     // Newest version by default: the current ledger dated by its page reads.
-    expect(within(section).getByText(/Intelligence Index v4\.3\.2 · Snapshot 2026-10-20/)).toBeInTheDocument()
+    expect(within(section).getByText(/Intelligence Index v4\.3\.2 · Snapshot 2026-10-27/)).toBeInTheDocument()
     // Historical versions are dated by their chart capture.
     fireEvent.click(screen.getAllByRole('button', { name: 'v4.2' })[0])
     expect(within(section).getByText(/Intelligence Index v4\.2 · Snapshot 2026-09-04/)).toBeInTheDocument()
