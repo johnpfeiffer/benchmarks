@@ -27,11 +27,11 @@ of the format (the section links to it as a download).
 
 ```json
 {
-  "benchmark_version": "Artificial Analysis Intelligence Index v4.3.2",
-  "date": "2026-09-29",
+  "benchmark_version": "Artificial Analysis Intelligence Index v5.0",
+  "date": "2026-10-28",
   "sample": false,
   "models": [
-    { "model": "GLM-5.3 Flash", "provider": "Z AI", "intelligence": 42, "cost_usd": 280.28, "color": "#1c7ff8" }
+    { "model": "GPT-6.1 Terra (max)", "provider": "OpenAI", "intelligence": 51, "cost_usd": 972.34, "color": "#1f1f1f" }
   ]
 }
 ```

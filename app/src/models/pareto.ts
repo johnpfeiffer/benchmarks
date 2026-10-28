@@ -24,9 +24,9 @@ export interface ParetoDataset {
  * versions derive their snapshot from the same function, dated by the
  * capture date of their backfill (see HISTORICAL_SNAPSHOTS).
  */
-export const PARETO_SNAPSHOT_AA_VERSION = 'v4.3.2'
+export const PARETO_SNAPSHOT_AA_VERSION = 'v5.0'
 export const PARETO_SNAPSHOT_VERSION = `Artificial Analysis Intelligence Index ${PARETO_SNAPSHOT_AA_VERSION}`
-export const PARETO_SNAPSHOT_DATE = '2026-10-27'
+export const PARETO_SNAPSHOT_DATE = '2026-10-28'
 
 /**
  * Build the published snapshot for one index version from the rows carrying
