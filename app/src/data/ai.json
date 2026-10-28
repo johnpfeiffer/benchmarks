@@ -2,6 +2,7 @@
   {"model": "Claude Opus 5.5 (max)", "intelligence_score": 58, "aa_version": "v4.3.2", "cost_usd": 8708.2, "provider": "Anthropic", "open_weight": false, "color": "#cc785c", "released": "2026-09-22"},
   {"model": "Claude Sonnet 5.5 (max)", "intelligence_score": 56, "aa_version": "v4.3.2", "cost_usd": 8976.65, "provider": "Anthropic", "open_weight": false, "color": "#cc785c", "released": "2026-09-28"},
   {"model": "Muse Wonder Full (max)", "intelligence_score": 56, "aa_version": "v4.3.2", "cost_usd": 4222.12, "provider": "Meta", "open_weight": false, "color": "#0089f4", "released": "2026-10-12"},
+  {"model": "Kimi K3.1 Pro", "intelligence_score": 55, "aa_version": "v4.3.2", "cost_usd": 3117.31, "provider": "Moonshot AI", "open_weight": true, "color": "#00B4D8", "released": "2026-10-23"},
   {"model": "Claude Fable 5.1 (max)", "intelligence_score": 53, "aa_version": "v4.3.2", "cost_usd": 13128.86, "provider": "Anthropic", "open_weight": false, "color": "#cc785c", "released": "2026-09-01"},
   {"model": "GPT-6 Astra (max)", "intelligence_score": 53, "aa_version": "v4.3.2", "cost_usd": 5324.1, "provider": "OpenAI", "open_weight": false, "color": "#1f1f1f", "released": "2026-09-03"},
   {"model": "Gemini 4 Argon (high)", "intelligence_score": 53, "aa_version": "v4.3.2", "cost_usd": 2407.24, "provider": "Google", "open_weight": false, "color": "#34A853", "released": "2026-09-30"},
