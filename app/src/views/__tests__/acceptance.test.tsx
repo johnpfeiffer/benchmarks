@@ -13,6 +13,7 @@ import {
   filterByAAVersion,
 } from '../../models'
 import rawIntelligenceData from '../../data/ai.json'
+import rawHistoricalV432Data from '../../data/ai-2026-10-27.json'
 import rawHistoricalV42Data from '../../data/ai-2026-09-04.json'
 import rawHistoricalV411Data from '../../data/ai-2026-08-11.json'
 import rawHistoricalV402Data from '../../data/ai-2026-02-19.json'
@@ -31,9 +32,10 @@ import { pinChartCanvas } from '../../test/pinChartCanvas'
  * that matters is not "does the parser return what the file says" (a
  * tautology) but "does the user actually see every row of the data".
  */
-// Mirror App.tsx: ai.json plus the historical v4.2, v4.1.1, v4.0.2, and v3.0 backfill snapshots.
+// Mirror App.tsx: ai.json plus the historical v4.3.2, v4.2, v4.1.1, v4.0.2, and v3.0 backfill snapshots.
 const intelligence = parseModelEntries([
   ...rawIntelligenceData,
+  ...rawHistoricalV432Data,
   ...rawHistoricalV42Data,
   ...rawHistoricalV411Data,
   ...rawHistoricalV402Data,
