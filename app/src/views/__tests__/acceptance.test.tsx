@@ -13,6 +13,7 @@ import {
   filterByAAVersion,
 } from '../../models'
 import rawIntelligenceData from '../../data/ai.json'
+import rawHistoricalV432Data from '../../data/ai-2026-10-27.json'
 import rawHistoricalV42Data from '../../data/ai-2026-09-04.json'
 import rawHistoricalV411Data from '../../data/ai-2026-08-11.json'
 import rawHistoricalV402Data from '../../data/ai-2026-02-19.json'
@@ -31,9 +32,10 @@ import { pinChartCanvas } from '../../test/pinChartCanvas'
  * that matters is not "does the parser return what the file says" (a
  * tautology) but "does the user actually see every row of the data".
  */
-// Mirror App.tsx: ai.json plus the historical v4.2, v4.1.1, v4.0.2, and v3.0 backfill snapshots.
+// Mirror App.tsx: ai.json plus the historical v4.3.2, v4.2, v4.1.1, v4.0.2, and v3.0 backfill snapshots.
 const intelligence = parseModelEntries([
   ...rawIntelligenceData,
+  ...rawHistoricalV432Data,
   ...rawHistoricalV42Data,
   ...rawHistoricalV411Data,
   ...rawHistoricalV402Data,
@@ -94,13 +96,18 @@ describe('acceptance: every JSON row appears in the UI', () => {
     // The version selector lives in the Model Details summary and drives the
     // chart and table.
     const versionButton = (version: string) => screen.getAllByRole('button', { name: version })[0]
-    // Claude Opus 4.6 (max) was never re-measured under the newest index
+    // Claude Opus 5 (max) was never re-measured under the newest index
     // version, so it only exists in the older snapshots.
-    expect(within(table).queryByRole('button', { name: 'Claude Opus 4.6 (max)' })).not.toBeInTheDocument()
+    expect(within(table).queryByRole('button', { name: 'Claude Opus 5 (max)' })).not.toBeInTheDocument()
     fireEvent.click(versionButton(previousVersion))
     expect(within(table).getAllByRole('row')).toHaveLength(previousRows.length + 1)
     // Models that first appear under the newly shown version start selected:
     // their rows are not grayed out and they join the chart.
+    expect(within(table).getByRole('button', { name: 'Claude Opus 5 (max)' })).toHaveAttribute('aria-pressed', 'true')
+    // The v4.2 backfill snapshot is listed and selectable like any version.
+    const v42Rows = filterByAAVersion(intelligence, 'v4.2')
+    fireEvent.click(versionButton('v4.2'))
+    expect(within(table).getAllByRole('row')).toHaveLength(v42Rows.length + 1)
     expect(within(table).getByRole('button', { name: 'Claude Opus 4.6 (max)' })).toHaveAttribute('aria-pressed', 'true')
     // The v4.1.1 backfill snapshot is listed and selectable like any version.
     const v411Rows = filterByAAVersion(intelligence, 'v4.1.1')
@@ -123,8 +130,8 @@ describe('acceptance: every JSON row appears in the UI', () => {
     expect(within(table).queryByRole('button', { name: 'Claude Opus 4.6 (max)' })).not.toBeInTheDocument()
     fireEvent.click(versionButton(latestVersion))
     expect(within(table).getAllByRole('row')).toHaveLength(latestIntelligence.length + 1)
-    expect(within(table).queryByRole('button', { name: 'Claude Opus 4.6 (max)' })).not.toBeInTheDocument()
-    expect(versions).toEqual(['v4.3.2', 'v4.2', 'v4.1.1', 'v4.0.2', 'v3.0'])
+    expect(within(table).queryByRole('button', { name: 'Claude Opus 5 (max)' })).not.toBeInTheDocument()
+    expect(versions).toEqual(['v5.0', 'v4.3.2', 'v4.2', 'v4.1.1', 'v4.0.2', 'v3.0'])
   })
 
   it('selects every model of the shown version after mixing the Open Weights preset with version switches', () => {
@@ -228,7 +235,9 @@ describe('acceptance: every JSON row appears in the UI', () => {
     expandSection(/Pareto Frontier/)
     const section = screen.getByRole('heading', { name: 'Pareto Frontier' }).closest('section') as HTMLElement
     // Newest version by default: the current ledger dated by its page reads.
-    expect(within(section).getByText(/Intelligence Index v4\.3\.2 · Snapshot 2026-10-27/)).toBeInTheDocument()
+    expect(within(section).getByText(/Intelligence Index v5\.0 · Snapshot 2026-10-28/)).toBeInTheDocument()
+    fireEvent.click(screen.getAllByRole('button', { name: 'v4.3.2' })[0])
+    expect(within(section).getByText(/Intelligence Index v4\.3\.2 · Snapshot 2026-10-28/)).toBeInTheDocument()
     // Historical versions are dated by their chart capture.
     fireEvent.click(screen.getAllByRole('button', { name: 'v4.2' })[0])
     expect(within(section).getByText(/Intelligence Index v4\.2 · Snapshot 2026-09-04/)).toBeInTheDocument()
@@ -355,7 +364,7 @@ describe('acceptance: every JSON row appears in the UI', () => {
   it('credits the Artificial Analysis Intelligence Index with its version number in the footer', () => {
     render(<App />)
     const footer = screen.getByRole('contentinfo')
-    const credit = within(footer).getByRole('link', { name: 'Artificial Analysis Intelligence Index v4.3.2' })
-    expect(credit).toHaveAttribute('href', 'https://artificialanalysis.ai/methodology/intelligence-benchmarking')
+    const credit = within(footer).getByRole('link', { name: 'Artificial Analysis Intelligence Index v5.0' })
+    expect(credit).toHaveAttribute('href', 'https://artificialanalysis.ai/articles/artificial-analysis-intelligence-index-v5')
   })
 })

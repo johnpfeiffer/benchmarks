@@ -24,10 +24,12 @@ import { Dashboard, type DataSourceCredit } from './views/Dashboard'
 import { HISTORICAL_SNAPSHOTS } from './views/HistoricalIntelligenceCharts'
 import { PARETO_SNAPSHOT_DATE, paretoSnapshotFromModels } from './models/pareto'
 import rawIntelligenceData from './data/ai.json'
-// Historical snapshots: the 2026-09-04 backfill of Intelligence Index v4.2
-// rows, the 2026-08-11 backfill of v4.1.1 rows, the 2026-02-19 backfill of
-// v4.0.2 rows, and the 2025-12-30 backfill of v3.0 rows, each kept in its
-// own file so ai.json stays the curated current ledger.
+// Historical snapshots: the 2026-10-27 backfill of Intelligence Index v4.3.2
+// rows, the 2026-09-04 backfill of v4.2 rows, the 2026-08-11 backfill of
+// v4.1.1 rows, the 2026-02-19 backfill of v4.0.2 rows, and the 2025-12-30
+// backfill of v3.0 rows, each kept in its own file so ai.json stays the
+// curated current ledger.
+import rawHistoricalV432Data from './data/ai-2026-10-27.json'
 import rawHistoricalV42Data from './data/ai-2026-09-04.json'
 import rawHistoricalV411Data from './data/ai-2026-08-11.json'
 import rawHistoricalV402Data from './data/ai-2026-02-19.json'
@@ -81,14 +83,15 @@ function useBenchmarkState(entries: readonly ModelEntry[]) {
 function DashboardPage() {
   // Parse + validate once. If the embedded data ever violates INV-001 this
   // throws loudly at module load rather than rendering partial state.
-  // The v4.2, v4.1.1, v4.0.2, and v3.0 backfills augment ai.json: one row
-  // per model per version, so the version toggle can show the 2026-09-04,
-  // 2026-08-11, 2026-02-19, and 2025-12-30 snapshots alongside the current
-  // ones.
+  // The v4.3.2, v4.2, v4.1.1, v4.0.2, and v3.0 backfills augment ai.json: one
+  // row per model per version, so the version toggle can show the 2026-10-27,
+  // 2026-09-04, 2026-08-11, 2026-02-19, and 2025-12-30 snapshots alongside the
+  // current ones.
   const allIntelligence = useMemo(
     () =>
       parseModelEntries([
         ...rawIntelligenceData,
+        ...rawHistoricalV432Data,
         ...rawHistoricalV42Data,
         ...rawHistoricalV411Data,
         ...rawHistoricalV402Data,
@@ -178,7 +181,7 @@ function DashboardPage() {
   }, [allIntelligence, aaVersion])
 
   const sources: DataSourceCredit[] = [
-    { label: 'Artificial Analysis Intelligence Index v4.3.2', href: 'https://artificialanalysis.ai/methodology/intelligence-benchmarking' },
+    { label: 'Artificial Analysis Intelligence Index v5.0', href: 'https://artificialanalysis.ai/articles/artificial-analysis-intelligence-index-v5' },
     { label: 'HuggingFace and Unsloth', href: 'https://huggingface.co/unsloth' },
     { label: 'Wikipedia Hopper (microarchitecture)', href: 'https://en.wikipedia.org/wiki/Hopper_(microarchitecture)' },
     { label: 'NVIDIA Hopper Architecture', href: 'https://developer.nvidia.com/blog/nvidia-hopper-architecture-in-depth/' },
@@ -194,9 +197,7 @@ function DashboardPage() {
     { label: 'Inferbase B200 SXM', href: 'https://inferbase.ai/gpu-catalog/gpu/nvidia-b200-sxm' },
   ]
   // The lead chart's source chip keeps linking to the AA homepage; only the
-  // footer credit (sources[0]) cites the index version — AA publishes no
-  // per-version article for patches like v4.3.2, so it links the methodology
-  // page whose version history documents the current patch.
+  // footer credit (sources[0]) links to the Intelligence Index v5.0 article.
   const intelligenceSource: DataSourceCredit = { label: 'Artificial Analysis', href: 'https://artificialanalysis.ai/' }
   const decisionSource: DataSourceCredit = {
     label: 'Artificial Analysis Decision Index',

@@ -106,6 +106,23 @@ func TestExtractAAModelEmbeddedPayloadCost(t *testing.T) {
 	if m.TotalCostUSD != "865" || m.TotalCostPrecision != "rounded_or_whole" {
 		t.Errorf("whole payload total = %q/%q", m.TotalCostUSD, m.TotalCostPrecision)
 	}
+	// v5.0 model pages embed the comparison set as an initialModels array of
+	// {"id":"...","slug":"..."} objects without a "currentModel" wrapper;
+	// each model's cost lookup stays bounded to its own JSON object.
+	v5Fixture := `<html><body>
+<p>GPT-6.1 Terra (max) scores 51 on the Artificial Analysis Intelligence Index.</p>
+<p>Artificial Analysis Intelligence Index v5.0 incorporates 9 evaluations across 4 categories.</p>
+<script>self.__next_f.push(["1:{\"initialModels\":[{\"id\":\"aaaa\",\"slug\":\"muse-wonder-full\",\"name\":\"Muse Wonder Full (max)\"},{\"id\":\"bbbb\",\"slug\":\"gpt-6-1-terra\",\"name\":\"GPT-6.1 Terra (max)\",\"release\":{\"slug\":\"gpt-6-1-terra\"},\"intelligenceIndexCost\":{\"total\":972.3358390033461,\"input\":475.4}}]}"])</script>
+</body></html>`
+	m = extractAAModel(v5Fixture, "https://artificialanalysis.ai/models/gpt-6-1-terra")
+	if m.TotalCostUSD != "972.3358390033461" || m.TotalCostSource != "embedded_payload" || m.TotalCostPrecision != "precise" {
+		t.Errorf("v5 initialModels cost = %q, %q, %q", m.TotalCostUSD, m.TotalCostSource, m.TotalCostPrecision)
+	}
+	// An uncosted model in initialModels must not inherit the next model's cost.
+	m = extractAAModel(v5Fixture, "https://artificialanalysis.ai/models/muse-wonder-full")
+	if m.TotalCostUSD != "" || m.TotalCostSource != "" {
+		t.Errorf("uncosted initialModels entry should stay empty, got %q via %q", m.TotalCostUSD, m.TotalCostSource)
+	}
 }
 
 func TestWriteAAModelJSON(t *testing.T) {

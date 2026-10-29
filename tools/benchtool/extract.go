@@ -124,6 +124,7 @@ var (
 
 	reAAModelPath    = regexp.MustCompile(`/models/([^/?#]+)`)
 	reAACurrentModel = regexp.MustCompile(`"currentModel":\{`)
+	reAAModelObject  = regexp.MustCompile(`\{"id":"[^"]+","slug":"((?:[^"\\]|\\.)*)"`)
 	reAANearbySlug   = regexp.MustCompile(`"slug":"((?:[^"\\]|\\.)*)"`)
 	reAAPayloadCost  = regexp.MustCompile(`"intelligenceIndexCost":\{"total":([0-9]+(?:\.[0-9]+)?)`)
 )
@@ -171,14 +172,14 @@ func extractAAModel(rawHTML, finalURL string) aaModel {
 
 // extractAAEmbeddedCost pulls the page model's Intelligence Index eval cost
 // from the escape-encoded JSON payload embedded in the model page HTML. The
-// payload carries a whole comparison set, so a cost is only attributed when
-// it follows the "currentModel" block whose slug is the page's own. Nested
-// effort/release objects carry their own slug keys between the anchor and
-// the cost, so the nearest-preceding-slug heuristic misfires here.
+// payload carries a whole comparison set (either a "currentModel" block or an
+// "initialModels" array of {"id":"...","slug":"..."} objects), so each
+// candidate is bounded to its balanced JSON object and only attributed when
+// its own top-level slug matches the page's slug.
 func extractAAEmbeddedCost(normalizedHTML, slug string) (string, bool) {
 	for _, anchor := range reAACurrentModel.FindAllStringIndex(normalizedHTML, -1) {
-		rest := normalizedHTML[anchor[1]:]
-		window := rest
+		obj := jsonObjectAt(normalizedHTML[anchor[1]-1:])
+		window := obj
 		if len(window) > 256 {
 			window = window[:256]
 		}
@@ -186,11 +187,53 @@ func extractAAEmbeddedCost(normalizedHTML, slug string) (string, bool) {
 		if owner == nil || unquoteJSON(owner[1]) != slug {
 			continue
 		}
-		if cost := reAAPayloadCost.FindStringSubmatch(rest); cost != nil {
+		if cost := reAAPayloadCost.FindStringSubmatch(obj); cost != nil {
+			return cost[1], true
+		}
+	}
+	for _, m := range reAAModelObject.FindAllStringSubmatchIndex(normalizedHTML, -1) {
+		if unquoteJSON(normalizedHTML[m[2]:m[3]]) != slug {
+			continue
+		}
+		obj := jsonObjectAt(normalizedHTML[m[0]:])
+		if cost := reAAPayloadCost.FindStringSubmatch(obj); cost != nil {
 			return cost[1], true
 		}
 	}
 	return "", false
+}
+
+// jsonObjectAt returns the prefix of s through the closing brace balancing s[0] == '{'
+// (or all of s if the payload is truncated in a synthetic test fixture).
+func jsonObjectAt(s string) string {
+	depth := 0
+	inStr := false
+	escaped := false
+	for i := 0; i < len(s); i++ {
+		c := s[i]
+		if inStr {
+			if escaped {
+				escaped = false
+			} else if c == '\\' {
+				escaped = true
+			} else if c == '"' {
+				inStr = false
+			}
+			continue
+		}
+		switch c {
+		case '"':
+			inStr = true
+		case '{':
+			depth++
+		case '}':
+			depth--
+			if depth == 0 {
+				return s[:i+1]
+			}
+		}
+	}
+	return s
 }
 
 // --- Artificial Analysis leaderboard release data ---

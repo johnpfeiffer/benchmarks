@@ -120,26 +120,31 @@ Add a model:
    `data.test.ts` holds only cross-file invariants (unique names, score
    order, color presence, release dates populated).
 
-Refresh scores for a new Intelligence Index version (augment, never
-overwrite — the old block stays in the file):
+Refresh scores for a new Intelligence Index version (each superseded version
+moves into its own immutable `app/src/data/ai-YYYY-MM-DD.json` snapshot file,
+so `app/src/data/ai.json` holds only the current ledger):
 
 1. Fetch the leaderboard (Status: All) and the version article; confirm the
-   new tag (e.g. `v4.4`) from AA's methodology version history and from the
+   new tag (e.g. `v5.0`) from AA's methodology version history and from the
    `benchmark_version` field of `aa-model --json` on a few model pages.
-2. For every model whose page now reports the new version, insert a NEW row
-   with the same model name: `ai-add "<model>" <new-score> "<provider>"
-   --aa-version=<vX.Y> [--cost=...]` (the same name under a different
-   version is not a duplicate; the new block lands at the top
-   automatically, score-descending). Refresh costs at the same time — a
+2. Archive the superseded version's rows from `app/src/data/ai.json` into
+   `app/src/data/ai-YYYY-MM-DD.json` (dated by that snapshot's last capture
+   date) and wire the new backfill file into `app/src/App.tsx`,
+   `app/src/models/__tests__/data.test.ts`,
+   `app/src/views/__tests__/acceptance.test.tsx`, `architecture.md`, and
+   `README.md`.
+3. For every model whose page now reports the new version, insert its row
+   into `app/src/data/ai.json`: `ai-add "<model>" <new-score> "<provider>"
+   --aa-version=<vX.Y> [--cost=...]`. Refresh costs at the same time — a
    cost pairs with the score of the same version.
-3. Models whose pages did not move to the new version keep only their old
-   rows (no row in the new block). Never copy an old score into the new
-   block — the variance table for the PR body is just a per-model join of
-   the two blocks.
-4. For leaderboard-missing models: check Status first, then ask the user
+4. Models whose pages did not move to the new version keep only their old
+   rows in the dated snapshot file (no row in `ai.json`). Never copy an old
+   score into the new version — the variance table for the PR body is a
+   per-model join across versions.
+5. For leaderboard-missing models: check Status first, then ask the user
    keep-vs-remove for each — never silently delete rows that
    `hardware.json` or news still reference.
-5. Bump `PARETO_SNAPSHOT_AA_VERSION`, `PARETO_SNAPSHOT_VERSION`, and
+6. Bump `PARETO_SNAPSHOT_AA_VERSION`, `PARETO_SNAPSHOT_VERSION`, and
    `PARETO_SNAPSHOT_DATE` in `app/src/models/pareto.ts`, update the footer
    article URL and label in `App.tsx` (`sources[0]` only) to the new
    version, and the version mention in `architecture.md`.

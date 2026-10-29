@@ -35,8 +35,8 @@ The methodology revisions never erase the previous snapshot. The Model Details s
 and the version toggle in its summary swaps both the chart and the table between versions.
 Switching versions resets the table/chart selection to the shown snapshot's models.
 
-The v4.1.1, v4.0.2, and v3.0 snapshots were backfilled from 2026-08-11, 2026-02-19, and 2025-12-30 and live in
-`app/src/data/ai-2026-08-11.json`, `app/src/data/ai-2026-02-19.json`, and `app/src/data/ai-2025-12-30.json`, which the app concatenates with `ai.json`.
+The v4.3.2, v4.2, v4.1.1, v4.0.2, and v3.0 snapshots live in
+`app/src/data/ai-2026-10-27.json`, `app/src/data/ai-2026-09-04.json`, `app/src/data/ai-2026-08-11.json`, `app/src/data/ai-2026-02-19.json`, and `app/src/data/ai-2025-12-30.json`, which the app concatenates with `ai.json`.
 
 The captured v4.1.1, v4.0.2, and v3.0 charts also live in the collapsed "Historical Artificial Analysis Intelligence charts" expander below Model Details,
 each block crediting its version's archived methodology page.
@@ -73,7 +73,7 @@ https://web.archive.org/web/20251230102900/https://artificialanalysis.ai/evaluat
 The chart's default snapshot is derived at load time from the
 `app/src/data/ai.json` rows carrying a `cost_usd` field, so it always shows
 real measured data from a single Artificial Analysis Intelligence Index
-version (currently v4.3.2). `app/src/data/pareto.json` keeps a fictional,
+version (currently v5.0). `app/src/data/pareto.json` keeps a fictional,
 clearly labeled sample purely as the paste-format example behind the
 section's download link. The full format and the refresh procedure are
 documented in [docs/pareto-data.md](docs/pareto-data.md).
