@@ -60,12 +60,12 @@ Row shape: `{ "model", "intelligence_score", "aa_version", "cost_usd"?,
   otherwise. Missing provider = add one, never omit.
 - `aa_version` is required: the Intelligence Index version the score (and
   cost) were measured under, tagged per AA's methodology version history
-  (`v4.3`, `v4.2`, ...; shape-checked by `MODEL-AA-VERSION`). The file keeps
-  one row per model **per version**, grouped newest version block first and
-  score-descending within a block. Refreshes augment — insert the new
-  version's rows, keep the old block — so score variance stays visible in
-  the data and the dashboard's version toggle can show both snapshots. A
-  model never re-measured under a version simply has no row in that block
+  (`v5.0`, `v4.3.2`, ...; shape-checked by `MODEL-AA-VERSION`). `ai.json`
+  keeps only the current version's rows, score-descending. Superseded
+  versions live in immutable `ai-YYYY-MM-DD.json` snapshots, concatenated
+  at parse time so the dashboard's version toggle can show each snapshot.
+  Across those files, keep one row per model **per version**. A model with
+  no published measured aggregate under a version has no row for it
   (never copy a score across versions). The footer credit names the newest
   version present.
 - `open_weight` defaults to false; set true only for the curated
@@ -93,8 +93,9 @@ Row shape: `{ "model", "intelligence_score", "aa_version", "cost_usd"?,
   strips `(...)` suffixes and the word `preview`); a rename that breaks
   the join fails `data.test.ts`. The join uses the newest version's block
   only — a hardware row carries a single intelligence score.
-- Block order is newest `aa_version` first, `intelligence_score` descending
-  within each block (ties keep file order); `ai-add` maintains both.
+- Keep `ai.json` sorted by `intelligence_score` descending (ties keep file
+  order). `ai-add` supports version-block ordering, but the current ledger
+  must contain only the current version; keep older blocks in their archives.
 
 ## Update procedures
 
@@ -133,14 +134,17 @@ so `app/src/data/ai.json` holds only the current ledger):
    `app/src/models/__tests__/data.test.ts`,
    `app/src/views/__tests__/acceptance.test.tsx`, `architecture.md`, and
    `README.md`.
-3. For every model whose page now reports the new version, insert its row
-   into `app/src/data/ai.json`: `ai-add "<model>" <new-score> "<provider>"
+3. For every model with a published measured aggregate under the new version,
+   insert its row into `app/src/data/ai.json`: `ai-add "<model>" <new-score> "<provider>"
    --aa-version=<vX.Y> [--cost=...]`. Refresh costs at the same time — a
-   cost pairs with the score of the same version.
-4. Models whose pages did not move to the new version keep only their old
-   rows in the dated snapshot file (no row in `ai.json`). Never copy an old
-   score into the new version — the variance table for the PR body is a
-   per-model join across versions.
+   cost pairs with the score of the same version. A current page's version
+   heading alone is not proof an older model has a new score: corroborate
+   the exact variant in the current index's full public model data with
+   non-null `intelligenceIndex` and `intelligenceIndexIsEstimated: false`.
+4. Models without that aggregate keep only their old rows in the dated
+   snapshot file (no row in `ai.json`). Never copy an old score into the
+   new version. A per-model old/new table documents a methodology change,
+   not a change in the model's capability on a constant scale.
 5. For leaderboard-missing models: check Status first, then ask the user
    keep-vs-remove for each — never silently delete rows that
    `hardware.json` or news still reference.
@@ -239,33 +243,62 @@ from the Intelligence Index, with its own conventions):
 - Data source is the evaluations page
   (`https://artificialanalysis.ai/evaluations/artificial-analysis-decision-index`),
   not `/models/<slug>` pages — `benchtool aa-model` is Intelligence Index
-  only. Fetch the page (`curl -sSL ... -o /tmp/aa-decision.html`) and read
-  the escape-encoded payload (normalize `\"` first): each model object
-  carries `"indexScore"` (float), `creatorName`, and `creatorColor`.
-- **The row set is the page's default chart legend**, not the full payload.
-  The payload also embeds the language-model comparison rows (a separate
-  "how decision models compare with LLMs" section — Claude, GPT, Gemma
-  variants) and payload-only decision models the default chart hides
-  (observed: Clef-Flash). Extract the legend from the rendered legend
-  buttons (circle `fill` + following `<span>` label) and mirror exactly
-  that set; list the exclusions in the PR body.
+  only. When readable page text omits values, fetch the public HTML (e.g.
+  `agent-browser read <url> --raw`). Decode the JSON argument of each
+  `self.__next_f.push(...)` script, join its string chunks, then parse the
+  bounded `contestants` and `defaultSlugs` arrays. Do not use nearby-name
+  regexes or global quote replacement to attribute nested objects.
+  Contestants carry `slug`, `kind`, `indexScore` (float), `creatorName`,
+  and `creatorColor`.
+- **The row set is the page's default decision-model chart selection**,
+  not the full payload: intersect `defaultSlugs` with contestants whose
+  `kind` is `decisionModel`. Some default slugs are language-model
+  baselines, while the default "Include language models" switch is off.
+  The payload also retains unselected decision models (2026-10-29:
+  Jev 1.13, Decider v1.1 27B, Clef-Flash). Cross-check the rendered legend
+  when available and list the exclusions in the PR body.
 - Scores: payload floats, AA displays rounded integers ("Jev 1.13 leads
-  with 58" = indexScore 57.50). Store the rounded integer; cross-check the
-  top rows against the launch article's prose.
+  with 58" = indexScore 57.50). Store the integer using JavaScript
+  `Math.round` semantics, not banker's rounding. Cross-check current chart
+  labels; launch prose may describe an older selection.
 - Colors: store AA's `creatorColor` per row (every row carries one).
-- No per-model version field exists here; infer methodology stability from
-  unchanged existing rows. If established scores move, suspect an index
-  version bump and update the file's `aa_version` metadata.
+- Verify `aa_version` against the explicit **Version History** at
+  `https://artificialanalysis.ai/methodology/decision-index` (v1.0 as of
+  2026-10-29). Score movement or a changed selection alone does not prove
+  a methodology revision. Point the file's `methodology` metadata there;
+  the dashboard's Source link remains the launch article.
 - Superseded model versions persist in the payload unselected (observed:
   Jev 1.13 stayed at 57.50 when Jev 1.14 shipped at 57.07). Mirror AA's
   default legend: when AA unselects the predecessor, drop it from the file
   and record the swap in the file's `note` field and the PR body.
-- There is no cost data on this index; the chart renders with
-  `italicsForMissingCost={false}`. Never invent costs for decision rows.
+- AA publishes cost per 1M decision tasks and median time per task. These
+  are not total Intelligence Index evaluation costs. Our Decision chart
+  remains score-only, with `italicsForMissingCost={false}`; never copy
+  those task prices into `cost_usd` or invent total costs.
 - File metadata (`source`, `methodology`, `aa_version`, `captured`, `note`)
   rides at the top of the JSON; bump `captured` on every refresh. Rows are
   validated and sorted score-descending by `parseDecisionEntries`; the
   acceptance suite renders the file and expects one labeled bar per row.
+
+## Historical baselines after an Intelligence Index revision
+
+- Default chart selection is not score coverage. `initialModels` may hold
+  only the selected defaults, while selector catalogs include models with
+  no current score. Check the fully loaded public chart data or public
+  export, matching the exact variant slug; require a non-null measured
+  `intelligenceIndex` before adding a current-version row.
+- AA's **Progress Index v1** at `https://artificialanalysis.ai/trends` is
+  intended for long-run comparisons, including older open weights.
+  Its methodology (`https://artificialanalysis.ai/methodology/progress-index`)
+  links models through overlapping evaluations using item response theory.
+  It does not require every old model to run the entire current suite.
+- Progress data's `score` is a different metric from `intelligenceIndex`.
+  Never put Progress values in `ai.json`, rescale them into v5 scores, or
+  treat a null v5 aggregate as zero. Preserve version-specific archives.
+  Highest-scoring effort variants represent releases on Progress charts.
+- The 2026-10-29 findings and verified baseline table are recorded in
+  `docs/aa-historical-baselines-2026-10-29.md`. That research does not
+  authorize adding every variant or a new chart.
 
 ## Validation and PR workflow
 
@@ -281,8 +314,9 @@ from the Intelligence Index, with its own conventions):
   trailer.
 - Push auth: reuse the authenticated `gh` session via
   `git config credential.helper "!gh auth git-credential"` (or a one-off
-  `git -c credential.helper='!gh auth git-credential' push`), and set a
-  repo-local `user.name`/`user.email` if git has no identity.
+  `git -c credential.helper='!gh auth git-credential' push`). Use the
+  environment's configured Git identity; if it is missing, stop and report
+  the configuration failure rather than setting or overriding it.
 - The PR body lists sources used and an old → new table for every changed
   score, plus anything deliberately left unchanged.
 
