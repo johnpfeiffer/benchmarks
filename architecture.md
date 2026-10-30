@@ -126,18 +126,29 @@ plot it), and `parse.ts` rejects non-positive or non-numeric values
 (`MODEL-COST`). The `cost_usd` column powers the Pareto default snapshot
 (see `ParetoFrontierSection` below).
 
+Different Intelligence Index versions use different evaluation suites;
+their raw aggregate scores are not a continuous capability scale.
+AA's separate Progress Index v1 links older and newer models through
+overlapping evaluations. Progress scores are not Intelligence Index scores
+and do not enter `ai.json` or the Pareto snapshot. See the verified
+[historical baseline findings](docs/aa-historical-baselines-2026-10-29.md).
+
 `data/decision.json` tracks the Artificial Analysis Decision Index (v1.0,
 launched 2026-10-13), a composite index testing decision models across
 classification, tool calling, knowledge and reasoning. One row per decision
 model (model, provider, score, color); scores are the rounded integers AA
 displays, colors mirror AA's per-creator colors, and the rows mirror the
-default chart legend on AA's evaluations page (the payload's language-model
-comparison rows and payload-only models like Clef-Flash, absent from the
-default legend, are excluded; superseded versions AA keeps but unselects —
-e.g. Jev 1.13 when 1.14 shipped — leave the file with the legend). The file
-carries `source`, `methodology`, `aa_version`, and
-`captured` metadata; a refresh re-verifies against the evaluations page and
-replaces the rows in place.
+default decision-model selection on AA's evaluations page: contestants with
+`kind: decisionModel` whose slugs appear in `defaultSlugs`. Language-model
+comparisons are excluded even if their slugs are defaults, since "Include
+language models" defaults to off. Unselected predecessors (e.g. Jev 1.13
+and Decider v1.1 27B) and Clef-Flash are excluded. The 2026-10-29 capture
+contains 14 rows. The file carries `source`, `methodology`, `aa_version`,
+and `captured` metadata; a refresh replaces the rows in place and verifies
+the version against AA's explicit Decision Index methodology history, not
+score movement. AA also publishes task pricing and latency; our chart stays
+score-only, and task pricing is never treated as an Intelligence Index
+total evaluation cost.
 
 ### Presentation (`views/`)
 
@@ -152,8 +163,8 @@ All views are pure (props in, callbacks out, no business logic):
   version (AA publishes no data for them there — e.g. Nemotron and Mistral
   on v4.1.1) get italic x-axis labels, applied as per-index CSS rules on
   `MuiChartsAxis-tickContainer:nth-of-type(...)` because MUI X
-  `tickLabelStyle` styles every tick label uniformly; indexes with no cost
-  column at all (the Decision Index) pass `italicsForMissingCost={false}` so
+  `tickLabelStyle` styles every tick label uniformly; score-only charts
+  (the Decision Index) pass `italicsForMissingCost={false}` so
   nothing renders italic. The row contract is the minimal `BarChartEntry`
   (model, provider, score, optional color and cost), which both `ModelEntry`
   and `DecisionEntry` satisfy; the Decision Index section at the very top of
