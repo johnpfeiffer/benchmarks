@@ -30,7 +30,7 @@ published total is `null`. It does not scrape the multi-model comparison chart.
 
 # Intelligence Index versions
 
-`app/src/data/ai.json` keeps one block of rows per Artificial Analysis Intelligence Index version (`aa_version`).
+`app/src/data/ai.json` keeps only the current Artificial Analysis Intelligence Index version (`aa_version`).
 The methodology revisions never erase the previous snapshot. The Model Details section sits directly below the chart,
 and the version toggle in its summary swaps both the chart and the table between versions.
 Switching versions resets the table/chart selection to the shown snapshot's models.
@@ -44,6 +44,10 @@ When a historical version (v4.1.1, v4.0.2, or v3.0) is selected, a "Scores and c
 
 Hardware tables always show the newest version's scores.
 A model that was never re-measured under a version simply has no row in that block.
+
+For long-run comparisons, AA now publishes a separate Progress Index.
+See [verified historical baselines and v5 coverage](docs/aa-historical-baselines-2026-10-29.md);
+Progress scores must not be mixed with Intelligence Index scores.
 
 ## Historical Data
 
