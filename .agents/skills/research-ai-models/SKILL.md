@@ -46,8 +46,11 @@ Artificial Analysis:
 - Index version articles (e.g. `.../articles/artificial-analysis-intelligence-index-v4-1-1`)
   announce each score revision. When scores are refreshed for a new index
   version, update the footer credit (`sources[0]` in `App.tsx`): both the
-  article URL and the version number in its label
-  (`Artificial Analysis Intelligence Index vX.Y`). The lead chart's source
+  URL and the version number in its label
+  (`Artificial Analysis Intelligence Index vX.Y`). Link the announcement
+  article when one exists; a regrade without an article (e.g. v5.0.1) links
+  to the methodology page, whose version history is the version authority.
+  The lead chart's source
   chip intentionally keeps linking to the AA homepage (`intelligenceSource`)
   — only the footer entry changes.
 
@@ -60,14 +63,21 @@ Row shape: `{ "model", "intelligence_score", "aa_version", "cost_usd"?,
   otherwise. Missing provider = add one, never omit.
 - `aa_version` is required: the Intelligence Index version the score (and
   cost) were measured under, tagged per AA's methodology version history
-  (`v5.0`, `v4.3.2`, ...; shape-checked by `MODEL-AA-VERSION`). `ai.json`
-  keeps only the current version's rows, score-descending. Superseded
+  (`v5.0.1`, `v5.0`, `v4.3.2`, ...; shape-checked by `MODEL-AA-VERSION`).
+  `ai.json` holds the current ledger: newest version block first,
+  score-descending within a block. Superseded
   versions live in immutable `ai-YYYY-MM-DD.json` snapshots, concatenated
   at parse time so the dashboard's version toggle can show each snapshot.
   Across those files, keep one row per model **per version**. A model with
   no published measured aggregate under a version has no row for it
   (never copy a score across versions). The footer credit names the newest
-  version present.
+  version present. Exception: a minor regrade that keeps the same
+  evaluation suite (v5.0 → v5.0.1, 2026-11-04) may be applied as a minimal
+  in-place relabel — only rows whose displayed score moved, plus newly
+  measured additions, get the new tag; untouched rows keep the old one, so
+  the ledger temporarily mixes two version blocks and no archive file is
+  created. Composition-changing versions still get the full archival
+  treatment below.
 - `open_weight` defaults to false; set true only for the curated
   open-weight families: kimi, minimax, deepseek, nemotron, qwen, glm,
   mistral, gemma, gpt-oss, inkling.
@@ -121,9 +131,23 @@ Add a model:
    `data.test.ts` holds only cross-file invariants (unique names, score
    order, color presence, release dates populated).
 
-Refresh scores for a new Intelligence Index version (each superseded version
-moves into its own immutable `app/src/data/ai-YYYY-MM-DD.json` snapshot file,
-so `app/src/data/ai.json` holds only the current ledger):
+Refresh scores for a new Intelligence Index version. Two shapes:
+
+- **Composition-changing version** (new/removed evaluations or weights,
+  e.g. v4.3.2 → v5.0): each superseded version moves into its own immutable
+  `app/src/data/ai-YYYY-MM-DD.json` snapshot file, so `app/src/data/ai.json`
+  holds only the new ledger. Follow the procedure below.
+- **Minor regrade of the same suite** (e.g. v5.0 → v5.0.1, CritPt v2
+  robustness fixes, 2026-11-04): with maintainer sign-off, a minimal
+  in-place relabel — no archive file. Relabel only the rows whose displayed
+  score moved, re-read their costs from the per-model pages (a cost pairs
+  with the score of the same version), add newly measured models the
+  maintainer selects under the new tag, and leave every untouched row at
+  the old tag. Steps 1, 3 (for the touched rows only), and 6 below still
+  apply; the default Pareto cohort shrinks to the relabeled rows, so adjust
+  the `data.test.ts` snapshot-size pin with a comment recording why.
+
+Full-refresh procedure:
 
 1. Fetch the leaderboard (Status: All) and the version article; confirm the
    new tag (e.g. `v5.0`) from AA's methodology version history and from the
@@ -140,7 +164,9 @@ so `app/src/data/ai.json` holds only the current ledger):
    cost pairs with the score of the same version. A current page's version
    heading alone is not proof an older model has a new score: corroborate
    the exact variant in the current index's full public model data with
-   non-null `intelligenceIndex` and `intelligenceIndexIsEstimated: false`.
+   non-null `intelligenceIndex` (the `intelligenceIndexIsEstimated` flag was
+   dropped from the payload in the 2026-11-04 v5.0.1 revision — before it,
+   also require `intelligenceIndexIsEstimated: false`).
 4. Models without that aggregate keep only their old rows in the dated
    snapshot file (no row in `ai.json`). Never copy an old score into the
    new version. A per-model old/new table documents a methodology change,
@@ -246,17 +272,23 @@ from the Intelligence Index, with its own conventions):
   only. When readable page text omits values, fetch the public HTML (e.g.
   `agent-browser read <url> --raw`). Decode the JSON argument of each
   `self.__next_f.push(...)` script, join its string chunks, then parse the
-  bounded `contestants` and `defaultSlugs` arrays. Do not use nearby-name
+  bounded `contestants` array. Do not use nearby-name
   regexes or global quote replacement to attribute nested objects.
   Contestants carry `slug`, `kind`, `indexScore` (float), `creatorName`,
   and `creatorColor`.
 - **The row set is the page's default decision-model chart selection**,
-  not the full payload: intersect `defaultSlugs` with contestants whose
-  `kind` is `decisionModel`. Some default slugs are language-model
+  not the full payload: contestants with `kind: decisionModel` flagged
+  `isDefault: true` (the payload's `defaultSlugs` array was replaced by
+  this per-contestant flag in early November 2026). Some default
+  contestants are language-model
   baselines, while the default "Include language models" switch is off.
-  The payload also retains unselected decision models (2026-10-29:
-  Jev 1.13, Decider v1.1 27B, Clef-Flash). Cross-check the rendered legend
-  when available and list the exclusions in the PR body.
+  The payload also retains unselected decision models (2026-11-04:
+  Jev 1.13, Decider v1.1 27B, Drex 1.5, Clef-Flash). The maintainer may
+  additionally exclude AA-default variants that add noise (current
+  exclusions: Decider Flash v1.2, Drex 2.0 — dominated cheap/fast variants
+  in a class that is already cheap and fast). Cross-check the rendered
+  legend when available and list every exclusion in the file's `note` and
+  the PR body.
 - Scores: payload floats, AA displays rounded integers ("Jev 1.13 leads
   with 58" = indexScore 57.50). Store the integer using JavaScript
   `Math.round` semantics, not banker's rounding. Cross-check current chart

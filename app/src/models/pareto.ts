@@ -23,10 +23,14 @@ export interface ParetoDataset {
  * both when a new index version becomes the current ledger. Historical
  * versions derive their snapshot from the same function, dated by the
  * capture date of their backfill (see HISTORICAL_SNAPSHOTS).
+ * v5.0.1 (2026-11-04) is a regrade of v5.0 (same 9 evaluations, CritPt v2
+ * robustness fixes): only the models whose displayed score moved, plus newly
+ * measured additions, carry v5.0.1 rows, so the default snapshot is that
+ * small regrade cohort while the v5.0 rows remain one toggle away.
  */
-export const PARETO_SNAPSHOT_AA_VERSION = 'v5.0'
+export const PARETO_SNAPSHOT_AA_VERSION = 'v5.0.1'
 export const PARETO_SNAPSHOT_VERSION = `Artificial Analysis Intelligence Index ${PARETO_SNAPSHOT_AA_VERSION}`
-export const PARETO_SNAPSHOT_DATE = '2026-10-28'
+export const PARETO_SNAPSHOT_DATE = '2026-11-04'
 
 /**
  * Build the published snapshot for one index version from the rows carrying

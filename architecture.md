@@ -111,8 +111,14 @@ snapshot is a 2026-08-11 backfill kept in `data/ai-2026-08-11.json`, the
 v4.0.2 snapshot a 2026-02-19 backfill kept in `data/ai-2026-02-19.json`, and
 the v3.0 snapshot a 2025-12-30 backfill kept in `data/ai-2025-12-30.json`,
 all concatenated with `ai.json` at parse time. `ai.json` itself holds only
-the current ledger (the newest index version, today v5.0); snapshot files
-are never merged into it, so the toggle lists v5.0, v4.3.2, v4.2, v4.1.1, v4.0.2, and v3.0. Every row carries a
+the current ledger (the newest index version, today v5.0.1); snapshot files
+are never merged into it, so the toggle lists v5.0.1, v5.0, v4.3.2, v4.2, v4.1.1, v4.0.2, and v3.0.
+A minor regrade that keeps the same evaluation suite (v5.0 → v5.0.1, CritPt
+v2 robustness fixes, 2026-11-04) is handled with a minimal in-place relabel
+instead of a full archival: only the rows whose displayed score moved, plus
+newly measured additions, carry the new version tag, while untouched rows
+keep the older tag — so the ledger temporarily mixes two version blocks and
+the default view shows the small regrade cohort until a full refresh lands. Every row carries a
 verified `released` date sourced from the Artificial Analysis leaderboard
 (`benchtool aa-releases`). A row may also carry `cost_usd`: the precise total
 Artificial Analysis charges to run the index on that model, read from the
@@ -139,11 +145,14 @@ classification, tool calling, knowledge and reasoning. One row per decision
 model (model, provider, score, color); scores are the rounded integers AA
 displays, colors mirror AA's per-creator colors, and the rows mirror the
 default decision-model selection on AA's evaluations page: contestants with
-`kind: decisionModel` whose slugs appear in `defaultSlugs`. Language-model
-comparisons are excluded even if their slugs are defaults, since "Include
-language models" defaults to off. Unselected predecessors (e.g. Jev 1.13
-and Decider v1.1 27B) and Clef-Flash are excluded. The 2026-10-29 capture
-contains 14 rows. The file carries `source`, `methodology`, `aa_version`,
+`kind: decisionModel` and `isDefault: true` (the payload's `defaultSlugs`
+array was replaced by the per-contestant flag in early November 2026).
+Language-model comparisons are excluded even when flagged default, since
+"Include language models" defaults to off. AA-unselected predecessors (Jev
+1.13, Decider v1.1 27B, Drex 1.5) and Clef-Flash are excluded, and the
+maintainer additionally excludes AA-default dominated cheap/fast variants
+(Decider Flash v1.2, Drex 2.0) — noise in a class that is already cheap and
+fast. The 2026-11-04 capture contains 14 rows. The file carries `source`, `methodology`, `aa_version`,
 and `captured` metadata; a refresh replaces the rows in place and verifies
 the version against AA's explicit Decision Index methodology history, not
 score movement. AA also publishes task pricing and latency; our chart stays
@@ -209,9 +218,11 @@ All views are pure (props in, callbacks out, no business logic):
   outline is an inline style so MUI's selected/hover styles never override
   it.
 - `Footer` - composes the shared `SiteFooter` (`johnutilsjs/ui`, `repo="benchmarks"`, centered built-by line + source links) with the credits for the non-GPU data sources,
-  [Artificial Analysis Intelligence Index v5.0](https://artificialanalysis.ai/articles/artificial-analysis-intelligence-index-v5)
+  [Artificial Analysis Intelligence Index v5.0.1](https://artificialanalysis.ai/methodology/intelligence-benchmarking)
   (the label names the newest index version present in `ai.json`; bump both
-  the label and the article URL when a new version block lands) and
+  the label and the URL when a new version block lands — link the
+  announcement article when one exists, otherwise the methodology page whose
+  version history is the version authority) and
   [HuggingFace](https://huggingface.co/unsloth), and links to the
   [GitHub repository](https://github.com/johnpfeiffer/benchmarks) with an inline
   GitHub SVG mark. GPU-specific source links are rendered uniquely below the
