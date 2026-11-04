@@ -15,7 +15,6 @@
     { "model": "Mercury Decide", "provider": "Inception", "score": 53, "color": "#021B30" },
     { "model": "Celeris-1 Decision", "provider": "Celeris", "score": 52, "color": "#ff8a75" },
     { "model": "d1", "provider": "Liquid AI", "score": 50, "color": "#000000" },
-    { "model": "Decider Flash v1.2", "provider": "Perplexity", "score": 50, "color": "#1B818E" },
     { "model": "Clef", "provider": "Cloudflare", "score": 49, "color": "#f18322" },
     { "model": "GPT-6 Luna (Decisions)", "provider": "OpenAI", "score": 48, "color": "#1f1f1f" },
     { "model": "Clef-Omni", "provider": "Cloudflare", "score": 44, "color": "#f18322" }
