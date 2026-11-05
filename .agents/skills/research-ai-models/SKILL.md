@@ -71,13 +71,11 @@ Row shape: `{ "model", "intelligence_score", "aa_version", "cost_usd"?,
   Across those files, keep one row per model **per version**. A model with
   no published measured aggregate under a version has no row for it
   (never copy a score across versions). The footer credit names the newest
-  version present. Exception: a minor regrade that keeps the same
-  evaluation suite (v5.0 → v5.0.1, 2026-11-04) may be applied as a minimal
-  in-place relabel — only rows whose displayed score moved, plus newly
-  measured additions, get the new tag; untouched rows keep the old one, so
-  the ledger temporarily mixes two version blocks and no archive file is
-  created. Composition-changing versions still get the full archival
-  treatment below.
+  version present. A minor regrade that keeps the same evaluation suite
+  (v5.0 → v5.0.1, 2026-11-04) is applied as an in-place retag of the whole
+  ledger: AA regrades every measured model, so every row takes the new tag
+  and no archive file is created. Composition-changing versions still get
+  the full archival treatment below.
 - `open_weight` defaults to false; set true only for the curated
   open-weight families: kimi, minimax, deepseek, nemotron, qwen, glm,
   mistral, gemma, gpt-oss, inkling.
@@ -138,14 +136,16 @@ Refresh scores for a new Intelligence Index version. Two shapes:
   `app/src/data/ai-YYYY-MM-DD.json` snapshot file, so `app/src/data/ai.json`
   holds only the new ledger. Follow the procedure below.
 - **Minor regrade of the same suite** (e.g. v5.0 → v5.0.1, CritPt v2
-  robustness fixes, 2026-11-04): with maintainer sign-off, a minimal
-  in-place relabel — no archive file. Relabel only the rows whose displayed
-  score moved, re-read their costs from the per-model pages (a cost pairs
-  with the score of the same version), add newly measured models the
-  maintainer selects under the new tag, and leave every untouched row at
-  the old tag. Steps 1, 3 (for the touched rows only), and 6 below still
-  apply; the default Pareto cohort shrinks to the relabeled rows, so adjust
-  the `data.test.ts` snapshot-size pin with a comment recording why.
+  robustness fixes, 2026-11-04): an in-place retag of the whole ledger — no
+  archive file. AA regrades every measured model, so every kept row takes
+  the new tag; never leave rows at the old tag (the version toggle would
+  split one methodology into two blocks). Re-verify every row against its
+  model page under the new version: scores usually hold at integer
+  precision, but a regrade can move a total cost without moving the
+  displayed score (v5.0.1 moved Gemini 4 Argon $3,051.42 → $7,620.22 and
+  Claude Fable 5.1 $13,265.77 → $13,326.78 with scores unchanged). Steps 1,
+  3, and 6 below still apply (step 3's insertion list is just the newly
+  measured additions the maintainer selects).
 
 Full-refresh procedure:
 

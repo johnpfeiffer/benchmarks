@@ -109,7 +109,9 @@ payload dropped the `intelligenceIndexIsEstimated` flag (a non-null
 `intelligenceIndex` now means measured). Four repo-tracked scores moved one
 point (Claude Opus 5.5 58→59, Claude Sonnet 5.5 54→55, Muse Spark 1.3
 36→37, DeepSeek V4.1 Flash 1017 32→33) and Gemini 4 Carbon (high) debuted
-at 60 as the new #1. The repo applied this as a minimal in-place relabel:
-those five rows carry `v5.0.1`, the other 18 keep `v5.0`, and the v5.0
-block is not archived. The baseline findings above remain valid for the
+at 60 as the new #1. Since AA regraded every measured model, the repo
+retagged the whole ledger `v5.0.1` in place — no v5.0 block or archive
+remains. Re-verifying every model page also caught two cost moves with
+unchanged scores (Gemini 4 Argon $3,051.42 → $7,620.22, Claude Fable 5.1
+$13,265.77 → $13,326.78). The baseline findings above remain valid for the
 v5.0 era they document.

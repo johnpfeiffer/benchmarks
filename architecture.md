@@ -112,13 +112,13 @@ v4.0.2 snapshot a 2026-02-19 backfill kept in `data/ai-2026-02-19.json`, and
 the v3.0 snapshot a 2025-12-30 backfill kept in `data/ai-2025-12-30.json`,
 all concatenated with `ai.json` at parse time. `ai.json` itself holds only
 the current ledger (the newest index version, today v5.0.1); snapshot files
-are never merged into it, so the toggle lists v5.0.1, v5.0, v4.3.2, v4.2, v4.1.1, v4.0.2, and v3.0.
+are never merged into it, so the toggle lists v5.0.1, v4.3.2, v4.2, v4.1.1, v4.0.2, and v3.0.
 A minor regrade that keeps the same evaluation suite (v5.0 → v5.0.1, CritPt
-v2 robustness fixes, 2026-11-04) is handled with a minimal in-place relabel
-instead of a full archival: only the rows whose displayed score moved, plus
-newly measured additions, carry the new version tag, while untouched rows
-keep the older tag — so the ledger temporarily mixes two version blocks and
-the default view shows the small regrade cohort until a full refresh lands. Every row carries a
+v2 robustness fixes, 2026-11-04) is applied as an in-place retag of the whole
+ledger — AA regrades every measured model, so every row takes the new tag and
+no archive file is created. Rows whose rounded score did not move keep their
+values, but scores and costs are still re-verified per model page: a regrade
+can move a total cost without moving the displayed score. Every row carries a
 verified `released` date sourced from the Artificial Analysis leaderboard
 (`benchtool aa-releases`). A row may also carry `cost_usd`: the precise total
 Artificial Analysis charges to run the index on that model, read from the

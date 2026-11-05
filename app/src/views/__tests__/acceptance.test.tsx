@@ -102,9 +102,8 @@ describe('acceptance: every JSON row appears in the UI', () => {
     fireEvent.click(versionButton(previousVersion))
     expect(within(table).getAllByRole('row')).toHaveLength(previousRows.length + 1)
     // Models that first appear under the newly shown version start selected:
-    // their rows are not grayed out and they join the chart. GPT-6 Astra (max)
-    // kept its v5.0 row when the v5.0.1 regrade only relabeled moved scores.
-    expect(within(table).getByRole('button', { name: 'GPT-6 Astra (max)' })).toHaveAttribute('aria-pressed', 'true')
+    // their rows are not grayed out and they join the chart.
+    expect(within(table).getByRole('button', { name: 'Claude Opus 5 (max)' })).toHaveAttribute('aria-pressed', 'true')
     // The v4.2 backfill snapshot is listed and selectable like any version.
     const v42Rows = filterByAAVersion(intelligence, 'v4.2')
     fireEvent.click(versionButton('v4.2'))
@@ -132,7 +131,7 @@ describe('acceptance: every JSON row appears in the UI', () => {
     fireEvent.click(versionButton(latestVersion))
     expect(within(table).getAllByRole('row')).toHaveLength(latestIntelligence.length + 1)
     expect(within(table).queryByRole('button', { name: 'Claude Opus 5 (max)' })).not.toBeInTheDocument()
-    expect(versions).toEqual(['v5.0.1', 'v5.0', 'v4.3.2', 'v4.2', 'v4.1.1', 'v4.0.2', 'v3.0'])
+    expect(versions).toEqual(['v5.0.1', 'v4.3.2', 'v4.2', 'v4.1.1', 'v4.0.2', 'v3.0'])
   })
 
   it('selects every model of the shown version after mixing the Open Weights preset with version switches', () => {
@@ -177,19 +176,18 @@ describe('acceptance: every JSON row appears in the UI', () => {
     }
 
     // Each button's outline is its provider's bar color (the chart color
-    // key), independent of toggle state. The default view is the v5.0.1
-    // regrade cohort, so the pinned vendors come from it.
-    expect(vendor('Anthropic')).toHaveStyle({ borderColor: '#cc785c' })
+    // key), independent of toggle state.
+    expect(vendor('Alibaba')).toHaveStyle({ borderColor: '#F54F35' })
     expect(vendor('Google')).toHaveStyle({ borderColor: '#34A853' })
 
     // A single vendor button selects exactly that vendor's rows; the others
     // gray out, like the Open Weights preset.
-    fireEvent.click(vendor('Anthropic'))
-    assertSelection((entry) => entry.provider === 'Anthropic')
+    fireEvent.click(vendor('Alibaba'))
+    assertSelection((entry) => entry.provider === 'Alibaba')
 
-    // Additive: Google joins Anthropic. Subtractive: removing Anthropic leaves Google.
+    // Additive: Google joins Alibaba. Subtractive: removing Alibaba leaves Google.
     fireEvent.click(vendor('Google'))
-    fireEvent.click(vendor('Anthropic'))
+    fireEvent.click(vendor('Alibaba'))
     assertSelection((entry) => entry.provider === 'Google')
 
     // Toggling the last provider off restores the full selection.

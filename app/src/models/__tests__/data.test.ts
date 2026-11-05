@@ -75,14 +75,10 @@ describe('embedded data integrity', () => {
 
   it('derives a valid real Pareto default snapshot from the costed ai.json rows', () => {
     // The chart's default data comes from ai.json; this pins the derivation
-    // so a data edit that empties or breaks the snapshot fails here. The bar
-    // is 5 because the v5.0.1 default cohort is a minimal regrade relabel
-    // (2026-11-04): only the four score-moved rows plus Gemini 4 Carbon carry
-    // v5.0.1, all five costed. Raise the bar back when a full v5.0.1 refresh
-    // re-measures the rest of the ledger.
+    // so a data edit that empties or breaks the snapshot fails here.
     const snapshot = paretoSnapshotFromModels(intelligence)
     expect(snapshot.sample).toBe(false)
-    expect(snapshot.models.length).toBeGreaterThanOrEqual(5)
+    expect(snapshot.models.length).toBeGreaterThanOrEqual(20)
     expect(() => parseParetoDataset(snapshot)).not.toThrow()
   })
 
