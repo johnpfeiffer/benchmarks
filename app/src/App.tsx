@@ -181,7 +181,7 @@ function DashboardPage() {
   }, [allIntelligence, aaVersion])
 
   const sources: DataSourceCredit[] = [
-    { label: 'Artificial Analysis Intelligence Index v5.0', href: 'https://artificialanalysis.ai/articles/artificial-analysis-intelligence-index-v5' },
+    { label: 'Artificial Analysis Intelligence Index v5.0.1', href: 'https://artificialanalysis.ai/methodology/intelligence-benchmarking' },
     { label: 'HuggingFace and Unsloth', href: 'https://huggingface.co/unsloth' },
     { label: 'Wikipedia Hopper (microarchitecture)', href: 'https://en.wikipedia.org/wiki/Hopper_(microarchitecture)' },
     { label: 'NVIDIA Hopper Architecture', href: 'https://developer.nvidia.com/blog/nvidia-hopper-architecture-in-depth/' },
@@ -197,7 +197,9 @@ function DashboardPage() {
     { label: 'Inferbase B200 SXM', href: 'https://inferbase.ai/gpu-catalog/gpu/nvidia-b200-sxm' },
   ]
   // The lead chart's source chip keeps linking to the AA homepage; only the
-  // footer credit (sources[0]) links to the Intelligence Index v5.0 article.
+  // footer credit (sources[0]) links to the index's version authority. v5.0.1
+  // is a regrade with no announcement article, so the credit links to the
+  // methodology page whose version history names the current version.
   const intelligenceSource: DataSourceCredit = { label: 'Artificial Analysis', href: 'https://artificialanalysis.ai/' }
   const decisionSource: DataSourceCredit = {
     label: 'Artificial Analysis Decision Index',

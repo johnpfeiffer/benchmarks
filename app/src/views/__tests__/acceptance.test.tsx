@@ -131,7 +131,7 @@ describe('acceptance: every JSON row appears in the UI', () => {
     fireEvent.click(versionButton(latestVersion))
     expect(within(table).getAllByRole('row')).toHaveLength(latestIntelligence.length + 1)
     expect(within(table).queryByRole('button', { name: 'Claude Opus 5 (max)' })).not.toBeInTheDocument()
-    expect(versions).toEqual(['v5.0', 'v4.3.2', 'v4.2', 'v4.1.1', 'v4.0.2', 'v3.0'])
+    expect(versions).toEqual(['v5.0.1', 'v4.3.2', 'v4.2', 'v4.1.1', 'v4.0.2', 'v3.0'])
   })
 
   it('selects every model of the shown version after mixing the Open Weights preset with version switches', () => {
@@ -235,9 +235,11 @@ describe('acceptance: every JSON row appears in the UI', () => {
     expandSection(/Pareto Frontier/)
     const section = screen.getByRole('heading', { name: 'Pareto Frontier' }).closest('section') as HTMLElement
     // Newest version by default: the current ledger dated by its page reads.
-    expect(within(section).getByText(/Intelligence Index v5\.0 · Snapshot 2026-10-28/)).toBeInTheDocument()
+    expect(within(section).getByText(/Intelligence Index v5\.0\.1 · Snapshot 2026-11-04/)).toBeInTheDocument()
+    // v4.3.2 has no captured charts, so its snapshot date falls back to the
+    // current ledger's page-read date.
     fireEvent.click(screen.getAllByRole('button', { name: 'v4.3.2' })[0])
-    expect(within(section).getByText(/Intelligence Index v4\.3\.2 · Snapshot 2026-10-28/)).toBeInTheDocument()
+    expect(within(section).getByText(/Intelligence Index v4\.3\.2 · Snapshot 2026-11-04/)).toBeInTheDocument()
     // Historical versions are dated by their chart capture.
     fireEvent.click(screen.getAllByRole('button', { name: 'v4.2' })[0])
     expect(within(section).getByText(/Intelligence Index v4\.2 · Snapshot 2026-09-04/)).toBeInTheDocument()
@@ -364,7 +366,9 @@ describe('acceptance: every JSON row appears in the UI', () => {
   it('credits the Artificial Analysis Intelligence Index with its version number in the footer', () => {
     render(<App />)
     const footer = screen.getByRole('contentinfo')
-    const credit = within(footer).getByRole('link', { name: 'Artificial Analysis Intelligence Index v5.0' })
-    expect(credit).toHaveAttribute('href', 'https://artificialanalysis.ai/articles/artificial-analysis-intelligence-index-v5')
+    const credit = within(footer).getByRole('link', { name: 'Artificial Analysis Intelligence Index v5.0.1' })
+    // v5.0.1 is a regrade with no announcement article; the methodology
+    // page's version history is the version authority.
+    expect(credit).toHaveAttribute('href', 'https://artificialanalysis.ai/methodology/intelligence-benchmarking')
   })
 })

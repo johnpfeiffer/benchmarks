@@ -97,3 +97,21 @@ deepseek-v4-pro
 The `?models=<comma-separated variant slugs>` query selects these models
 in the rendered charts. Raw initial HTML can still contain the defaults;
 check the fully loaded dataset before concluding a model has no score.
+
+## Addendum: v5.0.1 regrade (verified 2026-11-04)
+
+AA regraded every model on CritPt v2 (grading robustness improvements from
+the CritPt authors) and republished the index as **v5.0.1**; the suite is
+otherwise unchanged (same 9 evaluations and weights). There is no
+announcement article — the methodology page's version history is the
+version authority. The measured set grew from 78 to 96 variants, and the
+payload dropped the `intelligenceIndexIsEstimated` flag (a non-null
+`intelligenceIndex` now means measured). Four repo-tracked scores moved one
+point (Claude Opus 5.5 58→59, Claude Sonnet 5.5 54→55, Muse Spark 1.3
+36→37, DeepSeek V4.1 Flash 1017 32→33) and Gemini 4 Carbon (high) debuted
+at 60 as the new #1. Since AA regraded every measured model, the repo
+retagged the whole ledger `v5.0.1` in place — no v5.0 block or archive
+remains. Re-verifying every model page also caught two cost moves with
+unchanged scores (Gemini 4 Argon $3,051.42 → $7,620.22, Claude Fable 5.1
+$13,265.77 → $13,326.78). The baseline findings above remain valid for the
+v5.0 era they document.
