@@ -31,6 +31,7 @@ function renderChart(barValues?: boolean) {
   )
   return lastBarChartProps.current as {
     series: Array<{ barLabel?: string; barLabelPlacement?: string }>
+    yAxis: Array<{ min?: number; max?: number }>
     sx?: Record<string, { fill?: string }>
   }
 }
@@ -50,6 +51,22 @@ describe('IntelligenceBarChart value labels', () => {
     expect(props.sx?.['& .MuiBarChart-label']).toBeUndefined()
     // Grid styles are always present
     expect(props.sx?.['& .MuiChartsGrid-line']).toBeDefined()
+  })
+
+  it('keeps headroom above the tallest bar so outside value labels never clip', () => {
+    // Bar labels sit inside the plot area's clip path: when the y-axis tops
+    // out at exactly the highest score, that bar's label is cut off at the
+    // top (seen on Firefox). Alpha scores 60, so the axis keeps one 5-point
+    // grid step above it; the bottom still hugs the lowest score.
+    const props = renderChart(true)
+    expect(props.yAxis[0].max).toBe(65)
+    expect(props.yAxis[0].min).toBe(55)
+  })
+
+  it('leaves the axis max automatic when bar labels are off', () => {
+    // Without labels nothing overflows the plot area, so the axis stays tight.
+    const props = renderChart()
+    expect(props.yAxis[0].max).toBeUndefined()
   })
 })
 

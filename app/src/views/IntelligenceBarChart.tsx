@@ -102,6 +102,12 @@ export function IntelligenceBarChart({
   // #AIDEV: Cut empty space at the bottom by starting the y-axis near the lowest score
   const minScore = entries.length > 0 ? Math.min(...entries.map((e) => e.score)) : 0
   const yMin = Math.max(0, Math.floor((minScore - 5) / 5) * 5)
+  // Outside bar labels sit inside the plot area's clip path, so a label on
+  // the tallest bar is cut off when the axis tops out at exactly that score
+  // (seen on Firefox). Keep one 5-point grid step of headroom when labels
+  // are on; with labels off, leave the axis max automatic.
+  const maxScore = entries.length > 0 ? Math.max(...entries.map((e) => e.score)) : 0
+  const yMax = barValues ? Math.min(100, Math.ceil((maxScore + 5) / 5) * 5) : undefined
 
   return (
     <Box>
@@ -179,7 +185,7 @@ export function IntelligenceBarChart({
                     disableTicks: true,
                   },
                 ]}
-                yAxis={[{ label: scoreLabel, min: yMin, disableTicks: true }]}
+                yAxis={[{ label: scoreLabel, min: yMin, max: yMax, disableTicks: true }]}
                 margin={{ left: 60, right: 24, top: 40, bottom: 8 }}
                 grid={{ horizontal: true }}
                 borderRadius={3}
