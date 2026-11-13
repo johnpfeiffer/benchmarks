@@ -15,6 +15,7 @@
   {"model": "DeepSeek V4.1 Flash 1017 (max)", "intelligence_score": 33, "aa_version": "v5.0.1", "cost_usd": 520.63, "provider": "DeepSeek", "open_weight": true, "color": "#2243e6", "released": "2026-10-17"},
   {"model": "GLM-5.3 (max)", "intelligence_score": 32, "aa_version": "v5.0.1", "cost_usd": 3495.62, "provider": "Z AI", "open_weight": true, "color": "#1c7ff8", "released": "2026-08-18"},
   {"model": "Gemini 3.8 Flash (high)", "intelligence_score": 31, "aa_version": "v5.0.1", "cost_usd": 5763.75, "provider": "Google", "open_weight": false, "color": "#34A853", "released": "2026-09-02"},
+  {"model": "Inkling 2 Small", "intelligence_score": 31, "aa_version": "v5.0.1", "cost_usd": 791.81, "provider": "Thinking Machines", "open_weight": true, "color": "#676767", "released": "2026-11-05"},
   {"model": "MiMo-V2.6-Pro", "intelligence_score": 30, "aa_version": "v5.0.1", "cost_usd": 220.73, "provider": "Xiaomi", "open_weight": true, "color": "#9E9E9E", "released": "2026-09-21"},
   {"model": "GPT-6 Luna (max)", "intelligence_score": 28, "aa_version": "v5.0.1", "cost_usd": 136.06, "provider": "OpenAI", "open_weight": false, "color": "#1f1f1f", "released": "2026-09-22"},
   {"model": "DeepSeek V4 Pro 0813 (max)", "intelligence_score": 23, "aa_version": "v5.0.1", "cost_usd": 1401.88, "provider": "DeepSeek", "open_weight": true, "color": "#2243e6", "released": "2026-08-13"},
