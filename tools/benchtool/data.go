@@ -3,6 +3,7 @@ package main
 import (
 	"encoding/json"
 	"fmt"
+	"math"
 	"net/url"
 	"os"
 	"path/filepath"
@@ -203,11 +204,16 @@ func versionParts(v string) []int {
 
 // parseAICost validates a --cost=USD flag value: a positive finite dollar
 // amount. Zero is rejected because the Pareto chart's log cost axis (and the
-// app-side parser) require a positive cost.
+// app-side parser) require a positive cost. NaN and ±Inf are rejected
+// explicitly: ParseFloat accepts them, NaN slips past the cost <= 0 check,
+// and both render as bare NaN/+Inf tokens, which are invalid JSON.
 func parseAICost(flag string) (float64, error) {
 	cost, err := strconv.ParseFloat(strings.TrimPrefix(flag, "--cost="), 64)
 	if err != nil {
 		return 0, fmt.Errorf("cost %q is not a number", flag)
+	}
+	if math.IsNaN(cost) || math.IsInf(cost, 0) {
+		return 0, fmt.Errorf("cost must be a finite USD amount, got %v", cost)
 	}
 	if cost <= 0 {
 		return 0, fmt.Errorf("cost must be a positive USD amount, got %v", cost)
