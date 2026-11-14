@@ -256,7 +256,10 @@ func TestAIAddCostFlag(t *testing.T) {
 	if _, err := parseAICost("--cost=280.28"); err != nil {
 		t.Errorf("valid cost rejected: %v", err)
 	}
-	for _, bad := range []string{"--cost=0", "--cost=-5", "--cost=abc", "--cost="} {
+	// NaN and ±Inf parse as float64 (and NaN slips past the cost <= 0 check)
+	// but render as the bare tokens NaN/+Inf in ai.json, which is invalid JSON.
+	// -Inf and overflow already error out; pinned here as regressions.
+	for _, bad := range []string{"--cost=0", "--cost=-5", "--cost=abc", "--cost=", "--cost=NaN", "--cost=nan", "--cost=+Inf", "--cost=Inf", "--cost=Infinity", "--cost=-Inf", "--cost=-Infinity", "--cost=1e999"} {
 		if _, err := parseAICost(bad); err == nil {
 			t.Errorf("parseAICost(%q) = nil, want error", bad)
 		}
