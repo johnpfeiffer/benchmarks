@@ -350,12 +350,17 @@ describe('acceptance: every JSON row appears in the UI', () => {
     }
     const swatchFor = (provider: string) =>
       within(content).getByText(provider).closest('li')?.querySelector('[aria-hidden]') as HTMLElement
-    // Four companies share #000000 in decision.json; after color resolution
-    // (models/decision.ts) each shows a different color.
-    const sharedBlack = ['Liquid AI', 'Subquadratic', 'Nace.AI', 'Fastino'].map((provider) =>
-      swatchFor(provider).getAttribute('style'),
-    )
-    expect(new Set(sharedBlack).size).toBe(4)
+    // AA captured these four companies at #000000; decision.json now carries
+    // each vendor's brand color (2026-11-14) and the legend shows exactly it.
+    const brandColors: Record<string, string> = {
+      'Liquid AI': '#7B3AED',
+      Subquadratic: '#E04E1F',
+      'Nace.AI': '#1264A3',
+      Fastino: '#FF7A4C',
+    }
+    for (const [provider, color] of Object.entries(brandColors)) {
+      expect(swatchFor(provider), provider).toHaveStyle({ backgroundColor: color })
+    }
     // A company that is also a known intelligence provider keeps its ai.json
     // color (OpenAI is #1f1f1f in ai.json).
     expect(swatchFor('OpenAI')).toHaveStyle({ backgroundColor: '#1f1f1f' })

@@ -145,10 +145,12 @@ and do not enter `ai.json` or the Pareto snapshot. See the verified
 launched 2026-10-13), a composite index testing decision models across
 classification, tool calling, knowledge and reasoning. One row per decision
 model (model, provider, score, color); scores are the rounded integers AA
-displays, colors mirror AA's per-creator colors (several creators share one
-color — four use #000000 in this capture — so the dashboard reassigns
-duplicates at render time; known Intelligence Index providers keep their
-ai.json color), and the rows mirror the
+displays, colors mirror AA's per-creator colors (AA's capture reused
+colors across creators — four shared #000000 — so since 2026-11-14 those
+rows carry each vendor's brand color instead: Liquid AI's per AA's current
+chart, the rest per their own sites; the dashboard still reassigns any
+remaining duplicate at render time, and known Intelligence Index providers
+keep their ai.json color), and the rows mirror the
 default decision-model selection on AA's evaluations page: contestants with
 `kind: decisionModel` and `isDefault: true` (the payload's `defaultSlugs`
 array was replaced by the per-contestant flag in early November 2026).
