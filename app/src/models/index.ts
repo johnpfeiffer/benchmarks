@@ -3,4 +3,6 @@ export { parseDecisionEntries, parseModelEntries, parseNewsEntries, parseHardwar
 export { sortModels, nextSortState, DEFAULT_SORT } from './sort'
 export { mergeHardwareIntelligence, modelMatchKey } from './merge'
 export { openWeightIds, presetSelectionIds, providerColorMap } from './filter'
+export { companyColorMap, withCompanyColors, decisionCompanies } from './decision'
+export type { DecisionCompany } from './decision'
 export { compareAAVersions, aaVersionsDesc, filterByAAVersion } from './version'

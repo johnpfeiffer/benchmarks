@@ -43,7 +43,7 @@ export interface RawDecisionEntry {
   provider: string
   /** Decision Index score as AA displays it (rounded integer). */
   score: number
-  /** Explicit bar color (hex), matching AA's creator color. */
+  /** Explicit bar color (hex), matching AA's creator color; creators can share one color, so the controller reassigns duplicates (models/decision.ts). */
   color?: string
 }
 
@@ -52,6 +52,7 @@ export interface DecisionEntry {
   model: string
   provider: string
   score: number
+  /** Bar color; the controller resolves one distinct color per company before render (models/decision.ts). */
   color?: string
 }
 

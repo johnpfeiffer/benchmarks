@@ -15,6 +15,8 @@ import {
   presetSelectionIds,
   aaVersionsDesc,
   filterByAAVersion,
+  providerColorMap,
+  withCompanyColors,
   DEFAULT_SORT,
   type ModelEntry,
   type SortField,
@@ -109,8 +111,17 @@ function DashboardPage() {
   )
   const news = useMemo(() => parseNewsEntries(rawNewsData), [])
   // Decision Index rows arrive highest-score-first from the parser; the
-  // decision chart renders them as-is (no toggles, no table).
-  const decisionEntries = useMemo(() => parseDecisionEntries(rawDecisionData.rows), [])
+  // decision chart and its Decision Models Details legend render them with
+  // no toggles and no table. Each company's chart color is resolved once
+  // (models/decision.ts): a company that is a known intelligence provider
+  // reuses its ai.json color, the first claimant of a duplicated
+  // decision.json color keeps it, and the rest are reassigned, so the bars
+  // and the legend swatches read one source.
+  const knownProviderColors = useMemo(() => providerColorMap(allIntelligence), [allIntelligence])
+  const decisionEntries = useMemo(
+    () => withCompanyColors(parseDecisionEntries(rawDecisionData.rows), knownProviderColors),
+    [knownProviderColors],
+  )
   // Hardware rows carry a single score per model: always the newest version's.
   const latestIntelligence = useMemo(
     () => filterByAAVersion(allIntelligence, aaVersions[0]),
