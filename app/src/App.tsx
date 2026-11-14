@@ -112,11 +112,9 @@ function DashboardPage() {
   const news = useMemo(() => parseNewsEntries(rawNewsData), [])
   // Decision Index rows arrive highest-score-first from the parser; the
   // decision chart and its Decision Models Details legend render them with
-  // no toggles and no table. Each company's chart color is resolved once
-  // (models/decision.ts): a company that is a known intelligence provider
-  // reuses its ai.json color, the first claimant of a duplicated
-  // decision.json color keeps it, and the rest are reassigned, so the bars
-  // and the legend swatches read one source.
+  // no toggles and no table. A company that is also a known intelligence
+  // provider reuses its ai.json color (models/decision.ts); every other row
+  // keeps its decision.json brand color.
   const knownProviderColors = useMemo(() => providerColorMap(allIntelligence), [allIntelligence])
   const decisionEntries = useMemo(
     () => withCompanyColors(parseDecisionEntries(rawDecisionData.rows), knownProviderColors),

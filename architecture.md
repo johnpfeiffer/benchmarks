@@ -86,7 +86,7 @@ flowchart TD
 | `version.ts` | `compareAAVersions`, `aaVersionsDesc`, `filterByAAVersion`; numeric newest-first ordering of the `aa_version` tags present in a row set, and the per-version row slice the dashboard renders |
 | `sort.ts` | `sortModels`, `nextSortState`, `DEFAULT_SORT` (score desc) |
 | `filter.ts` | `openWeightIds`, `presetSelectionIds`; the id sets behind the "Open Weights" and provider presets (the union of the chosen providers' rows, intersected with the open-weight rows when that preset is on). `providerColorMap` maps each provider to its chart bar color (first row with a color wins) for the provider buttons' outlines |
-| `decision.ts` | `companyColorMap`, `withCompanyColors`, `decisionCompanies`, `DecisionCompany`; one chart color per Decision Index company — known intelligence providers reuse their ai.json color, the first claimant of a duplicated decision.json color keeps it, the rest are reassigned from a fallback palette — and the company → models grouping behind the Decision Models Details legend |
+| `decision.ts` | `withCompanyColors`, `decisionCompanies`, `DecisionCompany`; a Decision Index company that is also a known intelligence provider reuses its ai.json color (every other row keeps its decision.json brand color), and the company → models grouping behind the Decision Models Details legend |
 | `index.ts` | Public re-exports |
 
 `data/ai.json` tracks the Artificial Analysis Intelligence Index, keeping one
@@ -148,9 +148,8 @@ model (model, provider, score, color); scores are the rounded integers AA
 displays, colors mirror AA's per-creator colors (AA's capture reused
 colors across creators — four shared #000000 — so since 2026-11-14 those
 rows carry each vendor's brand color instead: Liquid AI's per AA's current
-chart, the rest per their own sites; the dashboard still reassigns any
-remaining duplicate at render time, and known Intelligence Index providers
-keep their ai.json color), and the rows mirror the
+chart, the rest per their own sites; a company that is also a known
+Intelligence Index provider shows its ai.json color), and the rows mirror the
 default decision-model selection on AA's evaluations page: contestants with
 `kind: decisionModel` and `isDefault: true` (the payload's `defaultSlugs`
 array was replaced by the per-contestant flag in early November 2026).
@@ -184,9 +183,9 @@ All views are pure (props in, callbacks out, no business logic):
   nothing renders italic. The row contract is the minimal `BarChartEntry`
   (model, provider, score, optional color and cost), which both `ModelEntry`
   and `DecisionEntry` satisfy; the Decision Index section at the very top of
-  the page reuses this chart (bars colored per company from `data/decision.json`'s
-  creator colors with duplicates reassigned — see `models/decision.ts` —
-  plus the collapsed Decision Models Details legend; no table and no toggles). The chart shows each
+  the page reuses this chart (bars colored by the creator colors in
+  `data/decision.json`, plus the collapsed Decision Models Details legend;
+  no table and no toggles). The chart shows each
   bar's score above the bar in small
   secondary-colored text (MUI X `barLabel: 'value'` with
   `barLabelPlacement: 'outside'`, gated by the `barValues` prop) and starts
@@ -201,9 +200,8 @@ All views are pure (props in, callbacks out, no business logic):
 - `DecisionModelsDetails` - collapsible (Accordion, collapsed by default) legend
   for the Decision Index chart: one row per company with its chart-color
   swatch and the models it makes (name and score), grouped via
-  `models/decision.ts`. Companies that share a color in decision.json show
-  their reassigned distinct color; known Intelligence Index providers show
-  their ai.json color.
+  `models/decision.ts`. Colors come straight from decision.json; known
+  Intelligence Index providers show their ai.json color.
 - `ModelTable` - collapsible (Accordion, collapsed by default) sortable table;
   headers `Intelligence`, `Model Name`, `Provider`, `Released`, and
   `Benchmark cost USD`; click headers to
