@@ -215,12 +215,36 @@ describe('Dashboard', () => {
       expect(within(decisionSection).getAllByText('Jev 9.99').length).toBeGreaterThan(0)
       expect(within(decisionSection).getAllByText('Clef-Test').length).toBeGreaterThan(0)
       expect(decisionSection.querySelectorAll('.MuiBarChart-element')).toHaveLength(decisionEntries.length)
-      // No table, no toggles: just the chart.
+      // Still no table and no filter toggles; the section's only button is
+      // the collapsed Decision Models Details legend (the "chart only"
+      // contract was deliberately extended on 2026-11-14).
       expect(within(decisionSection).queryByRole('table')).not.toBeInTheDocument()
-      expect(within(decisionSection).queryByRole('button')).not.toBeInTheDocument()
+      expect(within(decisionSection).getAllByRole('button')).toHaveLength(1)
+      expect(within(decisionSection).getByRole('button', { name: /Decision Models Details/i })).toHaveAttribute(
+        'aria-expanded',
+        'false',
+      )
     } finally {
       restoreCanvas()
     }
+  })
+
+  it('Decision Models Details explains each company with its models, scores, and chart color', () => {
+    renderDashboard()
+    const summary = screen.getByRole('button', { name: /Decision Models Details/i })
+    fireEvent.click(summary)
+    const content = document.getElementById('decision-details-content') as HTMLElement
+    // One row per company: name, its models with scores, and a swatch in the
+    // company's chart bar color.
+    for (const company of ['TypeSafe', 'Cloudflare']) {
+      expect(within(content).getAllByText(company)).toHaveLength(1)
+    }
+    expect(within(content).getByText(/Jev 9\.99 \(58\)/)).toBeInTheDocument()
+    expect(within(content).getByText(/Clef-Test \(49\)/)).toBeInTheDocument()
+    const swatchFor = (company: string) =>
+      within(content).getByText(company).closest('li')?.querySelector('[aria-hidden]') as HTMLElement
+    expect(swatchFor('TypeSafe')).toHaveStyle({ backgroundColor: '#E650BA' })
+    expect(swatchFor('Cloudflare')).toHaveStyle({ backgroundColor: '#f18322' })
   })
 
   it('swaps the chart and table between Intelligence Index versions via the toggle', () => {

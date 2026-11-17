@@ -336,6 +336,38 @@ describe('acceptance: every JSON row appears in the UI', () => {
     }
   })
 
+  it('lists every decision.json provider in Decision Models Details, one distinct color per company', () => {
+    render(<App />)
+    expandSection(/Decision Models Details/)
+    const content = document.getElementById('decision-details-content') as HTMLElement
+    const providers = [...new Set(decision.map((entry) => entry.provider))]
+    for (const provider of providers) {
+      expect(within(content).getByText(provider), provider).toBeInTheDocument()
+    }
+    for (const entry of decision) {
+      const modelAndScore = new RegExp(`${entry.model.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')} \\(${entry.score}\\)`)
+      expect(within(content).getByText(modelAndScore), entry.model).toBeInTheDocument()
+    }
+    const swatchFor = (provider: string) =>
+      within(content).getByText(provider).closest('li')?.querySelector('[aria-hidden]') as HTMLElement
+    // AA captured these four companies at #000000; decision.json now carries
+    // each vendor's brand color (2026-11-14) and the legend shows exactly it.
+    const brandColors: Record<string, string> = {
+      'Liquid AI': '#7B3AED',
+      Subquadratic: '#E04E1F',
+      'Nace.AI': '#1264A3',
+      Fastino: '#FF7A4C',
+    }
+    for (const [provider, color] of Object.entries(brandColors)) {
+      expect(swatchFor(provider), provider).toHaveStyle({ backgroundColor: color })
+    }
+    // A company that is also a known intelligence provider keeps its ai.json
+    // color (OpenAI is #1f1f1f in ai.json).
+    expect(swatchFor('OpenAI')).toHaveStyle({ backgroundColor: '#1f1f1f' })
+    // Full-app render plus ~40 queries: carry an explicit budget like the
+    // provider-filter acceptance test.
+  }, 10000)
+
   it('navigates via a fixed section menu whose anchor links all resolve on the page', () => {
     render(<App />)
     fireEvent.click(screen.getByRole('button', { name: 'Section menu' }))

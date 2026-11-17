@@ -43,7 +43,7 @@ export interface RawDecisionEntry {
   provider: string
   /** Decision Index score as AA displays it (rounded integer). */
   score: number
-  /** Explicit bar color (hex), matching AA's creator color. */
+  /** Explicit bar color (hex) — the creator's brand color. */
   color?: string
 }
 
@@ -52,6 +52,7 @@ export interface DecisionEntry {
   model: string
   provider: string
   score: number
+  /** Bar color; known intelligence providers show their ai.json color (models/decision.ts). */
   color?: string
 }
 

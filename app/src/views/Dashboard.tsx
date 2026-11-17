@@ -4,6 +4,7 @@ import type { DecisionEntry, GpuEntry, HardwareEntry, MachineEntry, ModelEntry, 
 import type { ParetoDataset } from '../models/pareto'
 import { IntelligenceBarChart } from './IntelligenceBarChart'
 import { ModelTable } from './ModelTable'
+import { DecisionModelsDetails } from './DecisionModelsDetails'
 import { HISTORICAL_AA_VERSIONS, HistoricalIntelligenceCharts } from './HistoricalIntelligenceCharts'
 import { Footer } from './Footer'
 import { NewsSection } from './NewsSection'
@@ -108,7 +109,8 @@ export function Dashboard({
         </Typography>
       </Box>
 
-      {/* Decision models lead the page: the newest index, chart only. */}
+      {/* Decision models lead the page: the newest index, chart plus the
+          collapsed Decision Models Details company legend. */}
       <Box component="section" aria-labelledby="decision-index-title" sx={{ mb: 4 }}>
         <Box sx={{ display: 'flex', alignItems: 'center', gap: 1, mb: 1, flexWrap: 'wrap' }}>
           <Typography id="decision-index-title" variant="h5" component="h2">
@@ -130,6 +132,9 @@ export function Dashboard({
           barValues
           italicsForMissingCost={false}
         />
+        <Box sx={{ mt: 1 }}>
+          <DecisionModelsDetails entries={decisionEntries} />
+        </Box>
       </Box>
 
       <Box component="section" aria-labelledby="intelligence-title" sx={{ mb: 4 }}>
