@@ -14,10 +14,9 @@ interface DecisionModelsDetailsProps {
  * Collapsed-by-default legend for the Decision Index chart: one row per
  * company with its chart-color swatch and the models it makes, mirroring the
  * color key the Model Details provider buttons give the intelligence chart.
- * The Decision Index has no toggles or table; App.tsx applies the one
- * color rule — a company that is also a known intelligence provider reuses
- * its ai.json color — before the rows reach the chart or this legend, so
- * both read the same entries.
+ * The Decision Index has no toggles or table; the legend and the chart
+ * read the same decision.json rows, so a company's swatch always matches
+ * its bars.
  *
  * Pure presentation: grouping and colors come from the models layer.
  */
@@ -52,8 +51,8 @@ export function DecisionModelsDetails({ entries, title = 'Decision Models Detail
           ))}
         </Box>
         <Typography variant="caption" component="p" color="text.secondary" sx={{ px: 2, pb: 1, m: 0, fontStyle: 'italic' }}>
-          The company behind each Decision Index model, keyed to its chart bar color. Known Intelligence Index
-          providers keep their ai.json color.
+          The company behind each Decision Index model, keyed to its chart bar color (colors from decision.json;
+          known Intelligence Index providers share their ai.json color).
         </Typography>
       </AccordionDetails>
     </Accordion>

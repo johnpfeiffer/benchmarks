@@ -361,8 +361,9 @@ describe('acceptance: every JSON row appears in the UI', () => {
     for (const [provider, color] of Object.entries(brandColors)) {
       expect(swatchFor(provider), provider).toHaveStyle({ backgroundColor: color })
     }
-    // A company that is also a known intelligence provider keeps its ai.json
-    // color (OpenAI is #1f1f1f in ai.json).
+    // A company that is also a known intelligence provider carries its
+    // ai.json color verbatim in decision.json (synced at data-entry time;
+    // OpenAI is #1f1f1f in both files).
     expect(swatchFor('OpenAI')).toHaveStyle({ backgroundColor: '#1f1f1f' })
     // Full-app render plus ~40 queries: carry an explicit budget like the
     // provider-filter acceptance test.
