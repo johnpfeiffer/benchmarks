@@ -20,6 +20,7 @@ import rawHistoricalV402Data from '../../data/ai-2026-02-19.json'
 import rawHistoricalV30Data from '../../data/ai-2025-12-30.json'
 import rawNewsData from '../../data/news.json'
 import rawDecisionData from '../../data/decision.json'
+import rawDecisionV10Data from '../../data/decision-2026-11-04.json'
 import rawHardwareData from '../../data/hardware.json'
 import rawGpuData from '../../data/gpu.json'
 import rawMachineData from '../../data/machines.json'
@@ -43,6 +44,7 @@ const intelligence = parseModelEntries([
 ])
 const news = parseNewsEntries(rawNewsData)
 const decision = parseDecisionEntries(rawDecisionData.rows)
+const decisionV10 = parseDecisionEntries(rawDecisionV10Data.rows)
 // Mirror App.tsx: the dashboard shows one index version at a time (newest by
 // default), and hardware scores always merge from the newest version's block.
 const latestVersion = aaVersionsDesc(intelligence)[0]
@@ -335,6 +337,28 @@ describe('acceptance: every JSON row appears in the UI', () => {
       restoreCanvas()
     }
   })
+
+  it('switches the Decision Index chart between the current version and the v1.0 snapshot', () => {
+    const restoreCanvas = pinChartCanvas()
+    try {
+      render(<App />)
+      const section = screen.getByRole('heading', { name: 'Artificial Analysis Decision Index' }).closest('section') as HTMLElement
+      // Newest version (v2.1) by default: a v2.1-only model leads the chart.
+      expect(within(section).getAllByText('Mammoth 27B').length).toBeGreaterThan(0)
+      expect(section.querySelectorAll('.MuiBarChart-element')).toHaveLength(decision.length)
+      // The legend summary's version selector swaps in the archived v1.0 rows.
+      fireEvent.click(within(section).getByRole('button', { name: 'v1.0' }))
+      expect(section.querySelectorAll('.MuiBarChart-element')).toHaveLength(decisionV10.length)
+      for (const entry of decisionV10) {
+        expect(within(section).getAllByText(entry.model).length).toBeGreaterThan(0)
+      }
+      expect(within(section).queryByText('Mammoth 27B')).not.toBeInTheDocument()
+      // The version click does not expand the legend accordion.
+      expect(screen.getByRole('button', { name: /Decision Models Details/i })).toHaveAttribute('aria-expanded', 'false')
+    } finally {
+      restoreCanvas()
+    }
+  }, 10000)
 
   it('lists every decision.json provider in Decision Models Details, one distinct color per company', () => {
     render(<App />)

@@ -136,9 +136,10 @@ function normalizeDecision(raw: RawDecisionEntry, index: number): DecisionEntry 
   }
   const model = assertModelName(raw?.model, index)
   const score = assertScore(raw?.score, index, model, 'score')
+  const aa_version = assertAAVersion(raw?.aa_version, index, model)
   const color = typeof raw?.color === 'string' && raw.color.trim() !== '' ? raw.color : undefined
 
-  return { model, provider, score, ...(color ? { color } : {}) }
+  return { model, provider, score, aa_version, ...(color ? { color } : {}) }
 }
 
 /**

@@ -263,15 +263,15 @@ describe('parseMachineEntries', () => {
 
 describe('parseDecisionEntries', () => {
   const validDecision: RawDecisionEntry[] = [
-    { model: 'Decider', provider: 'Perplexity', score: 53 },
-    { model: 'Jev 1.13', provider: 'TypeSafe', score: 58, color: '#E650BA' },
+    { model: 'Decider', provider: 'Perplexity', score: 53, aa_version: 'v2.1' },
+    { model: 'Jev 1.13', provider: 'TypeSafe', score: 58, aa_version: 'v2.1', color: '#E650BA' },
   ]
 
   it('normalizes valid entries and sorts score descending', () => {
     const out = parseDecisionEntries(validDecision)
     expect(out.map((entry) => entry.model)).toEqual(['Jev 1.13', 'Decider'])
-    expect(out[0]).toEqual({ model: 'Jev 1.13', provider: 'TypeSafe', score: 58, color: '#E650BA' })
-    expect(out[1]).toEqual({ model: 'Decider', provider: 'Perplexity', score: 53 })
+    expect(out[0]).toEqual({ model: 'Jev 1.13', provider: 'TypeSafe', score: 58, aa_version: 'v2.1', color: '#E650BA' })
+    expect(out[1]).toEqual({ model: 'Decider', provider: 'Perplexity', score: 53, aa_version: 'v2.1' })
   })
 
   it.each([
@@ -279,6 +279,8 @@ describe('parseDecisionEntries', () => {
     { name: 'empty provider', row: { model: 'X', provider: ' ', score: 1 }, inv: 'INV-001' },
     { name: 'missing model', row: { provider: 'P', score: 1 }, inv: 'MODEL-NAME' },
     { name: 'non-numeric score', row: { model: 'X', provider: 'P', score: '58' }, inv: 'SCORE-NUMBER' },
+    { name: 'missing aa_version', row: { model: 'X', provider: 'P', score: 1 }, inv: 'MODEL-AA-VERSION' },
+    { name: 'malformed aa_version', row: { model: 'X', provider: 'P', score: 1, aa_version: '2.1' }, inv: 'MODEL-AA-VERSION' },
   ])('rejects a row with $name', ({ row, inv }) => {
     try {
       parseDecisionEntries([row as unknown as RawDecisionEntry])

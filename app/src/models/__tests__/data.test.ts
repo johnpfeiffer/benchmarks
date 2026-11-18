@@ -13,6 +13,7 @@ import rawNewsData from '../../data/news.json'
 import rawHardwareData from '../../data/hardware.json'
 import rawMachineData from '../../data/machines.json'
 import rawDecisionData from '../../data/decision.json'
+import rawDecisionV10Data from '../../data/decision-2026-11-04.json'
 
 /**
  * Data-integrity invariants only. This suite used to assert each JSON row's
@@ -135,7 +136,27 @@ describe('embedded data integrity', () => {
       // decision.json mirrors AA's creator colors; every row is expected to
       // carry one so the chart never falls back to a provider guess.
       expect(entry.color).toMatch(/^#[0-9A-Fa-f]{6}$/)
+      // The current ledger holds a single index version, matching its metadata.
+      expect(entry.aa_version).toBe(rawDecisionData.aa_version)
     }
+  })
+
+  it('the decision v1.0 snapshot holds only v1.0 rows that meet the decision.json conventions', () => {
+    const backfill = parseDecisionEntries(rawDecisionV10Data.rows)
+    expect(backfill.length).toBeGreaterThan(0)
+    const names = backfill.map((entry) => entry.model)
+    expect(new Set(names).size).toBe(names.length)
+    for (const entry of backfill) {
+      expect(entry.aa_version).toBe('v1.0')
+      expect(entry.color).toMatch(/^#[0-9A-Fa-f]{6}$/)
+    }
+    // File order stays score-descending (the parser re-sorts anyway).
+    for (let i = 1; i < rawDecisionV10Data.rows.length; i++) {
+      expect(rawDecisionV10Data.rows[i].score).toBeLessThanOrEqual(rawDecisionV10Data.rows[i - 1].score)
+    }
+    // No (model, version) pair may exist in both files.
+    const mainKeys = new Set(parseDecisionEntries(rawDecisionData.rows).map((entry) => `${entry.aa_version}:${entry.model}`))
+    for (const entry of backfill) expect(mainKeys.has(`${entry.aa_version}:${entry.model}`)).toBe(false)
   })
 
   it('hardware rows with an AI namesake carry that row\'s intelligence score', () => {
