@@ -1,38 +1,13 @@
 import { describe, it, expect } from 'vitest'
-import { withCompanyColors, decisionCompanies } from '../decision'
+import { decisionCompanies } from '../decision'
 import type { DecisionEntry } from '../types'
 
 /**
- * Decision rows keep their explicit decision.json brand colors; the only
- * view-level rule is that a company which is also a known Intelligence Index
- * provider reuses its ai.json color, so a vendor on both charts shows one
- * color (OpenAI is the only such company today).
+ * The Decision Models Details legend groups each company with its models in
+ * chart order. Colors come verbatim from decision.json — the
+ * research-ai-models skill syncs them at data-entry time (a company that is
+ * also an intelligence provider takes its ai.json color).
  */
-describe('withCompanyColors', () => {
-  it('applies the known intelligence provider color to its decision rows without mutating the input', () => {
-    const entries: DecisionEntry[] = [
-      { model: 'GPT-6 Luna (Decisions)', provider: 'OpenAI', score: 48, color: '#000000' },
-      { model: 'Clef', provider: 'Cloudflare', score: 49, color: '#f18322' },
-    ]
-    const colored = withCompanyColors(entries, new Map([['OpenAI', '#1f1f1f']]))
-    expect(colored[0].color).toBe('#1f1f1f')
-    expect(colored[1].color).toBe('#f18322')
-    expect(entries[0].color).toBe('#000000')
-  })
-
-  it('leaves every row untouched when no company is a known provider', () => {
-    // One company's several models share its color in the data; that passes
-    // through as-is.
-    const entries: DecisionEntry[] = [
-      { model: 'd1-ultra', provider: 'Liquid AI', score: 65, color: '#7B3AED' },
-      { model: 'd1', provider: 'Liquid AI', score: 50, color: '#7B3AED' },
-      { model: 'Clef', provider: 'Cloudflare', score: 49, color: '#f18322' },
-      { model: 'Clef-Omni', provider: 'Cloudflare', score: 44, color: '#f18322' },
-    ]
-    expect(withCompanyColors(entries, new Map())).toEqual(entries)
-  })
-})
-
 describe('decisionCompanies', () => {
   it('groups each company with its models in first-appearance (chart) order', () => {
     const entries: DecisionEntry[] = [

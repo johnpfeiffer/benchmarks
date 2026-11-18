@@ -14,24 +14,11 @@ export interface DecisionCompany {
 const UNCOLORED = '#757575'
 
 /**
- * Decision rows with Intelligence Index provider colors applied: a company
- * that is also a known intelligence provider reuses its ai.json color, so a
- * vendor on both charts shows one color. Every other row keeps its explicit
- * decision.json color untouched. Input rows are not mutated.
- */
-export function withCompanyColors(
-  entries: readonly DecisionEntry[],
-  knownProviderColors: ReadonlyMap<string, string>,
-): DecisionEntry[] {
-  return entries.map((entry) => {
-    const known = knownProviderColors.get(entry.provider)
-    return known ? { ...entry, color: known } : entry
-  })
-}
-
-/**
  * The legend rows for Decision Models Details: each company in chart order
- * with the models it makes and their scores.
+ * with the models it makes and their scores. Colors come verbatim from
+ * decision.json — the research-ai-models skill keeps them synced at
+ * data-entry time (a company that is also an intelligence provider takes
+ * its ai.json color), so no runtime color logic is needed.
  */
 export function decisionCompanies(entries: readonly DecisionEntry[]): DecisionCompany[] {
   const companies = new Map<string, { provider: string; color: string; models: { model: string; score: number }[] }>()

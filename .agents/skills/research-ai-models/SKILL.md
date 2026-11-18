@@ -293,7 +293,15 @@ from the Intelligence Index, with its own conventions):
   with 58" = indexScore 57.50). Store the integer using JavaScript
   `Math.round` semantics, not banker's rounding. Cross-check current chart
   labels; launch prose may describe an older selection.
-- Colors: store AA's `creatorColor` per row (every row carries one).
+- Colors: every row carries one, decided at data-entry time — no
+  runtime recoloring. When the provider already exists in `ai.json`, reuse
+  that row's color so one company shows one color across both charts (e.g.
+  OpenAI is `#1f1f1f` in both files). Otherwise store AA's `creatorColor`;
+  when AA ships a shared placeholder (2026-11-04: four creators at
+  `#000000`), substitute the vendor's own brand color from its website and
+  record the substitution in the file's `note` and the PR body (precedent:
+  the 2026-11-14 brand-color reseed of Liquid AI, Subquadratic, Nace.AI,
+  and Fastino).
 - Verify `aa_version` against the explicit **Version History** at
   `https://artificialanalysis.ai/methodology/decision-index` (v1.0 as of
   2026-10-29). Score movement or a changed selection alone does not prove

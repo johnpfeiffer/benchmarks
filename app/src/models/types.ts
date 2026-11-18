@@ -52,7 +52,7 @@ export interface DecisionEntry {
   model: string
   provider: string
   score: number
-  /** Bar color; known intelligence providers show their ai.json color (models/decision.ts). */
+  /** Bar color from decision.json — the creator's brand color; known intelligence providers carry their ai.json color (synced at data-entry time). */
   color?: string
 }
 
