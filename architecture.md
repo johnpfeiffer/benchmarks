@@ -49,7 +49,7 @@ flowchart TD
     Models -->|INV-001 gate| Validated["ModelEntry[] per source"]
     App -->|sorted table rows + selected ids| Dashboard["views/Dashboard"]
     Dashboard --> DecisionChart["IntelligenceBarChart<br/>(Decision Index; top section)"]
-    Dashboard --> DecisionDetails["DecisionModelsDetails<br/>(collapsed company-color legend)"]
+    Dashboard --> DecisionDetails["DecisionModelsDetails<br/>(collapsed company-color legend + version selector)"]
     Dashboard --> ChartA["IntelligenceBarChart<br/>(Artificial Analysis)"]
     Dashboard --> Menu["SectionMenu<br/>(fixed hamburger, top right; anchor link per section)"]
     Dashboard --> News["NewsSection<br/>(collapsed; top-3 preview always visible)"]
@@ -141,30 +141,36 @@ overlapping evaluations. Progress scores are not Intelligence Index scores
 and do not enter `ai.json` or the Pareto snapshot. See the verified
 [historical baseline findings](docs/aa-historical-baselines-2026-10-29.md).
 
-`data/decision.json` tracks the Artificial Analysis Decision Index (v1.0,
-launched 2026-10-13), a composite index testing decision models across
-classification, tool calling, knowledge and reasoning. One row per decision
-model (model, provider, score, color); scores are the rounded integers AA
-displays, colors mirror AA's per-creator colors (AA's capture reused
-colors across creators — four shared #000000 — so since 2026-11-14 those
-rows carry each vendor's brand color instead: Liquid AI's per AA's current
-chart, the rest per their own sites; a company that is also a known
-Intelligence Index provider carries its ai.json color in the data — synced
-at data-entry time, with no runtime recoloring), and the rows mirror the
-default decision-model selection on AA's evaluations page: contestants with
+`data/decision.json` tracks the Artificial Analysis Decision Index (v2.1
+since 2026-11-18), a composite index testing decision models across
+document decisions and extraction, tool calling, knowledge, reasoning and
+invariance. One row per decision model per index version (model, provider,
+score, aa_version, color); scores are the rounded integers AA displays,
+colors mirror AA's per-creator colors (AA's capture reused colors across
+creators — four shared #000000 — so since 2026-11-14 those rows carry each
+vendor's brand color instead: Liquid AI's per AA's current chart, the rest
+per their own sites; a company that is also a known Intelligence Index
+provider carries its ai.json color in the data — synced at data-entry
+time, with no runtime recoloring), and the rows mirror the default
+decision-model selection on AA's evaluations page: contestants with
 `kind: decisionModel` and `isDefault: true` (the payload's `defaultSlugs`
 array was replaced by the per-contestant flag in early November 2026).
 Language-model comparisons are excluded even when flagged default, since
-"Include language models" defaults to off. AA-unselected predecessors (Jev
-1.13, Decider v1.1 27B, Drex 1.5) and Clef-Flash are excluded, and the
-maintainer additionally excludes AA-default dominated cheap/fast variants
-(Decider Flash v1.2, Drex 2.0) — noise in a class that is already cheap and
-fast. The 2026-11-04 capture contains 14 rows. The file carries `source`, `methodology`, `aa_version`,
-and `captured` metadata; a refresh replaces the rows in place and verifies
-the version against AA's explicit Decision Index methodology history, not
-score movement. AA also publishes task pricing and latency; our chart stays
-score-only, and task pricing is never treated as an Intelligence Index
-total evaluation cost.
+"Include language models" defaults to off. The maintainer additionally
+excludes AA-default dominated cheap/fast variants (v1.0: Decider Flash
+v1.2, Drex 2.0; v2.1: Decider Flash v1.3, Drex 2.0) — noise in a class
+that is already cheap and fast. The current file holds only the newest
+index version (16 rows); superseded versions live in dated
+`decision-YYYY-MM-DD.json` snapshots (v1.0: `decision-2026-11-04.json`),
+concatenated at parse time so the Decision Models Details summary's
+version selector can show each snapshot — the same pattern as the
+intelligence ledger's backfills. The file carries `source`, `methodology`,
+`aa_version`, and `captured` metadata; a refresh archives the outgoing
+version into a new dated snapshot and verifies the new version against
+AA's explicit Decision Index methodology history, not score movement. AA
+also publishes task pricing and latency; our chart stays score-only, and
+task pricing is never treated as an Intelligence Index total evaluation
+cost.
 
 ### Presentation (`views/`)
 
@@ -203,6 +209,9 @@ All views are pure (props in, callbacks out, no business logic):
   swatch and the models it makes (name and score), grouped via
   `models/decision.ts`. Colors come straight from decision.json, which
   reuses ai.json colors for known providers (synced at data-entry time).
+  When more than one index version exists, the accordion summary carries
+  the Decision Index version selector (same click-does-not-toggle pattern
+  as Model Details), switching the chart and legend together.
 - `ModelTable` - collapsible (Accordion, collapsed by default) sortable table;
   headers `Intelligence`, `Model Name`, `Provider`, `Released`, and
   `Benchmark cost USD`; click headers to

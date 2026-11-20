@@ -284,11 +284,11 @@ from the Intelligence Index, with its own conventions):
   baselines, while the default "Include language models" switch is off.
   The payload also retains unselected decision models (2026-11-04:
   Jev 1.13, Decider v1.1 27B, Drex 1.5, Clef-Flash). The maintainer may
-  additionally exclude AA-default variants that add noise (current
-  exclusions: Decider Flash v1.2, Drex 2.0 — dominated cheap/fast variants
-  in a class that is already cheap and fast). Cross-check the rendered
-  legend when available and list every exclusion in the file's `note` and
-  the PR body.
+  additionally exclude AA-default variants that add noise: dominated
+  cheap/fast variants in a class that is already cheap and fast (v1.0:
+  Decider Flash v1.2, Drex 2.0; v2.1: Decider Flash v1.3, Drex 2.0).
+  Cross-check the rendered legend when available and list every exclusion
+  in the file's `note` and the PR body.
 - Scores: payload floats, AA displays rounded integers ("Jev 1.13 leads
   with 58" = indexScore 57.50). Store the integer using JavaScript
   `Math.round` semantics, not banker's rounding. Cross-check current chart
@@ -303,10 +303,19 @@ from the Intelligence Index, with its own conventions):
   the 2026-11-14 brand-color reseed of Liquid AI, Subquadratic, Nace.AI,
   and Fastino).
 - Verify `aa_version` against the explicit **Version History** at
-  `https://artificialanalysis.ai/methodology/decision-index` (v1.0 as of
-  2026-10-29). Score movement or a changed selection alone does not prove
+  `https://artificialanalysis.ai/methodology/decision-index` (v2.1 as of
+  2026-11-18). Score movement or a changed selection alone does not prove
   a methodology revision. Point the file's `methodology` metadata there;
-  the dashboard's Source link remains the launch article.
+  the dashboard's Source link remains the launch article. Every row carries
+  a per-row `aa_version` tag (shape-checked by `MODEL-AA-VERSION`). When
+  the index version changes, archive the outgoing version's rows into
+  `app/src/data/decision-YYYY-MM-DD.json` (dated by that version's
+  `captured` date, per-row tags added at archival), refresh
+  `decision.json` to hold only the new version, and wire the new snapshot
+  into `app/src/App.tsx`, `app/src/models/__tests__/data.test.ts`,
+  `app/src/views/__tests__/acceptance.test.tsx`, and `architecture.md` —
+  the Decision Models Details summary's version selector then offers both
+  versions (precedent: the 2026-11-18 v1.0 → v2.1 refresh).
 - Superseded model versions persist in the payload unselected (observed:
   Jev 1.13 stayed at 57.50 when Jev 1.14 shipped at 57.07). Mirror AA's
   default legend: when AA unselects the predecessor, drop it from the file

@@ -23,9 +23,14 @@ export interface DataSourceCredit {
 interface DashboardProps {
   entries: readonly ModelEntry[]
   intelligenceChartEntries: readonly ModelEntry[]
-  /** Decision Index rows, highest score first (parser's canonical order). */
+  /** Decision Index rows of the shown version, highest score first (parser's canonical order). */
   decisionEntries: readonly DecisionEntry[]
   decisionSource: DataSourceCredit
+  /** Decision Index versions present in the data, newest first (selector renders when >1). */
+  decisionAaVersions?: readonly string[]
+  /** The Decision Index version currently shown. */
+  decisionAaVersion?: string
+  onDecisionAAVersionChange?: (version: string) => void
   /** Index versions present in ai.json, newest first. */
   aaVersions: readonly string[]
   /** The version currently shown in the chart and details table. */
@@ -70,6 +75,9 @@ export function Dashboard({
   intelligenceChartEntries,
   decisionEntries,
   decisionSource,
+  decisionAaVersions,
+  decisionAaVersion,
+  onDecisionAAVersionChange,
   aaVersions,
   aaVersion,
   onAAVersionChange,
@@ -110,7 +118,8 @@ export function Dashboard({
       </Box>
 
       {/* Decision models lead the page: the newest index, chart plus the
-          collapsed Decision Models Details company legend. */}
+          collapsed Decision Models Details company legend, whose summary
+          carries the Decision Index version selector. */}
       <Box component="section" aria-labelledby="decision-index-title" sx={{ mb: 4 }}>
         <Box sx={{ display: 'flex', alignItems: 'center', gap: 1, mb: 1, flexWrap: 'wrap' }}>
           <Typography id="decision-index-title" variant="h5" component="h2">
@@ -133,7 +142,12 @@ export function Dashboard({
           italicsForMissingCost={false}
         />
         <Box sx={{ mt: 1 }}>
-          <DecisionModelsDetails entries={decisionEntries} />
+          <DecisionModelsDetails
+            entries={decisionEntries}
+            aaVersions={decisionAaVersions}
+            aaVersion={decisionAaVersion}
+            onAAVersionChange={onDecisionAAVersionChange}
+          />
         </Box>
       </Box>
 

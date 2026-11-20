@@ -36,6 +36,10 @@ import rawHistoricalV402Data from './data/ai-2026-02-19.json'
 import rawHistoricalV30Data from './data/ai-2025-12-30.json'
 import rawNewsData from './data/news.json'
 import rawDecisionData from './data/decision.json'
+// The 2026-11-04 snapshot keeps Decision Index v1.0 so the version selector
+// can show it alongside the current v2.1 ledger (same pattern as the
+// ai-YYYY-MM-DD.json intelligence backfills).
+import rawDecisionV10Data from './data/decision-2026-11-04.json'
 import rawHardwareData from './data/hardware.json'
 import rawGpuData from './data/gpu.json'
 import rawMachineData from './data/machines.json'
@@ -109,11 +113,20 @@ function DashboardPage() {
   )
   const news = useMemo(() => parseNewsEntries(rawNewsData), [])
   // Decision Index rows arrive highest-score-first from the parser; the
-  // decision chart and its Decision Models Details legend render them with
-  // no toggles and no table. Colors come verbatim from decision.json —
-  // synced at data-entry time (see the research-ai-models skill), so no
-  // runtime color logic is needed.
-  const decisionEntries = useMemo(() => parseDecisionEntries(rawDecisionData.rows), [])
+  // decision chart and its Decision Models Details legend show one index
+  // version at a time (newest first by default), with no model-selection
+  // toggles and no table. Colors come verbatim from decision.json — synced
+  // at data-entry time (see the research-ai-models skill).
+  const allDecision = useMemo(
+    () => parseDecisionEntries([...rawDecisionData.rows, ...rawDecisionV10Data.rows]),
+    [],
+  )
+  const decisionAaVersions = useMemo(() => aaVersionsDesc(allDecision), [allDecision])
+  const [decisionAaVersion, setDecisionAaVersion] = useState(decisionAaVersions[0])
+  const decisionEntries = useMemo(
+    () => filterByAAVersion(allDecision, decisionAaVersion),
+    [allDecision, decisionAaVersion],
+  )
   // Hardware rows carry a single score per model: always the newest version's.
   const latestIntelligence = useMemo(
     () => filterByAAVersion(allIntelligence, aaVersions[0]),
@@ -223,6 +236,9 @@ function DashboardPage() {
       intelligenceChartEntries={table.chartEntries}
       decisionEntries={decisionEntries}
       decisionSource={decisionSource}
+      decisionAaVersions={decisionAaVersions}
+      decisionAaVersion={decisionAaVersion}
+      onDecisionAAVersionChange={setDecisionAaVersion}
       aaVersions={aaVersions}
       aaVersion={aaVersion}
       onAAVersionChange={handleAAVersionChange}

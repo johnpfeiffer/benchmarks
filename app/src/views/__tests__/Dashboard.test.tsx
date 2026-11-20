@@ -11,8 +11,8 @@ import { sortModels, nextSortState, presetSelectionIds, aaVersionsDesc, DEFAULT_
 
 // Decision Index fixture: small, sorted desc as the parser delivers.
 const decisionEntries: DecisionEntry[] = [
-  { model: 'Jev 9.99', provider: 'TypeSafe', score: 58, color: '#E650BA' },
-  { model: 'Clef-Test', provider: 'Cloudflare', score: 49, color: '#f18322' },
+  { model: 'Jev 9.99', provider: 'TypeSafe', score: 58, aa_version: 'v2.1', color: '#E650BA' },
+  { model: 'Clef-Test', provider: 'Cloudflare', score: 49, aa_version: 'v2.1', color: '#f18322' },
 ]
 
 const entries: ModelEntry[] = [
@@ -52,10 +52,14 @@ const machineEntries: MachineEntry[] = [
 ]
 
 /** Controller stand-in mirroring App.tsx: owns sort + version state, feeds sorted rows. */
-function DashboardController({ initialSort = DEFAULT_SORT, allEntries = entries }: { initialSort?: SortState; allEntries?: readonly ModelEntry[] }) {
+function DashboardController({ initialSort = DEFAULT_SORT, allEntries = entries, decisionFixture = decisionEntries }: { initialSort?: SortState; allEntries?: readonly ModelEntry[]; decisionFixture?: readonly DecisionEntry[] }) {
   const [sort, setSort] = useState<SortState>(initialSort)
   const aaVersions = aaVersionsDesc(allEntries)
   const [aaVersion, setAaVersion] = useState(aaVersions[0])
+  // Mirror App.tsx: the decision chart and legend show one index version.
+  const decisionVersions = aaVersionsDesc(decisionFixture)
+  const [decisionVersion, setDecisionVersion] = useState(decisionVersions[0])
+  const decisionShown = decisionFixture.filter((entry) => entry.aa_version === decisionVersion)
   const visible = allEntries.filter((entry) => entry.aa_version === aaVersion)
   const [selectedIds, setSelectedIds] = useState<Set<string>>(() => new Set(allEntries.map((entry) => entry.id)))
   const [openWeightsOnly, setOpenWeightsOnly] = useState(false)
@@ -107,8 +111,11 @@ function DashboardController({ initialSort = DEFAULT_SORT, allEntries = entries 
     <Dashboard
       entries={sorted}
       intelligenceChartEntries={chartEntries}
-      decisionEntries={decisionEntries}
+      decisionEntries={decisionShown}
       decisionSource={{ label: 'Artificial Analysis Decision Index', href: 'https://artificialanalysis.ai/articles/artificial-analysis-decision-index' }}
+      decisionAaVersions={decisionVersions}
+      decisionAaVersion={decisionVersion}
+      onDecisionAAVersionChange={setDecisionVersion}
       aaVersions={aaVersions}
       aaVersion={aaVersion}
       onAAVersionChange={handleAAVersionChange}
@@ -245,6 +252,33 @@ describe('Dashboard', () => {
       within(content).getByText(company).closest('li')?.querySelector('[aria-hidden]') as HTMLElement
     expect(swatchFor('TypeSafe')).toHaveStyle({ backgroundColor: '#E650BA' })
     expect(swatchFor('Cloudflare')).toHaveStyle({ backgroundColor: '#f18322' })
+  })
+
+  it('switches the decision chart between index versions without expanding the legend', () => {
+    const restoreCanvas = pinChartCanvas()
+    try {
+      const twoVersions: DecisionEntry[] = [
+        { model: 'Jev 9.99', provider: 'TypeSafe', score: 58, aa_version: 'v2.1', color: '#E650BA' },
+        { model: 'Jev 9.98', provider: 'TypeSafe', score: 55, aa_version: 'v1.0', color: '#E650BA' },
+      ]
+      render(
+        <ThemeProvider theme={theme}>
+          <CssBaseline />
+          <DashboardController decisionFixture={twoVersions} />
+        </ThemeProvider>,
+      )
+      const section = screen.getByRole('heading', { name: 'Artificial Analysis Decision Index' }).closest('section') as HTMLElement
+      // Newest version by default; the older row is nowhere in the section.
+      expect(within(section).getAllByText('Jev 9.99').length).toBeGreaterThan(0)
+      expect(within(section).queryByText('Jev 9.98')).not.toBeInTheDocument()
+      fireEvent.click(within(section).getByRole('button', { name: 'v1.0' }))
+      expect(within(section).getAllByText('Jev 9.98').length).toBeGreaterThan(0)
+      expect(within(section).queryByText('Jev 9.99')).not.toBeInTheDocument()
+      // The version click does not expand the legend accordion.
+      expect(within(section).getByRole('button', { name: /Decision Models Details/i })).toHaveAttribute('aria-expanded', 'false')
+    } finally {
+      restoreCanvas()
+    }
   })
 
   it('swaps the chart and table between Intelligence Index versions via the toggle', () => {
