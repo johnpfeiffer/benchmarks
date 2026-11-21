@@ -15,7 +15,9 @@ cyber speculation.
 Tier 1, independent benchmarkers and technical analysis (strongly preferred):
 
 - Artificial Analysis (`artificialanalysis.ai` articles and model pages): independent Intelligence Index evals
-- CodeRabbit blog (`coderabbit.ai/blog`): independent AI code-review benchmarks
+- CodeRabbit blog (`coderabbit.ai/blog`): independent AI code-review benchmarks,
+  but vet each post for substance first — the 2026-11-19 GPT-6.2 Sol/Astra
+  review was rejected by the maintainer as AI-generated slop (2026-11-20)
 - Semgrep blog (`semgrep.dev/blog`): independent security benchmark runs
 - Fireworks blog (`fireworks.ai/blog`): inference-provider technical write-ups
 - Hugging Face blog (`huggingface.co/blog`): open-weights technical breakdowns
