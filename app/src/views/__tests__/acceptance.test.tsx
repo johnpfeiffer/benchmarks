@@ -344,7 +344,7 @@ describe('acceptance: every JSON row appears in the UI', () => {
       render(<App />)
       const section = screen.getByRole('heading', { name: 'Artificial Analysis Decision Index' }).closest('section') as HTMLElement
       // Newest version (v2.1) by default: a v2.1-only model leads the chart.
-      expect(within(section).getAllByText('Mammoth 27B').length).toBeGreaterThan(0)
+      expect(within(section).getAllByText('Bison 31B').length).toBeGreaterThan(0)
       expect(section.querySelectorAll('.MuiBarChart-element')).toHaveLength(decision.length)
       // The legend summary's version selector swaps in the archived v1.0 rows.
       fireEvent.click(within(section).getByRole('button', { name: 'v1.0' }))
@@ -352,7 +352,7 @@ describe('acceptance: every JSON row appears in the UI', () => {
       for (const entry of decisionV10) {
         expect(within(section).getAllByText(entry.model).length).toBeGreaterThan(0)
       }
-      expect(within(section).queryByText('Mammoth 27B')).not.toBeInTheDocument()
+      expect(within(section).queryByText('Bison 31B')).not.toBeInTheDocument()
       // The version click does not expand the legend accordion.
       expect(screen.getByRole('button', { name: /Decision Models Details/i })).toHaveAttribute('aria-expanded', 'false')
     } finally {
