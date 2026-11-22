@@ -24,6 +24,7 @@
   {"model": "GPT-6 Luna (max)", "intelligence_score": 28, "aa_version": "v5.0.1", "cost_usd": 136.06, "provider": "OpenAI", "open_weight": false, "color": "#1f1f1f", "released": "2026-09-22"},
   {"model": "DeepSeek V4 Pro 0813 (max)", "intelligence_score": 23, "aa_version": "v5.0.1", "cost_usd": 1401.88, "provider": "DeepSeek", "open_weight": true, "color": "#2243e6", "released": "2026-08-13"},
   {"model": "Qwen3.8 27B (xhigh)", "intelligence_score": 20, "aa_version": "v5.0.1", "cost_usd": 2390.04, "provider": "Alibaba", "open_weight": true, "color": "#F54F35", "released": "2026-08-14"},
+  {"model": "Inkling 2 Mini", "intelligence_score": 20, "aa_version": "v5.0.1", "cost_usd": 405.84, "provider": "Thinking Machines", "open_weight": true, "color": "#676767", "released": "2026-11-20"},
   {"model": "MiniMax-M3", "intelligence_score": 19, "aa_version": "v5.0.1", "cost_usd": 878.03, "provider": "MiniMax", "open_weight": true, "color": "#EB3568", "released": "2026-06-01"},
   {"model": "Inkling", "intelligence_score": 12, "aa_version": "v5.0.1", "cost_usd": 1236.66, "provider": "Thinking Machines", "open_weight": true, "color": "#676767", "released": "2026-07-15"},
   {"model": "Nemotron 3 Ultra", "intelligence_score": 12, "aa_version": "v5.0.1", "cost_usd": 1541.98, "provider": "NVIDIA", "open_weight": true, "color": "#86b737", "released": "2026-06-04"},
