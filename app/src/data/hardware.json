@@ -9,5 +9,14 @@
   {"model": "DeepSeek V4 Flash 0731", "provider": "DeepSeek", "total_params": "284B", "iq1_m_gb": 86.9, "q2_k_xl_gb": 96.8, "q4_k_xl_gb": 155, "url": "https://huggingface.co/unsloth/DeepSeek-V4-Flash-0731-GGUF"},
   {"model": "Nemotron 3 Ultra 550B", "provider": "NVIDIA", "total_params": "550B", "iq1_m_gb": 188, "q2_k_xl_gb": 202, "q4_k_xl_gb": 360, "url": "https://huggingface.co/unsloth/NVIDIA-Nemotron-3-Ultra-550B-A55B-GGUF"},
   {"model": "Qwen3.8 Flash Next", "provider": "Alibaba", "total_params": "125B", "iq1_m_gb": 74.5, "q2_k_xl_gb": 78.9, "q4_k_xl_gb": 111, "url": "https://huggingface.co/unsloth/Qwen3.8-Flash-Next-GGUF"},
-  {"model": "Qwen3.8 27B", "provider": "Alibaba", "total_params": "27B", "iq1_m_gb": 6.73, "q2_k_xl_gb": 9.83, "q4_k_xl_gb": 17.6, "url": "https://huggingface.co/unsloth/Qwen3.8-27B-GGUF"}
+  {"model": "Qwen3.8 27B", "provider": "Alibaba", "total_params": "27B", "iq1_m_gb": 6.73, "q2_k_xl_gb": 9.83, "q4_k_xl_gb": 17.6, "url": "https://huggingface.co/unsloth/Qwen3.8-27B-GGUF"},
+  {"model": "DeepSeek V4.1 Flash 1017", "provider": "DeepSeek", "total_params": "763B", "iq1_m_gb": 250.4, "q2_k_xl_gb": 334.79, "q4_k_xl_gb": 500.71, "url": "https://huggingface.co/unsloth/DeepSeek-V4.1-Flash-1017-GGUF"},
+  {"model": "Inkling 2 Small", "provider": "Thinking Machines", "total_params": "594B", "iq1_m_gb": 178.54, "q2_k_xl_gb": 204.97, "q4_k_xl_gb": 354.15, "url": "https://huggingface.co/unsloth/Inkling-2-Small-GGUF"},
+  {"model": "Mistral Large 4", "provider": "Mistral", "total_params": "1T", "iq1_m_gb": 259.58, "q2_k_xl_gb": 378.25, "q4_k_xl_gb": 604.79, "url": "https://huggingface.co/unsloth/Mistral-Large-4-1T-A52B-GGUF"},
+  {"model": "Muse Spark Open", "provider": "Meta", "total_params": "816B", "iq1_m_gb": 208.93, "q2_k_xl_gb": 311.23, "q4_k_xl_gb": 505.5, "url": "https://huggingface.co/unsloth/Muse-Spark-Open-816B-A42B-GGUF"},
+  {"model": "DeepSeek V4 Pro 0813", "provider": "DeepSeek", "total_params": "1.65T", "iq1_m_gb": null, "q2_k_xl_gb": null, "q4_k_xl_gb": 849.68, "url": "https://huggingface.co/unsloth/DeepSeek-V4-Pro-0813-GGUF"},
+  {"model": "MiniMax-M3", "provider": "MiniMax", "total_params": "427B", "iq1_m_gb": 129.31, "q2_k_xl_gb": 143.86, "q4_k_xl_gb": 265.83, "url": "https://huggingface.co/unsloth/MiniMax-M3-GGUF"},
+  {"model": "Beam 1.0", "provider": "Reflection", "total_params": "501B", "iq1_m_gb": 123.61, "q2_k_xl_gb": 186.88, "q4_k_xl_gb": 306.53, "url": "https://huggingface.co/unsloth/Beam-1.0-501B-A23B-GGUF"},
+  {"model": "Nemotron 3.5 Super VL", "provider": "NVIDIA", "total_params": "120B", "iq1_m_gb": 46.14, "q2_k_xl_gb": 57.79, "q4_k_xl_gb": 86.91, "url": "https://huggingface.co/unsloth/NVIDIA-Nemotron-3.5-Super-VL-120B-A12B-GGUF"},
+  {"model": "gpt-oss-120b", "provider": "OpenAI", "total_params": "117B", "iq1_m_gb": null, "q2_k_xl_gb": null, "q4_k_xl_gb": 63.02, "url": "https://huggingface.co/unsloth/gpt-oss-120b-GGUF"}
 ]

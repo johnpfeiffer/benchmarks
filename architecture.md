@@ -43,6 +43,7 @@ flowchart TD
     NEWSJSON["data/news.json<br/>(embedded)"] --> App
     DECISIONJSON["data/decision.json<br/>(embedded AA Decision Index v1.0)"] --> App
     HWJSON["data/hardware.json<br/>(embedded)"] --> App
+    PROGJSON["data/progress.json<br/>(embedded AA Progress Index)"] --> App
     GPUJSON["data/gpu.json<br/>(embedded)"] --> App
     MACHINEJSON["data/machines.json<br/>(embedded)"] --> App
     App -->|parse + validate| Models["models/<br/>parse, sort, types"]
@@ -81,8 +82,8 @@ flowchart TD
 | File | Responsibility |
 | --- | --- |
 | `types.ts` | `ModelEntry`, `DecisionEntry`, `NewsEntry`, `HardwareEntry`, `GpuEntry`, `MachineEntry`, their raw JSON shapes, and benchmark sort types; `ModelEntry.open_weight` is always present after parse; `ModelEntry.color` is the explicit bar color carried from `ai.json`; `ModelEntry.released` is the release date (`YYYY-MM-DD` or null); `ModelEntry.aa_version` is the required Intelligence Index version tag carried from `ai.json` (`ModelEntry.id` stays versionless so selections survive version switches); `ModelEntry.cost_usd` is the optional total benchmark run cost carried from `ai.json` |
-| `parse.ts` | `parseModelEntries`, `parseDecisionEntries`, `parseNewsEntries`, `parseHardwareEntries`, `parseGpuEntries`, `parseMachineEntries`, and `InvariantError`; upholds **INV-001** (every model has a provider) and structural guards at the single gate. Decision entries (model, provider, score, color) are validated and sorted score-descending before reaching the view. News URLs and ISO dates are validated, copied, and sorted newest first before reaching the view; model release dates share the same strict calendar-date guard (`MODEL-RELEASED`), and index version tags are shape-checked (`MODEL-AA-VERSION`). Hardware entries are validated (provider, model, total_params, url required; quant sizes nullable). GPU entries are validated (model, date required; memory, memory_type, memory_bandwidth_gbs, fp16_tflops nullable). Machine entries are validated (machine, chip, vram_gb, url required; memory_bandwidth_gbs, price_usd nullable) |
-| `merge.ts` | `mergeHardwareIntelligence`, `modelMatchKey`; attaches each hardware row's intelligence score via a normalized model-name match with a unique-prefix fallback. `modelMatchKey` ignores parenthetical effort suffixes and "preview". Callers pass the newest version's block only (see `App.tsx`), since a hardware row carries a single score |
+| `parse.ts` | `parseModelEntries`, `parseDecisionEntries`, `parseNewsEntries`, `parseHardwareEntries`, `parseProgressEntries`, `parseGpuEntries`, `parseMachineEntries`, and `InvariantError`; upholds **INV-001** (every model has a provider) and structural guards at the single gate. Decision entries (model, provider, score, color) are validated and sorted score-descending before reaching the view. News URLs and ISO dates are validated, copied, and sorted newest first before reaching the view; model release dates share the same strict calendar-date guard (`MODEL-RELEASED`), and index version tags are shape-checked (`MODEL-AA-VERSION`). Hardware entries are validated (provider, model, total_params, url required; quant sizes nullable). Progress entries are validated (provider, model required; numeric `progress`). GPU entries are validated (model, date required; memory, memory_type, memory_bandwidth_gbs, fp16_tflops nullable). Machine entries are validated (machine, chip, vram_gb, url required; memory_bandwidth_gbs, price_usd nullable) |
+| `merge.ts` | `mergeHardwareIntelligence`, `mergeHardwareProgress`, `modelMatchKey`; attaches each hardware row's intelligence score and AA Progress value via a normalized model-name match. `modelMatchKey` ignores parenthetical effort suffixes and "preview". The only prefix fallback is a unique match differing solely by parameter-size tokens ("550B", "2.4T", "A55B") — version or variant words ("Kimi K3" vs "Kimi K3.1 Pro", "GLM-5.3 Flash" vs "GLM-5.3") are different models and never inherit each other's values. Intelligence callers pass the newest version's block only (see `App.tsx`), since a hardware row carries a single score; Progress is a separate IRT-linked cross-version metric and is never merged into `intelligence_score` |
 | `version.ts` | `compareAAVersions`, `aaVersionsDesc`, `filterByAAVersion`; numeric newest-first ordering of the `aa_version` tags present in a row set, and the per-version row slice the dashboard renders |
 | `sort.ts` | `sortModels`, `nextSortState`, `DEFAULT_SORT` (score desc) |
 | `filter.ts` | `openWeightIds`, `presetSelectionIds`; the id sets behind the "Open Weights" and provider presets (the union of the chosen providers' rows, intersected with the open-weight rows when that preset is on). `providerColorMap` maps each provider to its chart bar color (first row with a color wins) for the provider buttons' outlines |
@@ -322,13 +323,18 @@ All views are pure (props in, callbacks out, no business logic):
   to HuggingFace.
 - `HardwareTable` - sortable table of hardware details titled "Unsloth Open
   Weight Hosting Sizes"; headers `Model`,
-  `Provider`, `Intelligence`, `Total Params`, `UD-IQ1_M (GB)`,
+  `Provider`, `Intelligence (<aaVersion>)`, `AA Progress`, `Total Params`, `UD-IQ1_M (GB)`,
   `UD-Q2_K_XL (GB)`, `UD-Q4_K_XL (GB)`; click headers to toggle asc/desc. Model
   names link to their HuggingFace model pages. Missing quants render as `*`.
   The `Intelligence` column is attached by the controller
   (`mergeHardwareIntelligence`) via the normalized `modelMatchKey`
-  model-name match, with a unique-prefix fallback for size-suffixed rows (e.g.
+  model-name match, with a unique size-suffix-only prefix fallback (e.g.
   "Nemotron 3 Ultra 550B"); models without an `ai.json` row render `*`.
+  The `AA Progress` column comes from `progress.json` via
+  `mergeHardwareProgress` (null renders `*`). A caption states that
+  intelligence scores are comparable only within their labeled index version
+  and that AA Progress is AA's separate IRT-linked cross-version scale
+  (anchored at o3-mini (high) = 220), linking the Progress methodology.
   Default sort is intelligence descending (highest first; unscored rows last
   in both directions). Sort is local
   `useState`/`useMemo` in the component. Total params are parsed to billions
@@ -404,7 +410,11 @@ IDs for the intelligence chart, computes sorted/chart-visible entries from the
 selected version's block (`filterByAAVersion`), and
 forwards header clicks through `nextSortState`. Hardware rows merge their
 intelligence score from the newest version's block only, regardless of the
-selected view version. Deselected models are
+selected view version, and separately merge their AA Progress Index value
+from `progress.json` (AA's IRT-linked cross-version scale; sources: the
+https://artificialanalysis.ai/trends payload's `score` field, verified
+2026-11-22, and `docs/aa-historical-baselines-2026-10-29.md` for older
+open-weight models). Deselected models are
 filtered out of the chart while their rows stay visible in the table. A
 version switch resets the selection to exactly the shown version's models and
 clears the "Open Weights" and provider preset flags, so the table and chart

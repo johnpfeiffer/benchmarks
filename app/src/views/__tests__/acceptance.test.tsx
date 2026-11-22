@@ -6,9 +6,11 @@ import {
   parseModelEntries,
   parseNewsEntries,
   parseHardwareEntries,
+  parseProgressEntries,
   parseGpuEntries,
   parseMachineEntries,
   mergeHardwareIntelligence,
+  mergeHardwareProgress,
   aaVersionsDesc,
   filterByAAVersion,
 } from '../../models'
@@ -22,6 +24,7 @@ import rawNewsData from '../../data/news.json'
 import rawDecisionData from '../../data/decision.json'
 import rawDecisionV10Data from '../../data/decision-2026-11-04.json'
 import rawHardwareData from '../../data/hardware.json'
+import rawProgressData from '../../data/progress.json'
 import rawGpuData from '../../data/gpu.json'
 import rawMachineData from '../../data/machines.json'
 import { pinChartCanvas } from '../../test/pinChartCanvas'
@@ -49,7 +52,10 @@ const decisionV10 = parseDecisionEntries(rawDecisionV10Data.rows)
 // default), and hardware scores always merge from the newest version's block.
 const latestVersion = aaVersionsDesc(intelligence)[0]
 const latestIntelligence = filterByAAVersion(intelligence, latestVersion)
-const hardware = mergeHardwareIntelligence(parseHardwareEntries(rawHardwareData), latestIntelligence)
+const hardware = mergeHardwareProgress(
+  mergeHardwareIntelligence(parseHardwareEntries(rawHardwareData), latestIntelligence),
+  parseProgressEntries(rawProgressData),
+)
 const gpu = parseGpuEntries(rawGpuData)
 const machines = parseMachineEntries(rawMachineData)
 
@@ -270,6 +276,10 @@ describe('acceptance: every JSON row appears in the UI', () => {
   it('lists every hardware.json row in the hosting-sizes table with its source link', () => {
     render(<App />)
     const table = screen.getByRole('table', { name: 'Unsloth Open Weight Hosting Sizes' })
+    // The intelligence column is labeled with its index version so scores are
+    // never read as version-agnostic; AA Progress is the cross-version scale.
+    expect(within(table).getByText(`Intelligence (${latestVersion})`)).toBeInTheDocument()
+    expect(within(table).getByText('AA Progress')).toBeInTheDocument()
     expect(within(table).getAllByRole('row')).toHaveLength(hardware.length + 1)
     for (const h of hardware) {
       const link = within(table).getByRole('link', { name: h.model })
@@ -283,6 +293,7 @@ describe('acceptance: every JSON row appears in the UI', () => {
       expect(row.textContent).toContain(
         h.intelligence_score == null ? '*' : String(h.intelligence_score),
       )
+      if (h.progress != null) expect(row.textContent).toContain(String(h.progress))
     }
   })
 

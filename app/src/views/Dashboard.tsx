@@ -52,6 +52,8 @@ interface DashboardProps {
   news: readonly NewsEntry[]
   hardware: readonly HardwareEntry[]
   hardwareSource: DataSourceCredit
+  /** AA Intelligence Index version the hardware table's scores come from. */
+  hardwareAaVersion: string
   gpu: readonly GpuEntry[]
   gpuSources: readonly DataSourceCredit[]
   machines: readonly MachineEntry[]
@@ -94,6 +96,7 @@ export function Dashboard({
   news,
   hardware,
   hardwareSource,
+  hardwareAaVersion,
   gpu,
   gpuSources,
   machines,
@@ -223,7 +226,7 @@ export function Dashboard({
         </Typography>
         <HardwareChart entries={hardware} source={hardwareSource} />
         <Box sx={{ mt: 3 }}>
-          <HardwareTable entries={hardware} title="Unsloth Open Weight Hosting Sizes" />
+          <HardwareTable entries={hardware} title="Unsloth Open Weight Hosting Sizes" aaVersion={hardwareAaVersion} />
         </Box>
       </Box>
 
