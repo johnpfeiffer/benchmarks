@@ -13,5 +13,6 @@
   {"model": "DeepSeek V4.1 Flash 1017", "provider": "DeepSeek", "total_params": "763B", "iq1_m_gb": 250.4, "q2_k_xl_gb": 334.79, "q4_k_xl_gb": 500.71, "url": "https://huggingface.co/unsloth/DeepSeek-V4.1-Flash-1017-GGUF"},
   {"model": "Inkling 2 Small", "provider": "Thinking Machines", "total_params": "594B", "iq1_m_gb": 178.54, "q2_k_xl_gb": 204.97, "q4_k_xl_gb": 354.15, "url": "https://huggingface.co/unsloth/Inkling-2-Small-GGUF"},
   {"model": "Nemotron 3.5 Super VL", "provider": "NVIDIA", "total_params": "120B", "iq1_m_gb": 46.14, "q2_k_xl_gb": 57.79, "q4_k_xl_gb": 86.91, "url": "https://huggingface.co/unsloth/NVIDIA-Nemotron-3.5-Super-VL-120B-A12B-GGUF"},
-  {"model": "gpt-oss-120b", "provider": "OpenAI", "total_params": "117B", "iq1_m_gb": null, "q2_k_xl_gb": null, "q4_k_xl_gb": 63.02, "url": "https://huggingface.co/unsloth/gpt-oss-120b-GGUF"}
+  {"model": "gpt-oss-120b", "provider": "OpenAI", "total_params": "117B", "iq1_m_gb": null, "q2_k_xl_gb": null, "q4_k_xl_gb": 63.02, "url": "https://huggingface.co/unsloth/gpt-oss-120b-GGUF"},
+  {"model": "Inkling 2 Mini", "provider": "Thinking Machines", "total_params": "26.4B", "iq1_m_gb": 8.02, "q2_k_xl_gb": 9.14, "q4_k_xl_gb": 17.6, "url": "https://huggingface.co/unsloth/Inkling-2-Mini-GGUF"}
 ]
