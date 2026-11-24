@@ -1,6 +1,6 @@
 import { describe, it, expect } from 'vitest'
-import { parseDecisionEntries, parseModelEntries, parseNewsEntries, parseHardwareEntries, parseMachineEntries } from '../parse'
-import { mergeHardwareIntelligence, modelMatchKey } from '../merge'
+import { parseDecisionEntries, parseModelEntries, parseNewsEntries, parseHardwareEntries, parseProgressEntries, parseMachineEntries } from '../parse'
+import { mergeHardwareIntelligence, mergeHardwareProgress, modelMatchKey } from '../merge'
 import { aaVersionsDesc, filterByAAVersion } from '../version'
 import { parseParetoDataset, paretoSnapshotFromModels } from '../pareto'
 import rawIntelligenceData from '../../data/ai.json'
@@ -11,6 +11,7 @@ import rawHistoricalV402Data from '../../data/ai-2026-02-19.json'
 import rawHistoricalV30Data from '../../data/ai-2025-12-30.json'
 import rawNewsData from '../../data/news.json'
 import rawHardwareData from '../../data/hardware.json'
+import rawProgressData from '../../data/progress.json'
 import rawMachineData from '../../data/machines.json'
 import rawDecisionData from '../../data/decision.json'
 import rawDecisionV10Data from '../../data/decision-2026-11-04.json'
@@ -159,6 +160,15 @@ describe('embedded data integrity', () => {
     for (const entry of backfill) expect(mainKeys.has(`${entry.aa_version}:${entry.model}`)).toBe(false)
   })
 
+  // Independent re-derivation of the size-suffix-only prefix rule: version or
+  // variant words ("3.1 Pro", "Flash") make models distinct, so only
+  // parameter-size tokens ("550B", "2.4T", "A55B") may differ.
+  const SIZE_TOKEN = /^(\d+(\.\d+)?[btm]|a\d+b)$/i
+  const sizeOnlyRemainder = (longer: string, shorter: string): boolean => {
+    const rest = longer.slice(shorter.length).trim()
+    return rest !== '' && rest.split(/\s+/).every((token) => SIZE_TOKEN.test(token))
+  }
+
   it('hardware rows with an AI namesake carry that row\'s intelligence score', () => {
     // Re-derives the expected mapping independently of merge.ts, so a data
     // edit that silently breaks a match (e.g. renaming ai.json's "Nemotron 3
@@ -173,13 +183,62 @@ describe('embedded data integrity', () => {
         continue
       }
       const prefix = [...scoreByKey.keys()].filter(
-        (candidate) => candidate.startsWith(key) || key.startsWith(candidate),
+        (candidate) =>
+          (candidate.startsWith(key) && sizeOnlyRemainder(candidate, key)) ||
+          (key.startsWith(candidate) && sizeOnlyRemainder(key, candidate)),
       )
       if (prefix.length === 1) {
         expect(row.intelligence_score).toBe(scoreByKey.get(prefix[0]))
       } else {
         expect(row.intelligence_score).toBeNull()
       }
+    }
+  })
+
+  it('progress.json rows are unique, positive, descending, and join a hardware row', () => {
+    // Progress is a separate IRT-linked metric; its rows must stay joinable
+    // to the hardware table or they would render nowhere.
+    const progress = parseProgressEntries(rawProgressData)
+    const keys = progress.map((entry) => modelMatchKey(entry.model))
+    expect(new Set(keys).size).toBe(keys.length)
+    for (let i = 0; i < progress.length; i++) {
+      expect(progress[i].progress).toBeGreaterThan(0)
+      if (i > 0) expect(progress[i].progress).toBeLessThanOrEqual(progress[i - 1].progress)
+    }
+    const hardwareKeys = hardware.map((entry) => modelMatchKey(entry.model))
+    for (const entry of progress) {
+      const key = modelMatchKey(entry.model)
+      const joined = hardwareKeys.some(
+        (hk) =>
+          hk === key ||
+          (hk.startsWith(key) && sizeOnlyRemainder(hk, key)) ||
+          (key.startsWith(hk) && sizeOnlyRemainder(key, hk)),
+      )
+      expect(joined, `progress.json row "${entry.model}" has no hardware.json namesake`).toBe(true)
+    }
+    const enriched = mergeHardwareProgress(hardware, progress)
+    const progressByKey = new Map(progress.map((entry) => [modelMatchKey(entry.model), entry.progress]))
+    for (const row of enriched) {
+      const exact = progressByKey.get(modelMatchKey(row.model))
+      if (exact !== undefined) expect(row.progress).toBe(exact)
+    }
+  })
+
+  it('every hardware row carries an AA Progress value, except documented gaps', () => {
+    // Maintainer requirement (2026-11-24): the Progress column is the table's
+    // calibrated cross-version score, so coverage must stay complete. The
+    // allowlist documents models AA has not published a Progress value for;
+    // remove entries as AA fills them in.
+    const KNOWN_MISSING_PROGRESS = new Set([
+      // Inkling 2 Mini (hardware row arrives with PR #83): no record on AA's
+      // Progress evaluation page as of 2026-11-24.
+      'Inkling 2 Mini',
+    ])
+    const progress = parseProgressEntries(rawProgressData)
+    const enriched = mergeHardwareProgress(hardware, progress)
+    for (const row of enriched) {
+      if (KNOWN_MISSING_PROGRESS.has(row.model)) continue
+      expect(row.progress, `${row.model} has no AA Progress value`).not.toBeNull()
     }
   })
 })

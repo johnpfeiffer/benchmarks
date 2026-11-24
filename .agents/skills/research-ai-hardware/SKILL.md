@@ -10,6 +10,35 @@ sizes for running open-weight models locally, the "HuggingFace Estimated
 Hardware" chart) and `app/src/data/gpu.json` (the GPU specifications
 table).
 
+## Why this table exists: open weights are durable, and that is how you see progress
+
+Open-weight models have a special property: as long as someone shares the
+files, the model remains usable and **re-testable against updated
+benchmarks** — forever. A closed API model gets deprecated and becomes
+unmeasurable; Artificial Analysis stops publishing current-version
+aggregates for it and its intelligence score is frozen in history. An
+open-weight model can always be run again, by anyone, on the next
+evaluation suite.
+
+That makes this Open Weight (estimated hardware) table one of the only
+ways to **tangibly see progress** over time: the same downloadable
+artifacts, tracked across eras on AA's IRT-linked Progress scale. The
+Intelligence ledger (`ai.json`) mirrors AA's current measurements, so
+models naturally drop out of it; the hardware table plus the Progress
+column is the durable, calibrated record of how open models have
+actually advanced.
+
+Operational consequences:
+
+- Keep older open-weight rows even after AA stops measuring them under
+  the newest index version. `Intelligence: *` is honest and fine — the
+  Progress column carries their calibrated, cross-version score.
+- Row removal is a curation decision about local usefulness (maintainer's
+  bar: worth running locally; giant models needing giant hardware are a
+  contradiction), never a consequence of AA dropping the model.
+- The UD-quant sizes are part of the point: they show yesterday's
+  frontier running on today's desk, which is what progress looks like
+  when you can hold the files.
 ## hardware.json — Unsloth GGUF quant sizes
 
 Row shape: `{ "model", "provider", "total_params", "iq1_m_gb",
@@ -31,6 +60,48 @@ Row shape: `{ "model", "provider", "total_params", "iq1_m_gb",
 - Only open-weight models belong here; Unsloth publishes GGUFs for open
   weights. Rows track a specific variant (e.g. `GLM-5.2 (max)`).
 
+- `total_params` provenance: AA often leaves `parametersBillions` null.
+  Preferred source is the base model's HF repo — fetch the Unsloth repo's
+  API JSON (`https://huggingface.co/api/models/unsloth/<Repo>`), follow
+  `cardData.base_model`, and use the base repo's `safetensors.total`
+  (exact parameter count; round to the repo's B/T string style).
+- Repo discovery: `https://huggingface.co/api/models?author=unsloth&search=GGUF&limit=1000`
+  enumerates all GGUF repos (395 as of 2026-11-22; the default page size
+  truncates). A 401 from the model API means the repo does not exist
+  (or is private) — calibrate against a known-good repo before concluding.
+  Do not add rows for models with no Unsloth repo (e.g. Kimi K3.1 /
+  K3.1 Pro had none as of 2026-11-22).
+- Quant shard sums: `https://huggingface.co/api/models/unsloth/<Repo>/tree/main?recursive=true&expand=false`
+  lists every file with sizes; sum all `.gguf` shards whose path contains
+  the quant tag (UD-IQ1_M, UD-Q2_K_XL, UD-Q4_K_XL).
+
+## progress.json — AA Progress Index (cross-version scale)
+
+Row shape: `{ "model", "provider", "progress" }`, ordered descending.
+Attached to hardware rows by `mergeHardwareProgress`; renders as the
+hardware table's "AA Progress" column.
+
+- Purpose: calibrated comparison across Intelligence Index versions. A 20
+  under one AA index version is not a 20 under another; Progress Index v1
+  is AA's IRT-linked longitudinal scale (anchored at o3-mini (high) = 220)
+  built exactly for that comparison. It is a DIFFERENT metric from
+  `intelligence_score` — never copy Progress values into ai.json, never
+  rescale them into index scores, and keep the two columns separate.
+- Source: https://artificialanalysis.ai/evaluations/artificial-analysis-progress-index
+  embeds ~494 model records with a per-model `score` field (the Progress
+  value) plus slug, name and releaseDate — use releaseDate to disambiguate
+  dated variants (e.g. `deepseek-v4-flash` IS the 0731 release). The
+  /trends page only carries 28 defaults; individual model pages have no
+  numeric Progress field. Verified 2026-11-24. Methodology:
+  https://artificialanalysis.ai/methodology/progress-index.
+- Every hardware.json model should have a row here (maintainer request,
+  2026-11-24) — the Progress column is the table's calibrated cross-version
+  score. If a model is missing from the Progress evaluation page (e.g.
+  Inkling 2 Mini as of 2026-11-24), it has no published value yet: leave
+  the row out and the cell renders `*`; never invent or extrapolate.
+  data.test.ts enforces that every progress row joins a hardware row.
+- Name rows so `modelMatchKey` matches the hardware row (exact after
+  parenthetical stripping, or differing only by parameter-size tokens).
 ## gpu.json — GPU specifications
 
 Row shape: `{ "model", "date", "memory", "memory_type",

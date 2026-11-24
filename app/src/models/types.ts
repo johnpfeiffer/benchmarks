@@ -103,6 +103,27 @@ export interface HardwareEntry {
    * mergeHardwareIntelligence. Null when the model has no ai.json row.
    */
   intelligence_score?: number | null
+  /**
+   * AA Progress Index value, attached by mergeHardwareProgress. A separate
+   * IRT-linked cross-version metric, never an intelligence_score substitute.
+   * Null when AA publishes no Progress value for the model.
+   */
+  progress?: number | null
+}
+
+/** An AA Progress Index row as embedded in progress.json. */
+export interface RawProgressEntry {
+  model: string
+  provider: string
+  /** AA Progress Index value (IRT-linked cross-version scale, o3-mini (high) = 220). */
+  progress: number
+}
+
+/** A validated Progress entry. Exists only when INV-001 holds. */
+export interface ProgressEntry {
+  model: string
+  provider: string
+  progress: number
 }
 
 /** A GPU hardware-spec row as embedded in gpu.json. */

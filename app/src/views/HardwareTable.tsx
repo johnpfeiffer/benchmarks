@@ -13,7 +13,7 @@ import {
 } from '@mui/material'
 import type { HardwareEntry } from '../models'
 
-type SortField = 'model' | 'provider' | 'intelligence_score' | 'total_params' | 'iq1_m_gb' | 'q2_k_xl_gb' | 'q4_k_xl_gb'
+type SortField = 'model' | 'provider' | 'intelligence_score' | 'progress' | 'total_params' | 'iq1_m_gb' | 'q2_k_xl_gb' | 'q4_k_xl_gb'
 type SortDirection = 'asc' | 'desc'
 interface SortState { field: SortField; direction: SortDirection }
 
@@ -36,6 +36,7 @@ function fieldValue(entry: HardwareEntry, field: SortField): string | number | n
     case 'model': return entry.model
     case 'provider': return entry.provider
     case 'intelligence_score': return entry.intelligence_score ?? null
+    case 'progress': return entry.progress ?? null
     case 'total_params': return paramsInBillions(entry.total_params)
     case 'iq1_m_gb': return entry.iq1_m_gb
     case 'q2_k_xl_gb': return entry.q2_k_xl_gb
@@ -64,24 +65,27 @@ function nextSort(current: SortState, field: SortField): SortState {
   return { field, direction: 'asc' }
 }
 
-const COLUMNS: Array<{ label: string; field: SortField }> = [
-  { label: 'Model', field: 'model' },
-  { label: 'Provider', field: 'provider' },
-  { label: 'Intelligence', field: 'intelligence_score' },
-  { label: 'Total Params', field: 'total_params' },
-  { label: 'UD-IQ1_M (GB)', field: 'iq1_m_gb' },
-  { label: 'UD-Q2_K_XL (GB)', field: 'q2_k_xl_gb' },
-  { label: 'UD-Q4_K_XL (GB)', field: 'q4_k_xl_gb' },
-]
-
 interface HardwareTableProps {
   entries: readonly HardwareEntry[]
   title: string
+  /** AA Intelligence Index version the intelligence scores were measured under. */
+  aaVersion: string
 }
 
 /** Sortable table of Unsloth GGUF estimated hardware sizes for dynamic quants, ordered by intelligence by default. */
-export function HardwareTable({ entries, title }: HardwareTableProps) {
+export function HardwareTable({ entries, title, aaVersion }: HardwareTableProps) {
   const [sort, setSort] = useState<SortState>(DEFAULT_SORT)
+
+  const columns: Array<{ label: string; field: SortField }> = [
+    { label: 'Model', field: 'model' },
+    { label: 'Provider', field: 'provider' },
+    { label: `Intelligence (${aaVersion})`, field: 'intelligence_score' },
+    { label: 'AA Progress', field: 'progress' },
+    { label: 'Total Params', field: 'total_params' },
+    { label: 'UD-IQ1_M (GB)', field: 'iq1_m_gb' },
+    { label: 'UD-Q2_K_XL (GB)', field: 'q2_k_xl_gb' },
+    { label: 'UD-Q4_K_XL (GB)', field: 'q4_k_xl_gb' },
+  ]
 
   const sorted = useMemo(() => {
     const copy = [...entries]
@@ -105,7 +109,7 @@ export function HardwareTable({ entries, title }: HardwareTableProps) {
         <Table size="small" aria-label={title}>
           <TableHead>
             <TableRow>
-              {COLUMNS.map((col) => (
+              {columns.map((col) => (
                 <TableCell key={col.field}>
                   <TableSortLabel
                     active={sort.field === col.field}
@@ -128,6 +132,7 @@ export function HardwareTable({ entries, title }: HardwareTableProps) {
                 </TableCell>
                 <TableCell>{entry.provider}</TableCell>
                 <TableCell>{entry.intelligence_score ?? '*'}</TableCell>
+                <TableCell>{entry.progress ?? '*'}</TableCell>
                 <TableCell>{entry.total_params}</TableCell>
                 <TableCell>{entry.iq1_m_gb ?? '*'}</TableCell>
                 <TableCell>{entry.q2_k_xl_gb ?? '*'}</TableCell>
@@ -137,6 +142,15 @@ export function HardwareTable({ entries, title }: HardwareTableProps) {
           </TableBody>
         </Table>
       </TableContainer>
+      <Typography variant="caption" color="text.secondary" sx={{ display: 'block', mt: 1 }}>
+        Intelligence scores are measured under AA Intelligence Index {aaVersion} and are comparable only within
+        one index version.{' '}
+        <Link href="https://artificialanalysis.ai/methodology/progress-index" target="_blank" rel="noopener noreferrer">
+          AA Progress
+        </Link>{' '}
+        is AA&apos;s separate IRT-linked scale for cross-version comparison (anchored at o3-mini (high) = 220),
+        a different metric from Intelligence. * = no published value.
+      </Typography>
     </Box>
   )
 }

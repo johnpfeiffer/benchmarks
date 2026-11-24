@@ -7,9 +7,11 @@ import {
   parseModelEntries,
   parseNewsEntries,
   parseHardwareEntries,
+  parseProgressEntries,
   parseGpuEntries,
   parseMachineEntries,
   mergeHardwareIntelligence,
+  mergeHardwareProgress,
   sortModels,
   nextSortState,
   presetSelectionIds,
@@ -41,6 +43,7 @@ import rawDecisionData from './data/decision.json'
 // ai-YYYY-MM-DD.json intelligence backfills).
 import rawDecisionV10Data from './data/decision-2026-11-04.json'
 import rawHardwareData from './data/hardware.json'
+import rawProgressData from './data/progress.json'
 import rawGpuData from './data/gpu.json'
 import rawMachineData from './data/machines.json'
 
@@ -133,7 +136,10 @@ function DashboardPage() {
     [allIntelligence, aaVersions],
   )
   const hardware = useMemo(
-    () => mergeHardwareIntelligence(parseHardwareEntries(rawHardwareData), latestIntelligence),
+    () => mergeHardwareProgress(
+      mergeHardwareIntelligence(parseHardwareEntries(rawHardwareData), latestIntelligence),
+      parseProgressEntries(rawProgressData),
+    ),
     [latestIntelligence],
   )
   const gpu = useMemo(() => parseGpuEntries(rawGpuData), [])
@@ -255,6 +261,7 @@ function DashboardPage() {
       news={news}
       hardware={hardware}
       hardwareSource={hardwareSource}
+      hardwareAaVersion={aaVersions[0]}
       gpu={gpu}
       gpuSources={gpuSources}
       machines={machines}

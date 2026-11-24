@@ -9,6 +9,44 @@ The dashboard tracks AI models in `app/src/data/ai.json` (Artificial
 Analysis Intelligence Index scores). News coverage of models is a separate
 concern handled by the `benchmark-news-lookup` skill.
 
+## Why the meticulous versioning and historical snapshots
+
+The same rationale that makes open weights durable (see
+`research-ai-hardware/SKILL.md`) applies to the scores themselves: **a
+benchmark score is never a property of the model alone — it is a property
+of model × evaluation suite × date.** Each AA index version is a
+different ruler, so a number without its ruler and its date is not a
+measurement, just a rumor.
+
+When AA revises the index, two things are lost unless they are preserved
+deliberately: the old ruler's measurements (who scored what under
+v4.3.2), and the ability to tell **methodology change** apart from
+**capability change**. A model moving 45 → 19 across a revision did not
+get dumber; the exam changed. Without frozen per-version ledgers, that
+distinction is unrecoverable and "progress" becomes whatever the latest
+page says.
+
+That is why the rules here are strict and deliberate:
+
+- **Frozen, dated, append-only snapshots** (`ai-YYYY-MM-DD.json`,
+  `decision-YYYY-MM-DD.json`) are the ledger's durable artifacts, the
+  same role weight files play for open models: they let anyone go back
+  and re-examine the past instead of trusting a rewritten present. Never
+  scrub rows out of them — a snapshot documents what AA measured under
+  that version, and deprecated models remain visible in their era.
+- **Per-row `aa_version` + never copy a score across versions**: a 20 is
+  only a 20 within one ruler. Copying it across versions fabricates a
+  measurement that never happened.
+- **"Historical" is the control group, not nostalgia.** The version
+  toggle answers "what did we know, under which ruler, when?" — the
+  precondition for any honest claim of progress. For the calibrated
+  cross-ruler comparison itself, use AA's IRT-linked Progress Index
+  (the hardware table's Progress column), never raw scores across
+  snapshots.
+
+In short: open weights keep the *models* re-testable; frozen versioned
+ledgers keep the *measurements* re-readable. You need both to see
+progress instead of just change.
 ## Sources of truth
 
 For score, release-date, and total-cost research, fetch model pages through the

@@ -1,4 +1,4 @@
-import type { DecisionEntry, GpuEntry, HardwareEntry, MachineEntry, ModelEntry, NewsEntry, RawDecisionEntry, RawGpuEntry, RawHardwareEntry, RawMachineEntry, RawModelEntry, RawNewsEntry } from './types'
+import type { DecisionEntry, GpuEntry, HardwareEntry, MachineEntry, ModelEntry, NewsEntry, ProgressEntry, RawDecisionEntry, RawGpuEntry, RawHardwareEntry, RawMachineEntry, RawModelEntry, RawNewsEntry, RawProgressEntry } from './types'
 
 /**
  * Error raised when raw data violates a kernel invariant.
@@ -206,6 +206,28 @@ export function parseHardwareEntries(raw: readonly RawHardwareEntry[]): Hardware
     throw new InvariantError('Expected an array of hardware entries', -1, 'SHAPE')
   }
   return raw.map((entry, index) => normalizeHardware(entry, index))
+}
+
+function normalizeProgress(raw: RawProgressEntry, index: number): ProgressEntry {
+  const provider = raw?.provider
+  if (typeof provider !== 'string' || provider.trim() === '') {
+    throw new InvariantError(
+      `INV-001 violated at index ${index}: model "${raw?.model ?? '?'}" has no provider`,
+      index,
+      'INV-001',
+    )
+  }
+  const model = assertModelName(raw?.model, index)
+  const progress = assertScore(raw?.progress, index, model, 'progress')
+  return { model, provider, progress }
+}
+
+/** Validate embedded AA Progress Index entries. */
+export function parseProgressEntries(raw: readonly RawProgressEntry[]): ProgressEntry[] {
+  if (!Array.isArray(raw)) {
+    throw new InvariantError('Expected an array of progress entries', -1, 'SHAPE')
+  }
+  return raw.map((entry, index) => normalizeProgress(entry, index))
 }
 
 function normalizeGpu(raw: RawGpuEntry, index: number): GpuEntry {
