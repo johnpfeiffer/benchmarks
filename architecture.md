@@ -411,10 +411,11 @@ selected version's block (`filterByAAVersion`), and
 forwards header clicks through `nextSortState`. Hardware rows merge their
 intelligence score from the newest version's block only, regardless of the
 selected view version, and separately merge their AA Progress Index value
-from `progress.json` (AA's IRT-linked cross-version scale; sources: the
-https://artificialanalysis.ai/trends payload's `score` field, verified
-2026-11-22, and `docs/aa-historical-baselines-2026-10-29.md` for older
-open-weight models). Deselected models are
+from `progress.json` (AA's IRT-linked cross-version scale; source: the
+https://artificialanalysis.ai/evaluations/artificial-analysis-progress-index
+payload's per-model `score` field, ~494 records verified 2026-11-24,
+covering every hardware-table model; older values cross-checked against
+`docs/aa-historical-baselines-2026-10-29.md`). Deselected models are
 filtered out of the chart while their rows stay visible in the table. A
 version switch resets the selection to exactly the shown version's models and
 clears the "Open Weights" and provider preset flags, so the table and chart

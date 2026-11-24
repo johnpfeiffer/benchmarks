@@ -58,14 +58,19 @@ hardware table's "AA Progress" column.
   built exactly for that comparison. It is a DIFFERENT metric from
   `intelligence_score` — never copy Progress values into ai.json, never
   rescale them into index scores, and keep the two columns separate.
-- Sources: the https://artificialanalysis.ai/trends payload's per-model
-  `score` field (next to `intelligenceIndex`), and
-  `docs/aa-historical-baselines-2026-10-29.md` for older open-weight
-  models absent from the trends defaults. Methodology:
+- Source: https://artificialanalysis.ai/evaluations/artificial-analysis-progress-index
+  embeds ~494 model records with a per-model `score` field (the Progress
+  value) plus slug, name and releaseDate — use releaseDate to disambiguate
+  dated variants (e.g. `deepseek-v4-flash` IS the 0731 release). The
+  /trends page only carries 28 defaults; individual model pages have no
+  numeric Progress field. Verified 2026-11-24. Methodology:
   https://artificialanalysis.ai/methodology/progress-index.
-- Only models with a hardware.json namesake belong here (data.test.ts
-  enforces the join). Models with no published Progress value simply have
-  no row; the table renders `*`. Never invent or extrapolate a value.
+- Every hardware.json model should have a row here (maintainer request,
+  2026-11-24) — the Progress column is the table's calibrated cross-version
+  score. If a model is missing from the Progress evaluation page (e.g.
+  Inkling 2 Mini as of 2026-11-24), it has no published value yet: leave
+  the row out and the cell renders `*`; never invent or extrapolate.
+  data.test.ts enforces that every progress row joins a hardware row.
 - Name rows so `modelMatchKey` matches the hardware row (exact after
   parenthetical stripping, or differing only by parameter-size tokens).
 ## gpu.json — GPU specifications

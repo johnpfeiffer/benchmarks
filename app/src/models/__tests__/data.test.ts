@@ -223,4 +223,22 @@ describe('embedded data integrity', () => {
       if (exact !== undefined) expect(row.progress).toBe(exact)
     }
   })
+
+  it('every hardware row carries an AA Progress value, except documented gaps', () => {
+    // Maintainer requirement (2026-11-24): the Progress column is the table's
+    // calibrated cross-version score, so coverage must stay complete. The
+    // allowlist documents models AA has not published a Progress value for;
+    // remove entries as AA fills them in.
+    const KNOWN_MISSING_PROGRESS = new Set([
+      // Inkling 2 Mini (hardware row arrives with PR #83): no record on AA's
+      // Progress evaluation page as of 2026-11-24.
+      'Inkling 2 Mini',
+    ])
+    const progress = parseProgressEntries(rawProgressData)
+    const enriched = mergeHardwareProgress(hardware, progress)
+    for (const row of enriched) {
+      if (KNOWN_MISSING_PROGRESS.has(row.model)) continue
+      expect(row.progress, `${row.model} has no AA Progress value`).not.toBeNull()
+    }
+  })
 })

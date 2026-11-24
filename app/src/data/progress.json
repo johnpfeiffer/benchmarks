@@ -1,9 +1,16 @@
 [
   {"model": "DeepSeek V4.1 Flash 1017", "provider": "DeepSeek", "progress": 323.7},
   {"model": "GLM-5.3", "provider": "Z AI", "progress": 322.7},
+  {"model": "Qwen3.8 Flash Next", "provider": "Alibaba", "progress": 320.2},
+  {"model": "Kimi K3", "provider": "Moonshot AI", "progress": 319.9},
+  {"model": "GLM-5.3 Flash", "provider": "Z AI", "progress": 318.6},
+  {"model": "Qwen3.8 2.4T A95B", "provider": "Alibaba", "progress": 317.8},
   {"model": "Inkling 2 Small", "provider": "Thinking Machines", "progress": 317.6},
+  {"model": "DeepSeek V4 Flash 0731", "provider": "DeepSeek", "progress": 309.4},
   {"model": "Qwen3.8 27B", "provider": "Alibaba", "progress": 303.1},
+  {"model": "GLM-5.2", "provider": "Z AI", "progress": 302.5},
   {"model": "Nemotron 3.5 Super VL", "provider": "NVIDIA", "progress": 283.9},
+  {"model": "Inkling", "provider": "Thinking Machines", "progress": 281.4},
   {"model": "Nemotron 3 Ultra 550B", "provider": "NVIDIA", "progress": 270.6},
   {"model": "Gemma 4 31B", "provider": "Google", "progress": 253.5},
   {"model": "gpt-oss-120b", "provider": "OpenAI", "progress": 239.8}
