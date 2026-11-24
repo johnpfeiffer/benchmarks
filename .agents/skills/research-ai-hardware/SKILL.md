@@ -10,6 +10,35 @@ sizes for running open-weight models locally, the "HuggingFace Estimated
 Hardware" chart) and `app/src/data/gpu.json` (the GPU specifications
 table).
 
+## Why this table exists: open weights are durable, and that is how you see progress
+
+Open-weight models have a special property: as long as someone shares the
+files, the model remains usable and **re-testable against updated
+benchmarks** — forever. A closed API model gets deprecated and becomes
+unmeasurable; Artificial Analysis stops publishing current-version
+aggregates for it and its intelligence score is frozen in history. An
+open-weight model can always be run again, by anyone, on the next
+evaluation suite.
+
+That makes this Open Weight (estimated hardware) table one of the only
+ways to **tangibly see progress** over time: the same downloadable
+artifacts, tracked across eras on AA's IRT-linked Progress scale. The
+Intelligence ledger (`ai.json`) mirrors AA's current measurements, so
+models naturally drop out of it; the hardware table plus the Progress
+column is the durable, calibrated record of how open models have
+actually advanced.
+
+Operational consequences:
+
+- Keep older open-weight rows even after AA stops measuring them under
+  the newest index version. `Intelligence: *` is honest and fine — the
+  Progress column carries their calibrated, cross-version score.
+- Row removal is a curation decision about local usefulness (maintainer's
+  bar: worth running locally; giant models needing giant hardware are a
+  contradiction), never a consequence of AA dropping the model.
+- The UD-quant sizes are part of the point: they show yesterday's
+  frontier running on today's desk, which is what progress looks like
+  when you can hold the files.
 ## hardware.json — Unsloth GGUF quant sizes
 
 Row shape: `{ "model", "provider", "total_params", "iq1_m_gb",
