@@ -1,4 +1,5 @@
 [
+  {"model": "DeepSeek V4.1 Flash 1017", "provider": "DeepSeek", "progress": 323.7},
   {"model": "GLM-5.3", "provider": "Z AI", "progress": 322.7},
   {"model": "Inkling 2 Small", "provider": "Thinking Machines", "progress": 317.6},
   {"model": "Qwen3.8 27B", "provider": "Alibaba", "progress": 303.1},
