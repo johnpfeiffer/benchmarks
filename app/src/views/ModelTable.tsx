@@ -54,6 +54,9 @@ const COLUMNS: Array<{ label: string; field: SortField; accessor: (e: ModelEntry
   { label: 'Benchmark cost USD', field: 'cost', accessor: (e) => e.cost_usd },
 ]
 
+/** Shared hover explanation for the maintainer's unusable-in-practice flag. */
+const UNUSABLE_TITLE =
+  'Maintainer warning (2026-11-27): unusable in practice — silly follow-up questions and instruction drift despite the benchmark score.'
 /** Same USD formatting as the Pareto chart: cents only when they exist. */
 const formatCost = (value: number) =>
   new Intl.NumberFormat('en-US', { style: 'currency', currency: 'USD', maximumFractionDigits: 2 }).format(value)
@@ -201,9 +204,23 @@ export function ModelTable({ entries, aaVersions, aaVersion, onAAVersionChange, 
                                 whiteSpace: 'normal',
                                 opacity: isSelected ? 1 : 0.6,
                               }}
+                              // Maintainer's unusable flag: strike the name
+                              // (inline style, so tests can assert the DOM).
+                              style={{ textDecoration: entry.unusable ? 'line-through' : undefined }}
+                              title={entry.unusable ? UNUSABLE_TITLE : undefined}
                             >
                               {entry.model}
                             </Button>
+                          ) : col.field === 'score' && entry.unusable ? (
+                            // Dotted-underlined score for maintainer-flagged
+                            // unusable models: the number is real, the
+                            // warning is about practical usability.
+                            <span
+                              style={{ textDecoration: 'underline dotted', textUnderlineOffset: '3px' }}
+                              title={UNUSABLE_TITLE}
+                            >
+                              {entry.score}
+                            </span>
                           ) : (
                             col.accessor(entry) ?? '*'
                           )}

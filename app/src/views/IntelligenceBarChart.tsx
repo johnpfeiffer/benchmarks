@@ -11,6 +11,8 @@ export interface BarChartEntry {
   score: number
   color?: string
   cost_usd?: number
+  /** Maintainer experiential warning: dashed warning bar, struck label. */
+  unusable?: boolean
 }
 
 interface IntelligenceBarChartProps {
@@ -99,6 +101,30 @@ export function IntelligenceBarChart({
         : [],
     ),
   )
+  // Rows the maintainer flags as unusable in practice despite their scores:
+  // strike the x-axis label and give the bar a dashed warning outline with a
+  // muted fill (same nth-of-type band-index technique as noDataTickSx).
+  const unusableSx = Object.fromEntries(
+    entries.flatMap((entry, index) =>
+      entry.unusable
+        ? [
+            [
+              `& .MuiChartsAxis-directionX .MuiChartsAxis-tickContainer:nth-of-type(${index + 1}) .MuiChartsAxis-tickLabel`,
+              { textDecoration: 'line-through' },
+            ],
+            [
+              `& .MuiBarElement-root:nth-of-type(${index + 1})`,
+              {
+                stroke: theme.palette.error.main,
+                strokeWidth: 2,
+                strokeDasharray: '5 3',
+                fillOpacity: 0.45,
+              },
+            ],
+          ]
+        : [],
+    ),
+  )
   // #AIDEV: Cut empty space at the bottom by starting the y-axis near the lowest score
   const minScore = entries.length > 0 ? Math.min(...entries.map((e) => e.score)) : 0
   const yMin = Math.max(0, Math.floor((minScore - 5) / 5) * 5)
@@ -165,6 +191,7 @@ export function IntelligenceBarChart({
                     strokeOpacity: 0.3,
                   },
                   ...noDataTickSx,
+                  ...unusableSx,
                 }}
                 xAxis={[
                   {

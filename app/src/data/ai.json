@@ -1,11 +1,11 @@
 [
   {"model": "Claude Fable 5.2 (max)", "intelligence_score": 65, "aa_version": "v5.0.1", "cost_usd": 22191.42, "provider": "Anthropic", "open_weight": false, "color": "#cc785c", "released": "2026-11-09"},
-  {"model": "GPT-6.2 Astra (max)", "intelligence_score": 62, "aa_version": "v5.0.1", "cost_usd": 4530.46, "provider": "OpenAI", "open_weight": false, "color": "#1f1f1f", "released": "2026-11-17"},
+  {"model": "GPT-6.2 Astra (max)", "unusable": true, "intelligence_score": 62, "aa_version": "v5.0.1", "cost_usd": 4530.46, "provider": "OpenAI", "open_weight": false, "color": "#1f1f1f", "released": "2026-11-17"},
   {"model": "Gemini 4 Neon (xhigh)", "intelligence_score": 61, "aa_version": "v5.0.1", "cost_usd": 7787.91, "provider": "Google", "open_weight": false, "color": "#34A853", "released": "2026-11-18"},
   {"model": "Gemini 4 Carbon (high)", "intelligence_score": 60, "aa_version": "v5.0.1", "cost_usd": 8239.69, "provider": "Google", "open_weight": false, "color": "#34A853", "released": "2026-10-28"},
   {"model": "Claude Opus 5.5 (max)", "intelligence_score": 59, "aa_version": "v5.0.1", "cost_usd": 8909.67, "provider": "Anthropic", "open_weight": false, "color": "#cc785c", "released": "2026-09-22"},
   {"model": "GPT-6 Astra (max)", "intelligence_score": 57, "aa_version": "v5.0.1", "cost_usd": 5661.18, "provider": "OpenAI", "open_weight": false, "color": "#1f1f1f", "released": "2026-09-03"},
-  {"model": "GPT-6.2 Sol (max)", "intelligence_score": 57, "aa_version": "v5.0.1", "cost_usd": 1108.28, "provider": "OpenAI", "open_weight": false, "color": "#1f1f1f", "released": "2026-11-17"},
+  {"model": "GPT-6.2 Sol (max)", "unusable": true, "intelligence_score": 57, "aa_version": "v5.0.1", "cost_usd": 1108.28, "provider": "OpenAI", "open_weight": false, "color": "#1f1f1f", "released": "2026-11-17"},
   {"model": "GPT-6.1 Sol (max)", "intelligence_score": 55, "aa_version": "v5.0.1", "cost_usd": 1123.97, "provider": "OpenAI", "open_weight": false, "color": "#1f1f1f", "released": "2026-09-29"},
   {"model": "Claude Sonnet 5.5 (max)", "intelligence_score": 55, "aa_version": "v5.0.1", "cost_usd": 7980.63, "provider": "Anthropic", "open_weight": false, "color": "#cc785c", "released": "2026-09-28"},
   {"model": "Gemini 4 Hydrogen (xhigh)", "intelligence_score": 54, "aa_version": "v5.0.1", "cost_usd": 4085.72, "provider": "Google", "open_weight": false, "color": "#34A853", "released": "2026-11-12"},

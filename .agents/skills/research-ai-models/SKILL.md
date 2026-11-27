@@ -95,7 +95,21 @@ Artificial Analysis:
 ## ai.json contract
 
 Row shape: `{ "model", "intelligence_score", "aa_version", "cost_usd"?,
-"provider", "open_weight", "color", "released" }`.
+"provider", "open_weight", "color", "released", "unusable"? }`.
+
+- `unusable` (optional boolean) is the maintainer's experiential warning:
+  the model fails in real use (instruction drift, follow-up-question
+  loops) despite its measured score. Visual-only — struck name, dotted
+  score, dashed bar — the row STAYS because AA still measures it; never
+  remove or rescore a row over this flag. Maintainer sets it by hand with
+  a dated reason in the PR body (first: GPT-6.2 Astra/Sol, 2026-11-27).
+  Related news coverage goes through benchmark-news-lookup separately.
+- Benchmarks measure capability, not behavior. A model can benchmaxx its
+  way to a high score and still fail real use (drift, blocking questions,
+  early stops). A representative sampling of practitioner reports is
+  evidence about that behavioral layer, not a contradiction of AA's
+  measurement — keep both on the page (score + flag) instead of letting
+  either erase the other.
 
 - INV-001: every row requires a provider; the parser throws at load
   otherwise. Missing provider = add one, never omit.

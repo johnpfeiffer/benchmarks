@@ -106,6 +106,7 @@ function normalize(raw: RawModelEntry, index: number): ModelEntry {
     ...(cost !== undefined ? { cost_usd: cost } : {}),
     provider,
     open_weight: Boolean(raw.open_weight),
+    unusable: Boolean(raw.unusable),
     released,
     ...(color ? { color } : {}),
   }
