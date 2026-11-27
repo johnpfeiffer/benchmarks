@@ -409,7 +409,9 @@ Parses embedded JSON once (`useMemo`) — `ai.json` concatenated with the
 `ai-2026-10-27.json` v4.3.2, `ai-2026-09-04.json` v4.2, `ai-2026-08-11.json` v4.1.1, `ai-2026-02-19.json` v4.0.2, and
 `ai-2025-12-30.json` v3.0 backfills, plus
 validated newest-first news,
-HuggingFace hardware entries, GPU specification entries, and local machine
+HuggingFace hardware entries plus beyond-Unsloth resource links
+(`hardwareResources` in `App.tsx`: quant releases and serving recipes
+rendered under the hardware table), GPU specification entries, and local machine
 entries, holds the selected index version, the table `SortState` and selected
 model
 IDs for the intelligence chart, computes sorted/chart-visible entries from the

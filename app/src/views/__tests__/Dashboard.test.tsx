@@ -140,6 +140,7 @@ function DashboardController({ initialSort = DEFAULT_SORT, allEntries = entries,
       hardware={hardwareEntries}
       hardwareSource={{ label: 'HuggingFace', href: 'https://huggingface.co/unsloth' }}
       hardwareAaVersion="v5.0.1"
+      hardwareResources={[{ label: 'vLLM recipe: X', href: 'https://recipes.vllm.ai/x/y' }]}
       gpu={gpuEntries}
       gpuSources={[
         { label: 'NVIDIA Hopper Architecture', href: 'https://developer.nvidia.com/blog/nvidia-hopper-architecture-in-depth/' },

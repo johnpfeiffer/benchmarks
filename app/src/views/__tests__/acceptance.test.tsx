@@ -323,6 +323,20 @@ describe('acceptance: every JSON row appears in the UI', () => {
     expect(css).toMatch(/line-through/)
   })
 
+  it('shows the beyond-Unsloth resource links in the hardware section', () => {
+    render(<App />)
+    const section = screen.getByRole('heading', { name: 'HuggingFace Estimated Hardware' }).closest('section') as HTMLElement
+    expect(within(section).getByText(/Beyond Unsloth/)).toBeInTheDocument()
+    const resources: Array<[string, string]> = [
+      ['NVIDIA Kimi K3.1 Pro NVFP4 (Hugging Face)', 'https://huggingface.co/nvidia/Kimi-K3.1-Pro-NVFP4'],
+      ['vLLM recipe: Kimi K3.1 Pro', 'https://recipes.vllm.ai/moonshotai/Kimi-K3.1-Pro'],
+      ['vLLM recipe: Inkling 2 Small', 'https://recipes.vllm.ai/thinkingmachines/Inkling-2-Small'],
+    ]
+    for (const [label, href] of resources) {
+      expect(within(section).getByRole('link', { name: label })).toHaveAttribute('href', href)
+    }
+  })
+
   it('lists every gpu.json row in the GPU table', () => {
     render(<App />)
     const table = screen.getByRole('table', { name: 'GPU Specifications' })
