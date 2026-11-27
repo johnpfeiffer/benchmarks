@@ -19,8 +19,18 @@ describe('parseModelEntries', () => {
       provider: 'Anthropic',
       open_weight: true,
       released: null,
+      unusable: false,
     })
     expect(out[1].aa_version).toBe('v4.2')
+  })
+
+  it('passes through the maintainer unusable flag, defaulting to false', () => {
+    const out = parseModelEntries([
+      { model: 'X', intelligence_score: 1, aa_version: 'v4.3', provider: 'P', unusable: true },
+      { model: 'Y', intelligence_score: 2, aa_version: 'v4.3', provider: 'P' },
+    ])
+    expect(out[0].unusable).toBe(true)
+    expect(out[1].unusable).toBe(false)
   })
 
   it('passes through a valid ISO release date', () => {

@@ -81,7 +81,7 @@ flowchart TD
 
 | File | Responsibility |
 | --- | --- |
-| `types.ts` | `ModelEntry`, `DecisionEntry`, `NewsEntry`, `HardwareEntry`, `GpuEntry`, `MachineEntry`, their raw JSON shapes, and benchmark sort types; `ModelEntry.open_weight` is always present after parse; `ModelEntry.color` is the explicit bar color carried from `ai.json`; `ModelEntry.released` is the release date (`YYYY-MM-DD` or null); `ModelEntry.aa_version` is the required Intelligence Index version tag carried from `ai.json` (`ModelEntry.id` stays versionless so selections survive version switches); `ModelEntry.cost_usd` is the optional total benchmark run cost carried from `ai.json` |
+| `types.ts` | `ModelEntry`, `DecisionEntry`, `NewsEntry`, `HardwareEntry`, `GpuEntry`, `MachineEntry`, their raw JSON shapes, and benchmark sort types; `ModelEntry.open_weight` is always present after parse; `ModelEntry.color` is the explicit bar color carried from `ai.json`; `ModelEntry.released` is the release date (`YYYY-MM-DD` or null); `ModelEntry.aa_version` is the required Intelligence Index version tag carried from `ai.json` (`ModelEntry.id` stays versionless so selections survive version switches); `ModelEntry.cost_usd` is the optional total benchmark run cost carried from `ai.json`; `ModelEntry.unusable` is the optional maintainer experiential warning flag carried from `ai.json` (visual only, never a score change) |
 | `parse.ts` | `parseModelEntries`, `parseDecisionEntries`, `parseNewsEntries`, `parseHardwareEntries`, `parseProgressEntries`, `parseGpuEntries`, `parseMachineEntries`, and `InvariantError`; upholds **INV-001** (every model has a provider) and structural guards at the single gate. Decision entries (model, provider, score, color) are validated and sorted score-descending before reaching the view. News URLs and ISO dates are validated, copied, and sorted newest first before reaching the view; model release dates share the same strict calendar-date guard (`MODEL-RELEASED`), and index version tags are shape-checked (`MODEL-AA-VERSION`). Hardware entries are validated (provider, model, total_params, url required; quant sizes nullable). Progress entries are validated (provider, model required; numeric `progress`). GPU entries are validated (model, date required; memory, memory_type, memory_bandwidth_gbs, fp16_tflops nullable). Machine entries are validated (machine, chip, vram_gb, url required; memory_bandwidth_gbs, price_usd nullable) |
 | `merge.ts` | `mergeHardwareIntelligence`, `mergeHardwareProgress`, `modelMatchKey`; attaches each hardware row's intelligence score and AA Progress value via a normalized model-name match. `modelMatchKey` ignores parenthetical effort suffixes and "preview". The only prefix fallback is a unique match differing solely by parameter-size tokens ("550B", "2.4T", "A55B") — version or variant words ("Kimi K3" vs "Kimi K3.1 Pro", "GLM-5.3 Flash" vs "GLM-5.3") are different models and never inherit each other's values. Intelligence callers pass the newest version's block only (see `App.tsx`), since a hardware row carries a single score; Progress is a separate IRT-linked cross-version metric and is never merged into `intelligence_score` |
 | `version.ts` | `compareAAVersions`, `aaVersionsDesc`, `filterByAAVersion`; numeric newest-first ordering of the `aa_version` tags present in a row set, and the per-version row slice the dashboard renders |
@@ -179,6 +179,9 @@ All views are pure (props in, callbacks out, no business logic):
 
 - `IntelligenceBarChart` - vertical bars sorted by the controller (highest on
   the left by default), horizontally scrollable so labels stay readable,
+  with `unusable`-flagged rows getting a dashed warning-colored bar
+  outline, muted fill, and struck-through x-axis label (per-index CSS
+  rules, same technique as the no-data italics),
   colored by the explicit `color` field each `ai.json` row carries, falling
   back to a provider/model-family lookup when a row carries no color, with
   diagonal
@@ -214,6 +217,9 @@ All views are pure (props in, callbacks out, no business logic):
   the Decision Index version selector (same click-does-not-toggle pattern
   as Model Details), switching the chart and legend together.
 - `ModelTable` - collapsible (Accordion, collapsed by default) sortable table;
+  rows flagged `unusable` render a struck-through model name and a
+  dotted-underlined score, both with a hover explanation (inline styles so
+  acceptance tests can assert them);
   headers `Intelligence`, `Model Name`, `Provider`, `Released`, and
   `Benchmark cost USD`; click headers to
   toggle asc/desc (default: intelligence descending). When the data carries

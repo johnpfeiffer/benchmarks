@@ -297,6 +297,32 @@ describe('acceptance: every JSON row appears in the UI', () => {
     }
   })
 
+  it('marks the maintainer-flagged unusable 6.2 models with struck names, dotted scores, and dashed bars', () => {
+    render(<App />)
+    expandSection(/Model Details/)
+    const table = screen.getByRole('table', { name: /Model Details/ })
+    for (const model of ['GPT-6.2 Astra (max)', 'GPT-6.2 Sol (max)']) {
+      const toggle = within(table).getByRole('button', { name: model })
+      // Struck-through model name with the maintainer's explanation on hover.
+      expect(toggle.style.textDecoration).toBe('line-through')
+      expect(toggle.title).toContain('unusable in practice')
+      const row = toggle.closest('tr') as HTMLElement
+      // Dotted-underlined score: the measurement is real, the warning is
+      // about practical usability.
+      const score = row.querySelector('span[style*="dotted"]') as HTMLElement
+      expect(score).not.toBeNull()
+      expect(score.textContent).toBe(String(latestIntelligence.find((e) => e.model === model)?.score))
+    }
+    // Unflagged models keep plain names.
+    const control = within(table).getByRole('button', { name: 'Claude Fable 5.2 (max)' })
+    expect(control.style.textDecoration).not.toBe('line-through')
+    // The bar chart strikes their axis labels and dashes their bar outlines
+    // (emotion-generated selectors keyed on the entries' band indexes).
+    const css = Array.from(document.querySelectorAll('style')).map((s) => s.textContent).join('\n')
+    expect(css).toMatch(/stroke-dasharray:\s*5 3/)
+    expect(css).toMatch(/line-through/)
+  })
+
   it('lists every gpu.json row in the GPU table', () => {
     render(<App />)
     const table = screen.getByRole('table', { name: 'GPU Specifications' })

@@ -28,6 +28,12 @@ export interface RawModelEntry {
   provider: string
   /** Whether the model's weights are openly available. Optional in raw data. */
   open_weight?: boolean
+  /**
+   * Maintainer flag: the model is unusable in practice despite its measured
+   * score (e.g. instruction drift, follow-up-question loops). Visual warning
+   * only — the row stays because AA still measures it. Optional in raw data.
+   */
+  unusable?: boolean
   /** Explicit bar color (hex). Optional in raw data; ai.json carries one per row. */
   color?: string
   /**
@@ -193,6 +199,8 @@ export interface ModelEntry {
   provider: string
   /** Whether the model's weights are openly available. Always present after parse. */
   open_weight: boolean
+  /** Maintainer experiential warning flag; set when flagged. */
+  unusable?: boolean
   /** Release date (YYYY-MM-DD), or null when unknown. Always present after parse. */
   released: string | null
   /** Explicit bar color (hex). Set from ai.json. */
