@@ -58,6 +58,29 @@ pieces is high: even Xiaomi's unusually substantive MiMo-V2.6 launch post
 (full RL training detail, honest gaps) was removed in review as too
 vendor-adjacent (2026-09-24).
 
+## Declined is not vetoed; practitioner consensus is evidence
+
+Two learnings from the GPT-6.2 Astra/Sol backlash coverage (2026-11):
+
+- **A declined candidate is a verdict for that moment, not a permanent
+  ban.** VentureBeat's 2026-11-17 "'Essentially unusable'..." piece was
+  vetted and declined at launch as "too much, too subjective". When the
+  maintainer later hit the same failures himself, he re-read it as a
+  representative sampling and added it (2026-11-27). Record
+  vetted-but-declined candidates with their reasons and revisit them when
+  the story changes — but permanent vetoes (CodeRabbit's AI-slop review,
+  content farms/aggregators like gptunnel or mean.ceo, vendor marketing,
+  anthropic.com/openai.com) still stand.
+- **A representative sampling of credible practitioners is substance, not
+  subjectivity.** Failure coverage qualifies when it names specific,
+  reproducible behavioral symptoms (blocking follow-up questions, early
+  stops, instruction drift) from multiple named testers with track
+  records, ideally with concrete examples or cost-of-finished-work
+  analysis. A model can be benchmaxxed and still be unusable in practice;
+  that divergence IS the news. By contrast, a single vibes-y rant or an
+  AI-digested roundup (e.g. an "IT News AI" byline) is not enough on its
+  own — prefer the primary practitioner's full account over syndicated
+  summaries of it.
 ## Lookup procedure
 
 1. Search per trusted outlet: `"<Model Name>" site:artificialanalysis.ai`,
