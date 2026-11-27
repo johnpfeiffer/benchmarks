@@ -95,14 +95,18 @@ Artificial Analysis:
 ## ai.json contract
 
 Row shape: `{ "model", "intelligence_score", "aa_version", "cost_usd"?,
-"provider", "open_weight", "color", "released", "unusable"? }`.
+"provider", "open_weight", "color", "released", "unusable"?,
+"unusable_reason"? }`.
 
 - `unusable` (optional boolean) is the maintainer's experiential warning:
   the model fails in real use (instruction drift, follow-up-question
   loops) despite its measured score. Visual-only — struck name, dotted
   score, dashed bar — the row STAYS because AA still measures it; never
   remove or rescore a row over this flag. Maintainer sets it by hand with
-  a dated reason in the PR body (first: GPT-6.2 Astra/Sol, 2026-11-27).
+  a dated reason in the PR body (first: GPT-6.2 Astra/Sol, 2026-11-27;
+  Claude Opus 5, 2026-11-27). Optional `unusable_reason` carries the
+  model-specific symptom wording for the hover; flagged rows without it
+  show the generic warning, never another model's symptoms.
   Related news coverage goes through benchmark-news-lookup separately.
 - Benchmarks measure capability, not behavior. A model can benchmaxx its
   way to a high score and still fail real use (drift, blocking questions,
@@ -188,7 +192,9 @@ Refresh scores for a new Intelligence Index version. Two shapes:
   `app/src/data/ai-YYYY-MM-DD.json` snapshot file, so `app/src/data/ai.json`
   holds only the new ledger. Follow the procedure below.
 - **Minor regrade of the same suite** (e.g. v5.0 → v5.0.1, CritPt v2
-  robustness fixes, 2026-11-04): an in-place retag of the whole ledger — no
+  robustness fixes, 2026-11-04; v5.0.1 → v5.0.2, 2026-11-27, where Neon
+  61→62, Argon 50→51, Kimi K3.1 Pro 46→47, Inkling 12→13, DS V4.1 Flash
+  33→32, Qwen3.8-Flash-Next 29→28): an in-place retag of the whole ledger — no
   archive file. AA regrades every measured model, so every kept row takes
   the new tag; never leave rows at the old tag (the version toggle would
   split one methodology into two blocks). Re-verify every row against its
@@ -219,6 +225,11 @@ Full-refresh procedure:
    non-null `intelligenceIndex` (the `intelligenceIndexIsEstimated` flag was
    dropped from the payload in the 2026-11-04 v5.0.1 revision — before it,
    also require `intelligenceIndexIsEstimated: false`).
+   A 404 on a previously working model slug usually means AA RENAMED the
+   page, not dropped the model: under v5.0.2 `qwen3-8-max-0902` →
+   `qwen3-8-max`, `deepseek-v4-pro-0813` → `deepseek-v4-pro`,
+   `nemotron-3-ultra` → `nvidia-nemotron-3-ultra-550b-a55b`. Corroborate
+   the rename by release date and score before swapping slugs.
 4. Models without that aggregate keep only their old rows in the dated
    snapshot file (no row in `ai.json`). Never copy an old score into the
    new version. A per-model old/new table documents a methodology change,

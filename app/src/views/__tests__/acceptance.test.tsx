@@ -104,14 +104,14 @@ describe('acceptance: every JSON row appears in the UI', () => {
     // The version selector lives in the Model Details summary and drives the
     // chart and table.
     const versionButton = (version: string) => screen.getAllByRole('button', { name: version })[0]
-    // Claude Opus 5 (max) was never re-measured under the newest index
+    // Claude Sonnet 5 (max) was never re-measured under the newest index
     // version, so it only exists in the older snapshots.
-    expect(within(table).queryByRole('button', { name: 'Claude Opus 5 (max)' })).not.toBeInTheDocument()
+    expect(within(table).queryByRole('button', { name: 'Claude Sonnet 5 (max)' })).not.toBeInTheDocument()
     fireEvent.click(versionButton(previousVersion))
     expect(within(table).getAllByRole('row')).toHaveLength(previousRows.length + 1)
     // Models that first appear under the newly shown version start selected:
     // their rows are not grayed out and they join the chart.
-    expect(within(table).getByRole('button', { name: 'Claude Opus 5 (max)' })).toHaveAttribute('aria-pressed', 'true')
+    expect(within(table).getByRole('button', { name: 'Claude Sonnet 5 (max)' })).toHaveAttribute('aria-pressed', 'true')
     // The v4.2 backfill snapshot is listed and selectable like any version.
     const v42Rows = filterByAAVersion(intelligence, 'v4.2')
     fireEvent.click(versionButton('v4.2'))
@@ -138,8 +138,8 @@ describe('acceptance: every JSON row appears in the UI', () => {
     expect(within(table).queryByRole('button', { name: 'Claude Opus 4.6 (max)' })).not.toBeInTheDocument()
     fireEvent.click(versionButton(latestVersion))
     expect(within(table).getAllByRole('row')).toHaveLength(latestIntelligence.length + 1)
-    expect(within(table).queryByRole('button', { name: 'Claude Opus 5 (max)' })).not.toBeInTheDocument()
-    expect(versions).toEqual(['v5.0.1', 'v4.3.2', 'v4.2', 'v4.1.1', 'v4.0.2', 'v3.0'])
+    expect(within(table).queryByRole('button', { name: 'Claude Sonnet 5 (max)' })).not.toBeInTheDocument()
+    expect(versions).toEqual(['v5.0.2', 'v4.3.2', 'v4.2', 'v4.1.1', 'v4.0.2', 'v3.0'])
   })
 
   it('selects every model of the shown version after mixing the Open Weights preset with version switches', () => {
@@ -243,11 +243,11 @@ describe('acceptance: every JSON row appears in the UI', () => {
     expandSection(/Pareto Frontier/)
     const section = screen.getByRole('heading', { name: 'Pareto Frontier' }).closest('section') as HTMLElement
     // Newest version by default: the current ledger dated by its page reads.
-    expect(within(section).getByText(/Intelligence Index v5\.0\.1 · Snapshot 2026-11-04/)).toBeInTheDocument()
+    expect(within(section).getByText(/Intelligence Index v5\.0\.2 · Snapshot 2026-11-27/)).toBeInTheDocument()
     // v4.3.2 has no captured charts, so its snapshot date falls back to the
     // current ledger's page-read date.
     fireEvent.click(screen.getAllByRole('button', { name: 'v4.3.2' })[0])
-    expect(within(section).getByText(/Intelligence Index v4\.3\.2 · Snapshot 2026-11-04/)).toBeInTheDocument()
+    expect(within(section).getByText(/Intelligence Index v4\.3\.2 · Snapshot 2026-11-27/)).toBeInTheDocument()
     // Historical versions are dated by their chart capture.
     fireEvent.click(screen.getAllByRole('button', { name: 'v4.2' })[0])
     expect(within(section).getByText(/Intelligence Index v4\.2 · Snapshot 2026-09-04/)).toBeInTheDocument()
@@ -321,6 +321,20 @@ describe('acceptance: every JSON row appears in the UI', () => {
     const css = Array.from(document.querySelectorAll('style')).map((s) => s.textContent).join('\n')
     expect(css).toMatch(/stroke-dasharray:\s*5 3/)
     expect(css).toMatch(/line-through/)
+  })
+
+  it('flags Claude Opus 5 unusable with the generic warning, not the 6.2 symptoms', () => {
+    render(<App />)
+    expandSection(/Model Details/)
+    const table = screen.getByRole('table', { name: /Model Details/ })
+    const toggle = within(table).getByRole('button', { name: 'Claude Opus 5 (max)' })
+    expect(toggle.style.textDecoration).toBe('line-through')
+    expect(toggle.title).toContain('unusable in practice')
+    expect(toggle.title).toContain('despite the benchmark score')
+    expect(toggle.title).not.toContain('instruction drift')
+    // The 6.2 rows keep their maintainer-supplied symptom detail.
+    const astra = within(table).getByRole('button', { name: 'GPT-6.2 Astra (max)' })
+    expect(astra.title).toContain('silly follow-up questions and instruction drift')
   })
 
   it('lists every gpu.json row in the GPU table', () => {
@@ -460,7 +474,7 @@ describe('acceptance: every JSON row appears in the UI', () => {
   it('credits the Artificial Analysis Intelligence Index with its version number in the footer', () => {
     render(<App />)
     const footer = screen.getByRole('contentinfo')
-    const credit = within(footer).getByRole('link', { name: 'Artificial Analysis Intelligence Index v5.0.1' })
+    const credit = within(footer).getByRole('link', { name: 'Artificial Analysis Intelligence Index v5.0.2' })
     // v5.0.1 is a regrade with no announcement article; the methodology
     // page's version history is the version authority.
     expect(credit).toHaveAttribute('href', 'https://artificialanalysis.ai/methodology/intelligence-benchmarking')

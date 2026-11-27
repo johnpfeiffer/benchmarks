@@ -23,16 +23,16 @@ export interface ParetoDataset {
  * both when a new index version becomes the current ledger. Historical
  * versions derive their snapshot from the same function, dated by the
  * capture date of their backfill (see HISTORICAL_SNAPSHOTS).
- * v5.0.1 (2026-11-04) is a regrade of v5.0 (same 9 evaluations, CritPt v2
- * robustness fixes): AA regraded every measured model, so the whole ledger
- * was retagged in place and no v5.0 block or archive remains. Rows whose
- * rounded score did not move keep their values; their costs were re-read
- * from the v5.0.1 model pages (a cost pairs with the score of the same
- * version — regrading moved some totals without moving the score).
+ * v5.0.2 (2026-11-27) is a regrade of v5.0.1 (same 9 evaluations): AA
+ * regraded every measured model, so the whole ledger was retagged in place
+ * and no v5.0.1 block or archive remains (same treatment as v5.0 → v5.0.1).
+ * Scores and costs were re-read from the v5.0.2 model pages (a cost pairs
+ * with the score of the same version); Neon 61→62, Argon 50→51, Kimi K3.1
+ * Pro 46→47, Inkling 12→13, DS V4.1 Flash 33→32, Qwen Flash Next 29→28.
  */
-export const PARETO_SNAPSHOT_AA_VERSION = 'v5.0.1'
+export const PARETO_SNAPSHOT_AA_VERSION = 'v5.0.2'
 export const PARETO_SNAPSHOT_VERSION = `Artificial Analysis Intelligence Index ${PARETO_SNAPSHOT_AA_VERSION}`
-export const PARETO_SNAPSHOT_DATE = '2026-11-04'
+export const PARETO_SNAPSHOT_DATE = '2026-11-27'
 
 /**
  * Build the published snapshot for one index version from the rows carrying
