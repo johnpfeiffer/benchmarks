@@ -1,7 +1,7 @@
 [
   {"model": "Claude Opus 5 (max)", "unusable": true, "unusable_reason": "too verbose, uses way too many tokens = claudese", "intelligence_score": 63, "aa_version": "v4.1.1", "cost_usd": 3836, "provider": "Anthropic", "open_weight": false, "color": "#cc785c", "released": "2026-07-24"},
   {"model": "Claude Opus 5 (xhigh)", "intelligence_score": 63, "aa_version": "v4.1.1", "cost_usd": 2909, "provider": "Anthropic", "open_weight": false, "color": "#cc785c", "released": "2026-07-24"},
-  {"model": "Claude Fable 5 (max)", "intelligence_score": 62, "aa_version": "v4.1.1", "cost_usd": 5455, "provider": "Anthropic", "open_weight": false, "color": "#cc785c", "released": "2026-06-09"},
+  {"model": "Claude Fable 5 (max)", "unusable": true, "unusable_reason": "too verbose, uses way too many tokens = claudese", "intelligence_score": 62, "aa_version": "v4.1.1", "cost_usd": 5455, "provider": "Anthropic", "open_weight": false, "color": "#cc785c", "released": "2026-06-09"},
   {"model": "Claude Opus 5 (high)", "intelligence_score": 61, "aa_version": "v4.1.1", "cost_usd": 1974, "provider": "Anthropic", "open_weight": false, "color": "#cc785c", "released": "2026-07-24"},
   {"model": "GPT-5.6 Sol (max)", "intelligence_score": 61, "aa_version": "v4.1.1", "cost_usd": 2823, "provider": "OpenAI", "open_weight": false, "color": "#1f1f1f", "released": "2026-07-09"},
   {"model": "Kimi K3 (max)", "intelligence_score": 60, "aa_version": "v4.1.1", "cost_usd": 2425, "provider": "Moonshot AI", "open_weight": true, "color": "#00B4D8", "released": "2026-07-16"},

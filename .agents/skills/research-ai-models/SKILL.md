@@ -106,7 +106,7 @@ Row shape: `{ "model", "intelligence_score", "aa_version", "cost_usd"?,
   a dated reason in the PR body (first: GPT-6.2 Astra/Sol, 2026-11-27;
   Claude Opus 5, 2026-11-27). The flag is a model-level judgment, so the
   maintainer may backfill it onto that model's rows in the FROZEN snapshot
-  files too (done for Sonnet 5 / Opus 5, 2026-11-28): this is the one
+  files too (done for Sonnet 5 / Opus 5 / Fable 5, 2026-11-28): this is the one
   allowed edit to frozen rows — an annotation only, never touching scores,
   costs, dates, or membership. Optional `unusable_reason` carries the
   model-specific symptom wording for the hover; flagged rows without it

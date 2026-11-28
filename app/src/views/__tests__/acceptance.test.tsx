@@ -323,7 +323,7 @@ describe('acceptance: every JSON row appears in the UI', () => {
     expect(css).toMatch(/line-through/)
   })
 
-  it('flags Claude Opus 5 unusable with the generic warning, not the 6.2 symptoms', () => {
+  it('flags the claudese Claude models unusable with their own reason, not the 6.2 symptoms', () => {
     render(<App />)
     expandSection(/Model Details/)
     const table = screen.getByRole('table', { name: /Model Details/ })
@@ -338,7 +338,7 @@ describe('acceptance: every JSON row appears in the UI', () => {
     // The flag is a model-level maintainer judgment, so the frozen v4.x
     // snapshot rows carry it too (annotation only: scores/costs unchanged).
     fireEvent.click(screen.getAllByRole('button', { name: 'v4.3.2' })[0])
-    for (const model of ['Claude Sonnet 5 (max)', 'Claude Opus 5 (max)']) {
+    for (const model of ['Claude Sonnet 5 (max)', 'Claude Opus 5 (max)', 'Claude Fable 5 (max)']) {
       const historical = within(table).getByRole('button', { name: model })
       expect(historical.style.textDecoration).toBe('line-through')
       expect(historical.title).toContain('unusable in practice')
