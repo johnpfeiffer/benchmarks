@@ -77,7 +77,10 @@ Two learnings from the GPT-6.2 Astra/Sol backlash coverage (2026-11):
   stops, instruction drift) from multiple named testers with track
   records, ideally with concrete examples or cost-of-finished-work
   analysis. A model can be benchmaxxed and still be unusable in practice;
-  that divergence IS the news. By contrast, a single vibes-y rant or an
+  that divergence IS the news. Independent first-hand measurements also
+  qualify: Simon Willison's Sonnet 5 tokenizer counts (2026-06-30, ~1.4x
+  tokens on English text = effectively a 30% price increase at unchanged
+  list prices) back the token-bloat ('claudese') unusable flag. By contrast, a single vibes-y rant or an
   AI-digested roundup (e.g. an "IT News AI" byline) is not enough on its
   own — prefer the primary practitioner's full account over syndicated
   summaries of it.

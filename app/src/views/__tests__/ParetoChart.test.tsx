@@ -53,7 +53,7 @@ describe('Pareto dataset loading', () => {
     // Collapsed by default; open the section to reach the chart.
     fireEvent.click(screen.getByRole('button', { name: 'Pareto Frontier' }))
     // The published default is real measured data: no sample banner.
-    await screen.findByText(/Artificial Analysis Intelligence Index v5\.0\.1 · Snapshot/)
+    await screen.findByText(/Artificial Analysis Intelligence Index v5\.0\.2 · Snapshot/)
     expect(screen.queryByText(/Sample data — fictional models/)).not.toBeInTheDocument()
     expect(screen.getByRole('button', { name: /Gemini 4 Carbon \(high\), Google, intelligence 60/ })).toBeInTheDocument()
     fireEvent.click(screen.getByText('Load chart data'))
@@ -67,6 +67,6 @@ describe('Pareto dataset loading', () => {
     expect(screen.getByText(/Imported version · Snapshot/)).toBeInTheDocument()
     fireEvent.click(screen.getByRole('button', { name: 'Reload published data' }))
     expect(screen.queryByText(/Sample data — fictional models/)).not.toBeInTheDocument()
-    expect(screen.getByText(/Artificial Analysis Intelligence Index v5\.0\.1 · Snapshot/)).toBeInTheDocument()
+    expect(screen.getByText(/Artificial Analysis Intelligence Index v5\.0\.2 · Snapshot/)).toBeInTheDocument()
   })
 })

@@ -33,6 +33,16 @@ describe('parseModelEntries', () => {
     expect(out[1].unusable).toBe(false)
   })
 
+  it('passes through an optional unusable_reason only when provided', () => {
+    const out = parseModelEntries([
+      { model: 'X', intelligence_score: 1, aa_version: 'v4.3', provider: 'P', unusable: true, unusable_reason: 'instruction drift' },
+      { model: 'Y', intelligence_score: 2, aa_version: 'v4.3', provider: 'P', unusable: true },
+    ])
+    expect(out[0].unusable_reason).toBe('instruction drift')
+    expect(out[1].unusable_reason).toBeUndefined()
+    expect('unusable_reason' in out[1]).toBe(false)
+  })
+
   it('passes through a valid ISO release date', () => {
     const out = parseModelEntries([
       { model: 'X', intelligence_score: 1, aa_version: 'v4.3', provider: 'P', released: '2026-09-01' },

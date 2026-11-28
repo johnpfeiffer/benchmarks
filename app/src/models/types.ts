@@ -34,6 +34,8 @@ export interface RawModelEntry {
    * only — the row stays because AA still measures it. Optional in raw data.
    */
   unusable?: boolean
+  /** Optional maintainer symptom detail appended to the hover warning (raw data). */
+  unusable_reason?: string
   /** Explicit bar color (hex). Optional in raw data; ai.json carries one per row. */
   color?: string
   /**
@@ -201,6 +203,8 @@ export interface ModelEntry {
   open_weight: boolean
   /** Maintainer experiential warning flag; set when flagged. */
   unusable?: boolean
+  /** Maintainer symptom detail for the hover warning; set only when provided. */
+  unusable_reason?: string
   /** Release date (YYYY-MM-DD), or null when unknown. Always present after parse. */
   released: string | null
   /** Explicit bar color (hex). Set from ai.json. */
