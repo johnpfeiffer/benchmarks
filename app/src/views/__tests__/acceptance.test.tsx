@@ -330,7 +330,7 @@ describe('acceptance: every JSON row appears in the UI', () => {
     const toggle = within(table).getByRole('button', { name: 'Claude Opus 5 (max)' })
     expect(toggle.style.textDecoration).toBe('line-through')
     expect(toggle.title).toContain('unusable in practice')
-    expect(toggle.title).toContain('despite the benchmark score')
+    expect(toggle.title).toContain('too verbose, uses way too many tokens = claudese')
     expect(toggle.title).not.toContain('instruction drift')
     // The 6.2 rows keep their maintainer-supplied symptom detail.
     const astra = within(table).getByRole('button', { name: 'GPT-6.2 Astra (max)' })
@@ -342,6 +342,7 @@ describe('acceptance: every JSON row appears in the UI', () => {
       const historical = within(table).getByRole('button', { name: model })
       expect(historical.style.textDecoration).toBe('line-through')
       expect(historical.title).toContain('unusable in practice')
+      expect(historical.title).toContain('too verbose, uses way too many tokens = claudese')
       expect(historical.title).not.toContain('instruction drift')
     }
   })

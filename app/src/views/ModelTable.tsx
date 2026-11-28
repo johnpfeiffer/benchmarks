@@ -60,7 +60,7 @@ const COLUMNS: Array<{ label: string; field: SortField; accessor: (e: ModelEntry
  * (the 6.2 wording the maintainer supplied); other flagged rows fall back to
  * the generic warning instead of inheriting another model's symptoms.
  */
-const unusableTitle = (reason?: string) =>
+export const unusableTitle = (reason?: string) =>
   reason
     ? `Maintainer warning (2026-11-27): unusable in practice — ${reason}`
     : 'Maintainer warning (2026-11-27): unusable in practice despite the benchmark score.'
