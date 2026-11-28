@@ -335,6 +335,15 @@ describe('acceptance: every JSON row appears in the UI', () => {
     // The 6.2 rows keep their maintainer-supplied symptom detail.
     const astra = within(table).getByRole('button', { name: 'GPT-6.2 Astra (max)' })
     expect(astra.title).toContain('silly follow-up questions and instruction drift')
+    // The flag is a model-level maintainer judgment, so the frozen v4.x
+    // snapshot rows carry it too (annotation only: scores/costs unchanged).
+    fireEvent.click(screen.getAllByRole('button', { name: 'v4.3.2' })[0])
+    for (const model of ['Claude Sonnet 5 (max)', 'Claude Opus 5 (max)']) {
+      const historical = within(table).getByRole('button', { name: model })
+      expect(historical.style.textDecoration).toBe('line-through')
+      expect(historical.title).toContain('unusable in practice')
+      expect(historical.title).not.toContain('instruction drift')
+    }
   })
 
   it('lists every gpu.json row in the GPU table', () => {
