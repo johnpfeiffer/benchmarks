@@ -107,6 +107,9 @@ function normalize(raw: RawModelEntry, index: number): ModelEntry {
     provider,
     open_weight: Boolean(raw.open_weight),
     unusable: Boolean(raw.unusable),
+    ...(typeof raw.unusable_reason === 'string' && raw.unusable_reason.trim() !== ''
+      ? { unusable_reason: raw.unusable_reason }
+      : {}),
     released,
     ...(color ? { color } : {}),
   }
