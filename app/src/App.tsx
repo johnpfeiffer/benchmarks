@@ -230,6 +230,13 @@ function DashboardPage() {
   const hardwareSource = sources[1]
   const gpuSources: DataSourceCredit[] = sources.slice(2)
   const footerSources: DataSourceCredit[] = sources.slice(0, 2)
+  // Beyond-Unsloth resources for running local models (maintainer, 2026-11-27):
+  // quant releases and serving recipes that don't fit the UD-quant columns.
+  const hardwareResources: DataSourceCredit[] = [
+    { label: 'NVIDIA Kimi K3.1 Pro NVFP4 (Hugging Face)', href: 'https://huggingface.co/nvidia/Kimi-K3.1-Pro-NVFP4' },
+    { label: 'vLLM recipe: Kimi K3.1 Pro', href: 'https://recipes.vllm.ai/moonshotai/Kimi-K3.1-Pro' },
+    { label: 'vLLM recipe: Inkling 2 Small', href: 'https://recipes.vllm.ai/thinkingmachines/Inkling-2-Small' },
+  ]
   const machineSources: DataSourceCredit[] = [
     { label: 'Daring Fireball: Mac configurations and pricing', href: 'https://daringfireball.net/2026/08/configurations_and_pricing_for_new_mac_minis_and_mac_studios' },
     { label: 'NVIDIA DGX Spark', href: 'https://www.nvidia.com/en-us/products/workstations/dgx-spark/' },
@@ -262,6 +269,7 @@ function DashboardPage() {
       hardware={hardware}
       hardwareSource={hardwareSource}
       hardwareAaVersion={aaVersions[0]}
+      hardwareResources={hardwareResources}
       gpu={gpu}
       gpuSources={gpuSources}
       machines={machines}

@@ -54,6 +54,8 @@ interface DashboardProps {
   hardwareSource: DataSourceCredit
   /** AA Intelligence Index version the hardware table's scores come from. */
   hardwareAaVersion: string
+  /** Beyond-Unsloth local-model resources (quant releases, serving recipes). */
+  hardwareResources: readonly DataSourceCredit[]
   gpu: readonly GpuEntry[]
   gpuSources: readonly DataSourceCredit[]
   machines: readonly MachineEntry[]
@@ -97,6 +99,7 @@ export function Dashboard({
   hardware,
   hardwareSource,
   hardwareAaVersion,
+  hardwareResources,
   gpu,
   gpuSources,
   machines,
@@ -227,6 +230,16 @@ export function Dashboard({
         <HardwareChart entries={hardware} source={hardwareSource} />
         <Box sx={{ mt: 3 }}>
           <HardwareTable entries={hardware} title="Unsloth Open Weight Hosting Sizes" aaVersion={hardwareAaVersion} />
+          <Typography variant="body2" color="text.secondary" sx={{ mt: 2, mb: 0.5 }}>
+            Beyond Unsloth — more ways to run local models:
+          </Typography>
+          <Box sx={{ display: 'flex', gap: 2, flexWrap: 'wrap' }}>
+            {hardwareResources.map((src) => (
+              <Link key={src.href} href={src.href} target="_blank" rel="noopener noreferrer" variant="body2">
+                {src.label}
+              </Link>
+            ))}
+          </Box>
         </Box>
       </Box>
 

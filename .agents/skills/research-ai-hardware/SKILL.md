@@ -75,6 +75,17 @@ Row shape: `{ "model", "provider", "total_params", "iq1_m_gb",
   lists every file with sizes; sum all `.gguf` shards whose path contains
   the quant tag (UD-IQ1_M, UD-Q2_K_XL, UD-Q4_K_XL).
 
+## Beyond-Unsloth resources
+
+Quant releases and serving recipes that do not fit the UD-quant columns
+(e.g. NVIDIA NVFP4 releases, vLLM recipes) live in `hardwareResources` in
+`App.tsx`, rendered as links under the hardware table with a "Beyond
+Unsloth" caption. Add links as they appear (maintainer is expanding this
+area beyond Unsloth; good-enough coverage beats waiting for perfect).
+First entries (2026-11-27): nvidia/Kimi-K3.1-Pro-NVFP4, vLLM recipes for
+Kimi K3.1 Pro and Inkling 2 Small. The UD-quant table itself stays
+Unsloth-only; do not mix other quant schemes into its GB columns.
+
 ## progress.json — AA Progress Index (cross-version scale)
 
 Row shape: `{ "model", "provider", "progress" }`, ordered descending.
